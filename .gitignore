@@ -1,0 +1,16 @@
+# Decompiled game data and research notes stay local (game content, not ours to publish)
+/dump/
+/code/
+/analysis/
+/backup/
+/dev/
+/.claude/
+# Build output
+bin/
+obj/
+/release/
+/ue4ss/
+# Runtime files the mod writes in the game folder
+htr.log
+state.txt
+config.default.lua
