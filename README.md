@@ -133,8 +133,9 @@ Gear bonus off (the default) = the tables above, for every level.
 
 - **Bleeding:** a round that gets through the armor can open a wound that drains HP for
   15–25 s until the suit's nanites clot it (up to 3 wounds at once). Bleeding stops healing.
-- **Broken bones:** a heavy hit to an arm or leg can break it. NPCs with a broken arm aim
-  badly; for you, healing is halved until the nanites fuse the bone (about a minute).
+- **Broken bones:** a heavy hit to an arm or leg can break it until the nanites fuse it (about a
+  minute). Broken leg: you limp at half speed; NPCs and squad soldiers can only walk. Broken arm:
+  your aim drifts and trembles; NPCs spray with 3x their spread. Your healing is halved meanwhile.
 - **Robots** never bleed, but a heavy hit can still wreck an arm (shaky aim) or a leg.
 - **Squad soldiers** bleed too; once they go down, the game's own bleed-out timer takes over
   and a medic (or you) can still bring them back.

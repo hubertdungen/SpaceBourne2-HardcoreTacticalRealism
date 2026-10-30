@@ -420,6 +420,7 @@ function N.onSoldierMove(self)
     local d = U.dist(U.location(sol), U.location(U.playerPawn(sol)))
     if d >= 1e9 then return end
     local gait = (d > sq.SprintBeyond) and G.Gait.Sprint or ((d > sq.RunBeyond) and G.Gait.Run or G.Gait.Walk)
+    if W.fracture(U.addr(sol), os.clock()) == "leg" then gait = G.Gait.Walk end -- broken leg: limps after you
     pcall(function() sol:SetDesiredGait(gait) end)
     pcall(function() sol:SetGait(gait) end)
 end
@@ -446,6 +447,7 @@ function N.onThink(self)
             if left <= 0 then pcall(function() npc:ForceToDead() end); return end
         end
     end
+    if W.fracture(U.addr(npc), ct) == "leg" then pcall(function() npc:SetDesiredGait(G.Gait.Walk) end) end
     if st.clearJGDAt and t > st.clearJGDAt then
         U.bbSetBool(npc, BB.JustGotDamage, false)
         st.clearJGDAt = nil
@@ -504,7 +506,12 @@ function N.onRifleEye(self)
     local spread = d.spread
     if t - (st.acquiredAt or t) < d.settle then spread = spread * 2.2 end
     if st.suppressedUntil and t < st.suppressedUntil then spread = spread * 1.8 end
-    if W.fracture(U.addr(npc), os.clock()) == "arm" then spread = spread * 1.8 end -- broken arm: shaky aim
+    local frac = W.fracture(U.addr(npc), os.clock())
+    if frac == "arm" then spread = spread * (cfg().Wounds.NpcArmSpread or 3.0) end -- broken arm: wild aim
+    if frac == "leg" and (st.limpAt or 0) < t then -- broken leg: walks (BT tasks keep asking for a sprint)
+        st.limpAt = t + 0.5
+        pcall(function() npc:SetDesiredGait(G.Gait.Walk) end)
+    end
     -- Arrival grace (elevators, new floors, fresh spawns): nobody aims well for a few seconds.
     local now = os.clock()
     if now < (HTR.arrivalUntil or 0) or now - (st.spawnT or 0) < cfg().Arrival.SpawnGraceSeconds then

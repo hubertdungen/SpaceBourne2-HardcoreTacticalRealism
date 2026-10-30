@@ -96,8 +96,12 @@ local function computeHit(p, entry, shooter, bone)
         local new = W.onHit(U.addr(p), zone, wPct * ff, wPass, t, HTR.sideMultiplier("player") * freq, freq)
         if new and t > (Pl.woundMsgAt or 0) then
             Pl.woundMsgAt = t + 8
-            pcall(U.notify, new == "fracture" and ("Broken " .. zone .. " - healing halved until it fuses")
-                or "You are bleeding - get to cover", p)
+            local msg = "You are bleeding - get to cover"
+            if new == "fracture" then
+                msg = zone == "leg" and "Broken leg - you limp; healing halved until it fuses"
+                    or "Broken arm - your aim shakes; healing halved until it fuses"
+            end
+            pcall(U.notify, msg, p)
         end
     end
 
@@ -232,10 +236,42 @@ local function regenStep(p, t, dt)
     if changed then pcall(function() p:RefreshWidgetHP() end) end
 end
 
--- Hook: ALS_Base_C:ReceiveTick - leftovers, absorb upkeep, bleeding, healing.
+--[[ Broken bones, every frame while one is broken (nothing otherwise).
+     Leg: the game sets the walk/run/sprint speed each frame (ALS UpdateDynamicMovementSettings,
+     run from this tick); HTR scales the value it just set, so you limp at every gait.
+     Arm: with a gun drawn, the aim drifts and trembles (two slow waves plus a faster tremor). ]]
+local function injuryFrame(p)
+    local w = cfg().Wounds
+    if Pl.legBroken then
+        local ok, cmc = pcall(function() return p.CharacterMovement end)
+        if ok and U.valid(cmc) then
+            local v = U.get(cmc, "MaxWalkSpeed", 0)
+            if v > 0 and v ~= Pl.limpWritten then -- the game set a fresh value this frame
+                local nv = v * (w.LegSpeed or 0.5)
+                U.set(cmc, "MaxWalkSpeed", nv); U.set(cmc, "MaxWalkSpeedCrouched", nv)
+                Pl.limpWritten = nv
+            end
+        end
+    end
+    if Pl.armBroken then
+        local now = os.clock()
+        local dt = math.min(0.05, now - (Pl.swayT or now))
+        Pl.swayT = now
+        local okW, gun = pcall(function() return p.CurrentWeapon.ChildActor end)
+        if dt > 0 and okW and U.valid(gun) then
+            local a = (w.ArmSway or 6) * dt / 2.5 -- deg/s, divided by the controller's input scale
+            local yaw = a * (math.sin(now * 1.7) + 0.6 * math.sin(now * 4.9) + 0.25 * math.sin(now * 11.0))
+            local pitch = a * 0.7 * (math.sin(now * 1.3 + 1.1) + 0.6 * math.sin(now * 5.7) + 0.25 * math.sin(now * 13.0))
+            pcall(function() p:AddControllerYawInput(yaw); p:AddControllerPitchInput(pitch) end)
+        end
+    end
+end
+
+-- Hook: ALS_Base_C:ReceiveTick - leftovers, absorb upkeep, bleeding, healing, broken bones.
 function Pl.onTick(self)
     local p = self:get()
     Pl.tick = Pl.tick + 1
+    if (Pl.legBroken or Pl.armBroken) and U.addr(p) == Pl.addr then injuryFrame(p) end
     if #Pl.pending > 0 then
         if G.PlayerClassNames[U.className(p) or ""] then Pl.resolve(p, nil, nil) end
         return
@@ -259,6 +295,10 @@ function Pl.onTick(self)
     local dt = math.min(1.0, t - (Pl.lastStep or t))
     Pl.lastStep = t
     if dt > 0 then regenStep(p, t, dt) end
+    Pl.addr = U.addr(p)
+    local frac = W.fracture(Pl.addr, t)
+    Pl.legBroken, Pl.armBroken = frac == "leg", frac == "arm"
+    if not Pl.legBroken then Pl.limpWritten = nil end
 end
 
 return Pl

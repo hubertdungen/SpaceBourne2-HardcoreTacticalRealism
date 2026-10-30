@@ -63,6 +63,10 @@ return {
         Bleeding        = true, -- penetrating hits can open bleeding wounds (nanites clot them in 15-25 s);
                                 -- heavy limb hits can break an arm (shaky aim) or leg.
                                 -- Robots never bleed, but their arms and legs can still be wrecked.
+        -- Broken bones (about a minute until the nanites fuse them):
+        LegSpeed     = 0.5, -- broken leg: you move at this fraction of the speed; NPCs and squad can only walk
+        ArmSway      = 6,   -- broken arm: your aim drifts and trembles (deg/s) while a gun is drawn
+        NpcArmSpread = 3.0, -- broken arm: NPC aim spread multiplier
         -- how often you and your allies get wounded (enemies always 1.0)
         Frequency = { ["Tactical"] = 0.4, ["Tactical Hardcore"] = 0.6, ["Realism"] = 1.0, ["Realism Hardcore"] = 1.0 },
     },

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.5 — 2026-10-30
+
+- **Broken bones matter now.** A broken leg makes you limp at half speed at every gait; NPCs and
+  squad soldiers with a broken leg can only walk. A broken arm makes your aim drift and tremble
+  while a gun is drawn, and gives NPCs 3x their aim spread (was 1.8x). Robots get the same
+  (a wrecked leg or arm), still without bleeding. Bones fuse in about a minute (`Wounds` in config:
+  `LegSpeed`, `ArmSway`, `NpcArmSpread`).
+- Verified in game: your speed 375 → 187 cm/s with a broken leg, an NPC's 375 → 165 cm/s, about 8°
+  of aim drift with a broken arm. Nothing runs while no bone is broken.
+
 ## 0.4.4 — 2026-10-30
 
 - **Gear bonus key is now Shift+F7**, because many laptops have no Insert key (Ctrl+Insert in
