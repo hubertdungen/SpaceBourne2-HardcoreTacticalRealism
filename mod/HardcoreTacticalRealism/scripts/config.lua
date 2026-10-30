@@ -41,6 +41,8 @@ return {
         TankVitality      = 2.0,  -- heavy robot tanks
         RobotVitality     = 1.2,
         PirateArmorShift  = -1,   -- pirates/raiders wear one armor class less
+        HelmetMinPass     = 0.4,  -- no helmet fully stops a headshot: at least 40% gets through
+                                  -- (any firearm kills in 1-2 headshots); applies in every mode
     },
 
     Tactical = {

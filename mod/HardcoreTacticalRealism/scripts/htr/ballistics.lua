@@ -15,6 +15,7 @@ local B = {}
 
 B.Floor = 0.18    -- fraction of damage that always gets through as trauma
 B.Ablation = 0.28 -- how fast stopped rounds wear the armor down (condition % per stopped damage)
+B.HeadMinPass = 0.4 -- no helmet fully stops a headshot: at least this fraction always gets through
 
 -- dmg: % of an unarmored body for a centre-mass hit. pen: armor penetration.
 B.Calibers = {
@@ -98,6 +99,7 @@ function B.compute(a)
     rating = rating * (0.35 + 0.65 * integrity) -- damaged armor protects less
     local raw = cal.dmg * zm * (0.9 + 0.2 * (a.rnd or 0.5))
     local pass = B.passFraction(cal.pen, rating)
+    if zone == "head" and not cal.tick and pass < B.HeadMinPass then pass = B.HeadMinPass end
     local eff = raw * pass
     local minPct = a.minPct or 10
     if cal.melee or cal.tick then minPct = 0 end

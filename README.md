@@ -15,7 +15,7 @@ Overhaul* and *NPC AI Improvement*. No code from those mods is used.
 **Damage model (all on-foot fights)**
 - Damage = **caliber vs armor + hit zone**. NPC level, weapon level and rarity no longer matter.
 - Unarmored targets drop in **1–2 rifle hits**; heavy armor takes **5–6**, power armor/robots
-  **6–8**. Any firearm headshot on a bare head kills. Snipers kill almost anything in one hit.
+  **6–8**. Any firearm headshot on a bare head kills, and no helmet fully stops one: 1-2 headshots kill through any helmet. Snipers kill almost anything in one hit.
 - Melee is lethal: knives, swords and hammers kill most targets with one or two blows.
 - Armor **wears down** as it stops rounds (the armor bar shows its condition): worn armor
   protects less. Vanilla's armor-overflow bug is gone.
@@ -24,8 +24,8 @@ Overhaul* and *NPC AI Improvement*. No code from those mods is used.
 
 | Hits to kill (centre mass / head) | none | light | medium | heavy | power |
 |---|---|---|---|---|---|
-| Pistol | 2 / 1 | 4 / 1 | 6 / 2 | 7 / 2 | 8 / 3 |
-| SMG | 2 / 1 | 4 / 1 | 6 / 2 | 8 / 2 | 8 / 3 |
+| Pistol | 2 / 1 | 4 / 1 | 6 / 2 | 7 / 2 | 8 / 2 |
+| SMG | 2 / 1 | 4 / 1 | 6 / 2 | 8 / 2 | 8 / 2 |
 | Rifle | 2 / 1 | 3 / 1 | 4 / 1 | 5 / 2 | 6 / 2 |
 | Hunter (DMR) | 2 / 1 | 2 / 1 | 2 / 1 | 3 / 1 | 3 / 1 |
 | Sniper | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 | 2 / 1 |

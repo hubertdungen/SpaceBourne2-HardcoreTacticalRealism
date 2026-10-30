@@ -38,6 +38,8 @@ default(cfg.Features, "NPCGrenades", false)
 default(cfg.Damage, "GlobalToNPCs", 1.0); default(cfg.Damage, "MinPercentPerHit", 10)
 default(cfg.Damage, "BossVitality", 1.8); default(cfg.Damage, "TankVitality", 2.0)
 default(cfg.Damage, "RobotVitality", 1.2); default(cfg.Damage, "PirateArmorShift", -1)
+default(cfg.Damage, "HelmetMinPass", 0.4)
+require("htr.ballistics").HeadMinPass = cfg.Damage.HelmetMinPass
 default(cfg.Tactical, "MaxIncomingVsVanilla", 1.5); default(cfg.Tactical, "MinIncomingVsVanilla", 0.6)
 default(cfg.Tactical, "HeadMultiplier", 1.5)
 default(cfg.Realism, "PlayerVitality", 1.0); default(cfg.Realism, "UnattributedMultiplier", 2.0)

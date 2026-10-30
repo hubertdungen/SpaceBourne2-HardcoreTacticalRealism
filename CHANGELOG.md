@@ -6,6 +6,7 @@
   Realism Hardcore. "Realism" is the former "Hardcore" mode; the new "Hardcore" variants double
   all damage (you, allies and enemies) on top of their base rules. Old configs/state still load.
 - New options: `HardcoreDamageMultiplier` (2.0) and `HardcoreAlsoForEnemies` (true).
+- Headshots are always dangerous: no helmet stops more than 60% of a headshot (`HelmetMinPass` 0.4), so any firearm kills in 1-2 headshots, in every mode.
 - Ground turrets now fight for their team (allied turrets count as allies, enemy turrets as
   enemies) with their own caliber; turret and battle-drone hits on the player are attributed.
 - Planned: ships hitting NPCs and the player on foot (toggleable).
