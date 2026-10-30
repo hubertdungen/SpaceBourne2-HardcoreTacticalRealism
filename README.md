@@ -5,22 +5,71 @@
 On-foot combat in SpaceBourne 2 is an MMO bullet-sponge: a level 30 raider soaks up
 15 000 HP plus 15 000 armor, your damage depends on weapon level, and headshots barely
 matter. **HTR replaces that with ballistics**: what kills is the round, where it hits and
-what armor it hits. Enemies go down fast — and so can you. Fight from cover.
+what armor it hits. Enemies go down fast, fight smarter, bleed, break bones and throw
+grenades — and so can you. Fight from cover.
 
 Inspired by Cyberpunk 2077 *Hardcore Realism*, Fallout: New Vegas *Realistic Combat
-Overhaul* and *NPC AI Improvement*. No code from those mods is used.
+Overhaul* and *NPC AI Improvement* (no code from those mods is used). Works together with
+my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
 
-## What changes
+## Install (2 minutes)
 
-**Damage model (all on-foot fights)**
+HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). Pick one:
+
+**A. One-click installer (recommended, includes UE4SS)**
+1. Download `HardcoreTacticalRealism-x.y.z.zip` (the big one) from
+   [GitHub Releases](https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism/releases/latest).
+2. Extract it anywhere (e.g. Downloads) and double-click **`Install.cmd`**.
+   - Steam: found automatically.
+   - GOG / other folder: drag your `SpaceBourne 2` folder onto `Install.cmd`.
+3. Start the game. Done.
+
+**B. Lua-only file (Nexus, or `-lite.zip` on GitHub) — if you already have UE4SS**
+(for example from SB2 HOTAS):
+1. Open your game folder (`...\SpaceBourne 2`, the one with `SpaceBourne2.exe`).
+2. Extract the zip **there**. It creates `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism`
+   and switches itself on — nothing else to edit.
+3. No UE4SS yet? Get [RE-UE4SS 3.0.1](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/v3.0.1)
+   and copy `dwmapi.dll`, `UE4SS.dll` and `UE4SS-settings.ini` into
+   `SpaceBourne 2\SB2\Binaries\Win64\` — or simply use option A.
+
+**Update:** install the new version the same way (the installer keeps your `config.lua`).
+**Uninstall:** `Uninstall.cmd` (option A) or delete the `HardcoreTacticalRealism` folder
+(option B). HTR never writes to your saves, so you can add or remove it at any time.
+
+## Controls
+
+| Key | What it does |
+|---|---|
+| **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
+| **F9** | Ships vs infantry on/off (shown on the HUD) |
+| Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
+
+Both choices are remembered between sessions. Keys can be changed in `config.lua`.
+
+## Modes
+
+| Mode | Damage you and your allies take | Wounds on your side |
+|---|---|---|
+| **Tactical** (default) | follows weapon and hit zone, always **100–150 %** of vanilla | rare |
+| **Tactical Hardcore** | Tactical, then **all damage x2** (both sides) | occasional |
+| **Realism** | **exactly the same rules as enemies**; your suit is your armor | full |
+| **Realism Hardcore** | Realism, then **all damage x2** (both sides) | full, bleeding x2 |
+
+Enemies always use the realistic model.
+
+## Damage model
+
 - Damage = **caliber vs armor + hit zone**. NPC level, weapon level and rarity no longer matter.
-- Unarmored targets drop in **1–2 rifle hits**; heavy armor takes **5–6**, power armor/robots
-  **6–8**. Any firearm headshot on a bare head kills, and no helmet fully stops one: 1-2 headshots kill through any helmet. Snipers kill almost anything in one hit.
-- Melee is lethal: knives, swords and hammers kill most targets with one or two blows.
-- Armor **wears down** as it stops rounds (the armor bar shows its condition): worn armor
+- Unarmored targets drop in **1–2 rifle hits**, heavy armor in **5–6**, power armor and
+  robots in **6–8**. Snipers kill almost anything in one hit; melee kills in one or two blows.
+- **Headshots** kill a bare head with any firearm, and **no helmet stops a headshot
+  completely** (at least 40 % always gets through): 1–2 headshots kill through any helmet.
+  This applies to everyone — NPCs shooting NPCs included (vanilla has no NPC headshots).
+- Armor **wears down** as it stops rounds (the armor bar shows its condition); worn armor
   protects less. Vanilla's armor-overflow bug is gone.
-- Limb hits cripple: destroyed arms and legs use the game's own dismemberment, and lethal
-  hits blow off the limb or head that was hit (needs *Gore* on in Gameplay settings).
+- Destroyed limbs use the game's own dismemberment; lethal hits blow off the part that was
+  hit (needs *Gore* on in Gameplay settings).
 
 | Hits to kill (centre mass / head) | none | light | medium | heavy | power |
 |---|---|---|---|---|---|
@@ -31,106 +80,85 @@ Overhaul* and *NPC AI Improvement*. No code from those mods is used.
 | Sniper | 1 / 1 | 1 / 1 | 1 / 1 | 1 / 1 | 2 / 1 |
 | Knife / Sword / Hammer | 1 | 1 | 2 / 1 / 1 | 2 / 2 / 1 | 3 / 2 / 2 |
 
-Shotgun pellets are counted individually: one close blast kills an unarmored target.
-Bosses have a tougher body (about 8–9 rifle hits, 3 to the head).
+Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have
+a tougher body (about 8–9 rifle hits, 3 to the head).
 
-**Four modes** — **F7** cycles them in game (shown on the HUD, remembered between sessions)
-- **Tactical** (default): enemies die fast; damage *you* take follows weapon and hit zone but is
-  capped at **+50 %** of vanilla. Your allies get the same protection.
-- **Tactical Hardcore**: Tactical with **all damage doubled** (you, allies and enemies; the
-  Tactical caps are applied first).
-- **Realism**: you and your allies take damage under **exactly the same rules** as enemies.
-  Your suit's armor rating and condition protect you; a few rifle hits kill.
-- **Realism Hardcore**: Realism with **all damage doubled**.
+## Wounds and healing
 
-**Friendly fire**
-- You ↔ allies (companions, squad, crew): reduced in the Tactical modes (35 %), fully real in the Realism modes.
-- Allies ↔ allies and allied turrets: vanilla damage, capped at 10 % of HP per hit.
-- Ground turrets fight for their own team: allied turrets count as allies, enemy turrets as enemies.
-- Enemies ↔ enemies: fully realistic. Allies ↔ enemies: fully realistic, so your squad
-  and companions now actually kill things.
+- **Bleeding:** a round that gets through the armor can open a wound that drains HP for
+  15–25 s until the suit's nanites clot it (up to 3 wounds at once). Bleeding stops healing.
+- **Broken bones:** a heavy hit to an arm or leg can break it. NPCs with a broken arm aim
+  badly; for you, healing is halved until the nanites fuse the bone (about a minute).
+- Enemies get wounded in every mode. You and your allies get wounded rarely in Tactical,
+  more in Tactical Hardcore, and fully in Realism; Hardcore modes bleed twice as fast.
+- **Healing:** your suit's own healing is kept but slowed by mode — Tactical 70 %, Tactical
+  Hardcore 50 %, Realism 25 %, Realism Hardcore 12 % of vanilla — and it starts 8–15 s after
+  your last hit. Armor nanites slowly repair the suit too.
 
-**Smarter, deadlier AI**
-- NPC bullets fly at 360–500 m/s instead of 100 m/s, so they hit what they aim at...
-- ...but they aim like people: spread that depends on training, a settle-in time after
-  spotting you, worse aim while moving or being shot at, and mostly centre-mass aim
-  instead of vanilla's random feet/above-the-head points.
-- Fixed vanilla behaviour that never triggered: NPCs break line of sight when hit,
-  fall back when badly hurt, call nearby allies when hit or killed, peek from cover
-  more often (2.5 s instead of 5 s).
-- **Suppression**: your rounds landing next to an enemy make it duck and shoot worse.
-- Companions' bullets work (vanilla gave them a 0-second projectile life) and they see further.
+## Explosions, grenades and ships
 
-**Doctrines — not every enemy fights the same**
+- **Explosions** (your grenades, NPC grenades, rockets) do realistic damage that fades with
+  distance and gibs at close range. In vanilla, NPCs ignore every explosion that isn't yours.
+- **NPC grenades:** regular and elite troops throw grenades when you hide behind cover too long.
+- **Ships vs infantry (F9):** ship guns — yours and AI ships' — now hit people on foot. A direct
+  hit kills almost anyone and the blast hurts everyone nearby, friends included.
+
+## Friendly fire
+
+| Attacker → victim | Tactical modes | Realism modes |
+|---|---|---|
+| You → companions / squad | 35 % | 100 % |
+| Companions / squad → you | 35 % | 100 % |
+| Ally → ally, allied turrets | vanilla, max 10 % HP per hit | same |
+| Enemy → enemy, ally ↔ enemy | 100 % (realistic) | same |
+
+Ground turrets fight for their own team. Your squad soldiers now take realistic damage too
+(they go down injured first, as in vanilla).
+
+## AI and doctrines
+
+- NPC bullets fly at 360–500 m/s instead of 100 m/s, but NPCs aim like people: spread by
+  training, a settle-in time after spotting you, worse aim while moving, hurt or suppressed,
+  and centre-mass aim instead of vanilla's random feet/above-the-head points.
+- Vanilla behaviour that never triggered now works: breaking line of sight when hit, falling
+  back when badly hurt, calling allies, peeking from cover every 2.5 s instead of 5 s.
+- **Suppression:** your rounds landing close make enemies duck and shoot worse.
+- Companions' bullets work (vanilla gave them a 0-second projectile life).
+
 | Doctrine | Who | How they fight |
 |---|---|---|
-| Pirate | raiders, salvagers | slow to react, spray long bursts, wide spread, panic when mates die, flee early |
+| Pirate | raiders, salvagers | slow, spray, wide spread, panic when mates die, flee early |
 | Militia | low-tier troops | better than pirates, still sloppy |
-| Regular | standard faction troops | quick, accurate, use cover, coordinate |
-| Elite | high-tier faction troops, guards, bosses | fastest reactions, tight aim, short controlled fire, alert the whole area |
-| Machine | robots | fearless, steady aim, never retreat |
-| Companion | your allies | elite-level aim, cover, no panic |
+| Regular | standard faction troops | quick, accurate, cover, grenades |
+| Elite | high-tier troops, guards, bosses | fastest reactions, tight aim, grenades, alert the area |
+| Machine | robots | fearless, steady, never retreat |
+| Companion | your allies | elite-level aim, no panic |
 
-All numbers live in plain data files (see *Tuning*), so you can make pirates dumber or
-elites deadlier.
+## Settings
 
-## Install
-
-1. Download `HardcoreTacticalRealism-x.y.z.zip` from [Releases](../../releases/latest) and extract it.
-2. Double-click **`Install.cmd`**. It finds the Steam copy by itself.
-   GOG / other folder: drag your `SpaceBourne 2` folder onto `Install.cmd`.
-3. Start the game. Damage and AI change as soon as you land.
-
-The installer reuses UE4SS if you already have it (for example from **SB2 HOTAS** — both
-mods work together), otherwise it installs the bundled UE4SS 3.0.1. The game executable
-is never modified. Updating: run the new `Install.cmd`; your `config.lua` is kept.
-
-**Lite / Nexus build (`-lite.zip`, no executables):** needs UE4SS 3.0.x in the game already
-(e.g. from SB2 HOTAS, or [RE-UE4SS 3.0.1](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/v3.0.1)).
-Extract the zip into your `SpaceBourne 2` folder — it enables itself (`enabled.txt`), no
-`mods.txt` editing needed.
-
-**Manual install:** copy `ue4ss\dwmapi.dll`, `ue4ss\UE4SS.dll` and `ue4ss\UE4SS-settings.ini`
-into `SpaceBourne 2\SB2\Binaries\Win64\` (skip if UE4SS is already there), copy
-`mod\HardcoreTacticalRealism` into `...\Win64\Mods\`, and add the line
-`HardcoreTacticalRealism : 1` to `...\Win64\Mods\mods.txt`.
-
-**Uninstall:** double-click `Uninstall.cmd`. Saves are not changed by the mod, so you can
-remove it at any time.
-
-## Tuning
-
-Open `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua` in Notepad:
-mode, every feature on/off, friendly-fire factors, boss toughness, Tactical cap, logging.
-For deeper changes:
-- `htr\ballistics.lua` — caliber damage/penetration, armor ratings, hit-zone multipliers.
-- `htr\doctrines.lua` — reaction time, sight range, bullet speed, fire rate, spread, morale.
+`SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua` (open with Notepad,
+restart the game after saving): mode and keys, every feature on/off, Hardcore multiplier,
+helmet rule, wounds and healing per mode, ships vs infantry strength, friendly fire,
+boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
+and `htr\doctrines.lua` (how each kind of NPC fights).
 
 ## Known limitations
 
-- Ship combat is untouched (on-foot only). Ships cannot hurt NPCs on foot yet — planned
-  (see below).
-- Beam weapons, grenades and explosions hitting NPCs use vanilla damage.
-- NPC grenades are off by default (`NPCGrenades`, experimental).
-- The game has no faction field on soldiers, so doctrines use the game's raider flag,
-  troop tier, guard/robot/boss flags and companion status.
-- The squad soldiers you command take vanilla damage (their attacks are realistic).
-- Tested on the Steam build of 26 Oct 2026. Feedback and logs (`htr.log`) are welcome.
-
-## Planned
-
-- **Ships vs infantry:** your ship's (and enemy ships') weapons hit and heavily damage NPCs
-  and the player on foot, with an on/off option.
-- Realistic damage for squad soldiers, grenades and beam weapons; NPC grenade use.
+- On-foot combat only; ship-vs-ship combat is unchanged.
+- The game has no faction field on soldiers, so doctrines use its raider flag, troop tier,
+  guard/robot/boss flags and companion status.
+- Gamepad toggles are experimental (untested without a controller).
+- Tested on the Steam build of 26 Oct 2026. Bug reports with `htr.log` (set `Debug.Log = true`)
+  are very welcome.
 
 ## After a game update
 
-All game-internal names are in one file, `htr\gamedefs.lua`. If an update renames
-something, HTR switches the affected feature off (logged in `htr.log` and `UE4SS.log`)
-instead of crashing, and only that file needs fixing. `tools\` holds the scripts used to
-inspect the game's Blueprints.
+Every game-internal name lives in one file, `htr\gamedefs.lua`. If an update renames
+something, HTR switches that feature off (logged in `UE4SS.log`) instead of crashing.
+`tools\` holds the scripts used to inspect the game's Blueprints.
 
 ## Credits & license
 
 MIT licensed — see `LICENSE`. Uses [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) (MIT).
-Unofficial fan mod, not affiliated with the developer of SpaceBourne 2.
+Code written with AI assistance; banner images are AI-generated. Unofficial fan mod, not
+affiliated with the developer of SpaceBourne 2.

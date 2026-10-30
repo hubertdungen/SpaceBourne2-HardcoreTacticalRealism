@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.2.0"
+local VERSION = "0.3.0"
 
 local U = require("htr.util")
 
@@ -34,13 +34,26 @@ for k, v in pairs(defaults) do if cfg[k] == nil then cfg[k] = v end end
 local function default(tbl, key, val) if tbl[key] == nil then tbl[key] = val end end
 for _, f in ipairs({ "RealisticDamageToNPCs", "RealisticDamageToPlayer", "FriendlyFireRules", "SmarterAI", "FactionDoctrines",
     "RealisticNPCBallistics", "CompanionFixes", "Suppression" }) do default(cfg.Features, f, true) end
-default(cfg.Features, "NPCGrenades", false)
+default(cfg.Features, "NPCGrenades", true)
 default(cfg.Damage, "GlobalToNPCs", 1.0); default(cfg.Damage, "MinPercentPerHit", 10)
 default(cfg.Damage, "BossVitality", 1.8); default(cfg.Damage, "TankVitality", 2.0)
 default(cfg.Damage, "RobotVitality", 1.2); default(cfg.Damage, "PirateArmorShift", -1)
-default(cfg.Damage, "HelmetMinPass", 0.4)
+default(cfg.Damage, "HelmetMinPass", 0.4); default(cfg.Damage, "ExplosionRadius", 600)
 require("htr.ballistics").HeadMinPass = cfg.Damage.HelmetMinPass
-default(cfg.Tactical, "MaxIncomingVsVanilla", 1.5); default(cfg.Tactical, "MinIncomingVsVanilla", 0.6)
+cfg.Wounds = cfg.Wounds or {}
+default(cfg.Wounds, "Bleeding", true)
+default(cfg.Wounds, "Frequency", { ["Tactical"] = 0.4, ["Tactical Hardcore"] = 0.6, ["Realism"] = 1.0, ["Realism Hardcore"] = 1.0 })
+cfg.Regen = cfg.Regen or {}
+default(cfg.Regen, "Enabled", true)
+default(cfg.Regen, "Tactical", { Delay = 8, HP = 0.7, Armor = 1.5 })
+default(cfg.Regen, "Tactical Hardcore", { Delay = 10, HP = 0.5, Armor = 1.0 })
+default(cfg.Regen, "Realism", { Delay = 12, HP = 0.25, Armor = 0.5 })
+default(cfg.Regen, "Realism Hardcore", { Delay = 15, HP = 0.12, Armor = 0.3 })
+cfg.Ships = cfg.Ships or {}
+default(cfg.Ships, "Enabled", true); default(cfg.Ships, "ToggleKey", "F9")
+default(cfg.Ships, "DirectHitDamage", 300); default(cfg.Ships, "SplashDamage", 150); default(cfg.Ships, "SplashRadius", 500)
+default(cfg, "GamepadToggles", true)
+default(cfg.Tactical, "MaxIncomingVsVanilla", 1.5); default(cfg.Tactical, "MinIncomingVsVanilla", 1.0)
 default(cfg.Tactical, "HeadMultiplier", 1.5)
 default(cfg.Realism, "PlayerVitality", 1.0); default(cfg.Realism, "UnattributedMultiplier", 2.0)
 default(cfg.Realism, "UnattributedMaxPercent", 60)
@@ -92,6 +105,12 @@ function HTR.sideMultiplier(side)
     return 1.0
 end
 
+-- Wound frequency: enemies always 1.0; you and your allies per mode (Wounds.Frequency).
+function HTR.woundFreq(side)
+    if side ~= "player" and side ~= "ally" then return 1.0 end
+    return (cfg.Wounds.Frequency or {})[HTR.mode] or 1.0
+end
+
 -- Friendly-fire factor for the current base mode (accepts 0.1.x "Hardcore" keys).
 function HTR.ff(tbl)
     if type(tbl) ~= "table" then return tonumber(tbl) or 1.0 end
@@ -100,10 +119,25 @@ end
 
 HTR.setMode(loadMode())
 
+-- Ships vs infantry on/off (F9), remembered in state.txt.
+do
+    local f = io.open(STATE, "r")
+    local s = f and f:read("a") or ""
+    if f then f:close() end
+    local v = s:match("ships=(%a+)")
+    if v then HTR.shipsOn = (v == "on") else HTR.shipsOn = cfg.Ships.Enabled end
+end
+
+local function saveState()
+    local f = io.open(STATE, "w")
+    if f then f:write("mode=" .. HTR.mode .. "\nships=" .. (HTR.shipsOn and "on" or "off") .. "\n"); f:close() end
+end
+
 local H = require("htr.hooks")
 local G = require("htr.gamedefs")
 local N = require("htr.npc")
 local Pl = require("htr.player")
+local S = require("htr.ships")
 
 U.log(string.format("=== HTR %s loaded, mode=%s ===", VERSION, HTR.mode))
 
@@ -120,6 +154,14 @@ H.add(G.Fn.PlayerIncome, Pl.onIncome, "player damage")
 H.add(G.Fn.PlayerRadial, Pl.onRadial, "player radial")
 H.add(G.Fn.PlayerTick, Pl.onTick, "player tick")
 for i, path in ipairs(G.NpcProjectileHits) do H.add(path, Pl.onShooterProjectileHit, "shooter hit " .. i) end
+H.add(G.Fn.NpcRadial, N.onRadial, "NPC blast")
+H.add(G.Fn.SoldierHit, N.onSoldierHit, "squad soldier damage")
+for i, path in ipairs(G.ShipGunHits) do
+    H.add(path, function(...) S.onPlayerShipHit(N, Pl, ...) end, "ship gun " .. i)
+end
+for i, path in ipairs(G.AIShipImpacts) do
+    H.add(path, function(...) S.onAIShipImpact(N, Pl, ...) end, "AI ship round " .. i)
+end
 
 -- Behaviour-tree template tweak (applies to every NPC using it).
 local btTuned = false
@@ -150,24 +192,51 @@ end)
 
 -- Mode hotkey ------------------------------------------------------------------
 local MODE_TEXT = {
-    ["Tactical"]          = "HTR mode: TACTICAL - damage you take is capped at +50% of vanilla",
+    ["Tactical"]          = "HTR mode: TACTICAL - damage you take is 100-150% of vanilla",
     ["Tactical Hardcore"] = "HTR mode: TACTICAL HARDCORE - Tactical, and all damage is doubled",
     ["Realism"]           = "HTR mode: REALISM - you and your allies follow the same rules as enemies",
     ["Realism Hardcore"]  = "HTR mode: REALISM HARDCORE - Realism, and all damage is doubled",
 }
 
-if cfg.ToggleModeKey and cfg.ToggleModeKey ~= "" and Key and Key[cfg.ToggleModeKey] then
-    RegisterKeyBind(Key[cfg.ToggleModeKey], function()
-        local nextMode = MODES[1]
-        for i, name in ipairs(MODES) do
-            if name == HTR.mode then nextMode = MODES[i % #MODES + 1] end
+local function cycleMode() -- runs on the game thread
+    local nextMode = MODES[1]
+    for i, name in ipairs(MODES) do
+        if name == HTR.mode then nextMode = MODES[i % #MODES + 1] end
+    end
+    HTR.setMode(nextMode)
+    saveState()
+    U.warn("mode is now " .. HTR.mode)
+    pcall(U.notify, MODE_TEXT[HTR.mode] or ("HTR mode: " .. HTR.mode))
+end
+
+local function toggleShips()
+    HTR.shipsOn = not HTR.shipsOn
+    saveState()
+    U.warn("ships vs infantry " .. (HTR.shipsOn and "ON" or "OFF"))
+    pcall(U.notify, HTR.shipsOn and "HTR: SHIPS VS INFANTRY ON - ship guns now hit people on foot"
+        or "HTR: SHIPS VS INFANTRY OFF - ship guns ignore people on foot (vanilla)")
+end
+
+local function bindKey(name, fn)
+    if name and name ~= "" and Key and Key[name] then
+        RegisterKeyBind(Key[name], function() ExecuteInGameThread(fn) end)
+    end
+end
+bindKey(cfg.ToggleModeKey, cycleMode)
+bindKey(cfg.Ships.ToggleKey, toggleShips)
+
+-- Gamepad: 4 quick presses of "switch camera" cycle the mode (crouched: ships toggle).
+-- Four presses leave the camera where it was.
+if cfg.GamepadToggles then
+    local taps, first = 0, 0
+    H.add(G.Fn.PadCamera, function(self)
+        local now = os.clock()
+        if now - first > 1.5 then taps, first = 0, now end
+        taps = taps + 1
+        if taps >= 4 then
+            taps = 0
+            local crouched = U.get(self:get(), "Stance", 0) == 1
+            if crouched then toggleShips() else cycleMode() end
         end
-        HTR.setMode(nextMode)
-        local f = io.open(STATE, "w")
-        if f then f:write("mode=" .. HTR.mode .. "\n"); f:close() end
-        U.warn("mode is now " .. HTR.mode)
-        ExecuteInGameThread(function()
-            pcall(U.notify, MODE_TEXT[HTR.mode] or ("HTR mode: " .. HTR.mode))
-        end)
-    end)
+    end, "gamepad toggles")
 end

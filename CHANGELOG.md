@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.0 — 2026-10-30
+
+- Tactical now keeps the damage you and your allies take between 100 % and 150 % of vanilla
+  (never less than vanilla).
+- Wounds: penetrating hits can cause bleeding; heavy limb hits break bones (NPCs with a broken
+  arm aim badly; your healing is halved). Enemies in every mode; your side rarely in Tactical,
+  more in Tactical Hardcore, fully in Realism.
+- Healing: the suit's own HP healing is slowed per mode (70/50/25/12 %), starts 8–15 s after
+  your last hit and pauses while bleeding; armor nanites slowly repair the suit.
+- Explosions and grenades now do realistic, distance-based damage to NPCs (vanilla NPCs ignored
+  every explosion that wasn't yours).
+- NPC grenades on by default: regular and elite troops flush you out of cover.
+- Squad soldiers take realistic damage (injured first, as in vanilla).
+- Ships vs infantry (F9): your ship's and AI ships' guns hit people on foot.
+- Experimental gamepad toggles: 4 quick presses of "switch camera" (crouched: ships).
+- Clearer install guide.
+
 ## 0.2.0 — 2026-10-30
 
 - Four modes, cycled with F7 and announced on the HUD: Tactical, Tactical Hardcore, Realism,

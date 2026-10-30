@@ -43,6 +43,8 @@ B.Calibers = {
     npc_melee     = { dmg = 65,  pen = 50, melee = true },
     squad_rifle   = { dmg = 52,  pen = 42 },
     turret        = { dmg = 45,  pen = 52 }, -- ground turrets (team battles, bases)
+    explosion     = { dmg = 150, pen = 60, tick = true }, -- grenades/rockets at the blast centre
+    ship          = { dmg = 300, pen = 95, tick = true }, -- ship guns hitting infantry
     generic       = { dmg = 50,  pen = 40 },
 }
 

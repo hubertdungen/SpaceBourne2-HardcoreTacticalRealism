@@ -7,6 +7,8 @@ local G = require("htr.gamedefs")
 local B = require("htr.ballistics")
 local C = require("htr.classify")
 local DOC = require("htr.doctrines")
+local W = require("htr.wounds")
+local S = require("htr.ships")
 local P, BB = G.P, G.BB
 
 local N = { state = {}, count = 0, aimWrite = nil }
@@ -130,10 +132,13 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
 
     local armor, maxArmor = U.get(npc, P.Armor, 0), U.get(npc, P.MaxArmor, 0)
     local integrity = (maxArmor > 0) and (armor / maxArmor) or 1.0
-    local hpPct, ablation = B.compute({
+    local hpPct, ablation, pass = B.compute({
         caliber = caliber, zone = zone, armor = st.armor, hasHelmet = st.helmet, integrity = integrity,
         vitality = st.vitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random(),
     })
+    if c.Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
+        W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side), HTR.woundFreq(st.side))
+    end
 
     local f = c.Damage.GlobalToNPCs
     if ff then
@@ -141,9 +146,9 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
         if aside == "enemy" and st.side == "enemy" then f = f * c.FriendlyFire.EnemyToEnemy end
     end
     local dmg = hpPct / 100 * maxHP * f
-    -- Tactical keeps your allies about as sturdy as vanilla (max +50%).
+    -- Tactical: your allies take 100-150% of what vanilla would do.
     if st.side == "ally" and aside == "enemy" and HTR.base == "Tactical" then
-        dmg = math.min(dmg, vanilla * c.Tactical.MaxIncomingVsVanilla)
+        dmg = U.clamp(dmg, vanilla * c.Tactical.MinIncomingVsVanilla, vanilla * c.Tactical.MaxIncomingVsVanilla)
     end
     -- "Hardcore" modes: your side (and optionally enemies) takes double damage.
     local sideMult = HTR.sideMultiplier(st.side)
@@ -222,7 +227,84 @@ function N.onDead(self)
             end
         end
     end
-    if a then N.state[a] = nil; N.count = math.max(0, N.count - 1) end
+    if a then N.state[a] = nil; N.count = math.max(0, N.count - 1); W.heal(a) end
+end
+
+-- Damage factor for victim side `vs` hit by attacker side `as` (friendly fire + Hardcore).
+local function sideFactor(as, vs)
+    local c, f = cfg(), cfg().Damage.GlobalToNPCs
+    if feat("FriendlyFireRules") then
+        if as == "player" and vs == "ally" then f = f * HTR.ff(c.FriendlyFire.PlayerToAlly) end
+        if as == "enemy" and vs == "enemy" then f = f * c.FriendlyFire.EnemyToEnemy end
+    end
+    return f * HTR.sideMultiplier(vs)
+end
+
+-- Hook: Q1_Shooter_AI_C:ReceiveRadialDamage(DamageReceived, DamageType, Origin, HitInfo, InstigatedBy, DamageCauser)
+-- Vanilla only lets the player's blasts through (raw, level-scaled) and ignores
+-- every other explosion. HTR replaces both with a distance-based blast.
+function N.onRadial(self, dmgP, dtypeP, originP, hitP, instigP, causerP)
+    if not feat("RealisticDamageToNPCs") then return end
+    local npc = self:get()
+    if not U.get(npc, P.Ready, false) or U.get(npc, P.Dead, false) then return end
+    local maxHP = U.get(npc, P.MaxHP, 0)
+    if maxHP <= 1.5 then return end
+    local st = N.ensure(npc)
+    if not st then return end
+    local aside = C.sideOf(causerP:get())
+    local raw = dmgP:get()
+    if aside == "player" and raw <= 2 then return end -- ability shockwaves: knock-down only, as vanilla
+    local hp = U.get(npc, P.HP, 0)
+    if aside == "player" then hp = hp + raw end -- undo vanilla's raw hit
+    local o = originP:get()
+    local d = U.dist({ X = o.X, Y = o.Y, Z = o.Z }, U.location(npc))
+    local falloff = math.max(0, 1 - d / cfg().Damage.ExplosionRadius)
+    local pct = B.compute({ caliber = "explosion", zone = "torso", armor = st.armor, hasHelmet = st.helmet,
+        integrity = 1, vitality = st.vitality, minPct = 0, rnd = math.random() }) * falloff
+    hp = hp - pct / 100 * maxHP * sideFactor(aside, st.side)
+    U.set(npc, P.HP, math.max(0, hp))
+    if U.LogHits then U.log(string.format("BLAST %s <- %s d=%.0f => %.1f%%", tostring(st.cn), aside, d, pct)) end
+    if hp <= 0 then
+        U.set(npc, "Shotgun", true)
+        pcall(function() npc:ForceToDead() end)
+    end
+end
+
+-- Hook: Master_Soldier_C:ReceivePointDamage (your ground squad / team-battle soldiers).
+-- Vanilla already subtracted self.Damage from armor or HP; HTR swaps it for the realistic value.
+local SOLDIER_ARMOR = { [0] = "light", [1] = "light", [2] = "medium", [3] = "heavy", [4] = "heavy" }
+function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, dirP, instigP, causerP)
+    if not feat("RealisticDamageToNPCs") then return end
+    local sol = self:get()
+    if U.get(sol, P.Dead, false) then return end
+    local applied = U.get(sol, "Damage", 0)
+    if applied <= 0 then return end
+    local attacker = causerP:get()
+    local aside, acn = C.sideOf(attacker)
+    local vside = C.sideOf(sol)
+    if aside == vside and aside ~= "other" then return end -- vanilla ignores own-team soldiers
+    local hp, armor = U.get(sol, P.HP, 0), U.get(sol, P.Armor, 0)
+    if armor > 0 then
+        U.set(sol, P.Armor, 0.0) -- HTR models their armor itself; the vanilla pool goes away
+    else
+        hp = hp + applied
+    end
+    local zone = C.zoneOf((function() local ok, s = pcall(function() return boneP:get():ToString() end); return ok and s or "None" end)(), false)
+    local caliber = C.caliberOf(attacker, aside, acn, sol)
+    local hpPct = B.compute({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
+        hasHelmet = true, integrity = 1, vitality = 1, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() })
+    local dmg = hpPct / 100 * U.get(sol, P.MaxHP, 100) * sideFactor(aside, vside) / HTR.sideMultiplier(vside)
+    if vside == "ally" and aside == "enemy" and HTR.base == "Tactical" then
+        dmg = U.clamp(dmg, applied * cfg().Tactical.MinIncomingVsVanilla, applied * cfg().Tactical.MaxIncomingVsVanilla)
+    end
+    dmg = dmg * HTR.sideMultiplier(vside)
+    hp = hp - dmg
+    U.set(sol, P.HP, hp)
+    if U.LogHits then U.log(string.format("SQUAD %s(%s) <- %s %s zone=%s => %.1f hp (vanilla %.1f)", tostring(U.className(sol)), vside, aside, caliber, zone, dmg, applied)) end
+    if hp < 0 then
+        if U.get(sol, "InInjuredMode", false) then pcall(function() sol:Deaded() end)
+        else pcall(function() sol:EnterInjuredMode() end) end
+    end
 end
 
 -- Hook: Q1_Shooter_AI_C:CheckMeleeDistance (vanilla 1 Hz timer) - our "think" tick.
@@ -232,6 +314,19 @@ function N.onThink(self)
     local st = N.ensure(npc)
     if not st then return end
     local t = U.now(npc)
+    S.track(npc)
+    -- bleeding (1 Hz)
+    local ct = os.clock()
+    local dt = math.min(2.0, ct - (st.lastThink or ct))
+    st.lastThink = ct
+    if dt > 0 and cfg().Wounds.Bleeding then
+        local pct = W.bleed(U.addr(npc), ct, dt)
+        if pct > 0 then
+            local left = U.get(npc, P.HP, 0) - pct / 100 * U.get(npc, P.MaxHP, 100)
+            U.set(npc, P.HP, math.max(0, left))
+            if left <= 0 then pcall(function() npc:ForceToDead() end); return end
+        end
+    end
     if st.clearJGDAt and t > st.clearJGDAt then
         U.bbSetBool(npc, BB.JustGotDamage, false)
         st.clearJGDAt = nil
@@ -269,6 +364,8 @@ function N.onRifleEye(self)
     local spread = d.spread
     if t - (st.acquiredAt or t) < d.settle then spread = spread * 2.2 end
     if st.suppressedUntil and t < st.suppressedUntil then spread = spread * 1.8 end
+    if W.fracture(U.addr(npc), os.clock()) == "arm" then spread = spread * 1.8 end -- broken arm: shaky aim
+    S.track(npc)
     if U.speed(npc) > 150 then spread = spread * 1.4 end
     if U.speed(target) > 350 then spread = spread * 1.25 end
     local from, tl = U.location(npc), U.location(target)

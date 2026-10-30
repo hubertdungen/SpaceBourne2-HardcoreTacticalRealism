@@ -20,6 +20,7 @@ local U = require("htr.util")
 local G = require("htr.gamedefs")
 local B = require("htr.ballistics")
 local C = require("htr.classify")
+local W = require("htr.wounds")
 local P = G.P
 
 local Pl = { pending = {}, passthrough = false, radialTick = -1, tick = 0, nextAbsorb = 0, owned = false }
@@ -80,9 +81,24 @@ local function computeHit(p, entry, shooter, bone)
     local zone = C.zoneOf(bone, false)
     local maxHP, armor, maxArmor = U.get(p, P.MaxHP, 100), U.get(p, P.Armor, 0), U.get(p, P.MaxArmor, 0)
 
+    -- Wounds in every mode (less often in the Tactical modes, see Wounds.Frequency).
+    local freq = HTR.woundFreq("player")
+    if c.Wounds.Bleeding and caliber and not entry.radial and freq > 0 then
+        local integ = (maxArmor > 0) and (armor / maxArmor) or 0
+        local wPct, _, wPass = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
+            integrity = integ, vitality = c.Realism.PlayerVitality, minPct = 0, rnd = 0.5 })
+        local t = os.clock()
+        local new = W.onHit(U.addr(p), zone, wPct * ff, wPass, t, HTR.sideMultiplier("player") * freq, freq)
+        if new and t > (Pl.woundMsgAt or 0) then
+            Pl.woundMsgAt = t + 8
+            pcall(U.notify, new == "fracture" and ("Broken " .. zone .. " - healing is halved until the nanites fuse the bone")
+                or "You are bleeding - get to cover, the nanites are clotting the wound")
+        end
+    end
+
     if realism and caliber and not entry.radial then
         local integrity = (maxArmor > 0) and (armor / maxArmor) or 0
-        local hpPct, ablation = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
+        local hpPct, ablation, pass = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
             integrity = integrity, vitality = c.Realism.PlayerVitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random() })
         return hpPct / 100 * maxHP * ff, ablation / 100 * maxArmor * ff, "realism", caliber, zone, side
     end
@@ -118,6 +134,7 @@ function Pl.resolve(p, shooter, bone)
     local list = Pl.pending
     Pl.pending = {}
     local hp, armor = U.get(p, P.HP, 0), U.get(p, P.Armor, 0)
+    Pl.lastHurt = os.clock()
     for _, e in ipairs(list) do
         local d, abl, kind, caliber, zone, side = computeHit(p, e, shooter, bone)
         if kind == "pool" then
@@ -164,7 +181,53 @@ function Pl.onShooterProjectileHit(self, proj, hitP)
     Pl.resolve(victim, shooter, bone)
 end
 
--- Hook: ALS_Base_C:ReceiveTick - leftovers and absorb upkeep.
+-- Damage from outside the normal hit path (ship blasts, bleeding). Absolute HP.
+function Pl.applyExternal(p, amount, label)
+    if amount <= 0 or not enabled() then return end
+    local hp, armor = U.get(p, P.HP, 0) - amount, U.get(p, P.Armor, 0)
+    if label ~= "bleeding" then
+        armor = math.max(0, armor - amount * 0.3)
+        Pl.lastHurt = os.clock()
+    end
+    if U.LogHits then U.log(string.format("PLAYER <- %s %.1f => hp %.1f", label, amount, hp)) end
+    if hp <= 0 then
+        if U.get(p, P.GodMode, false) then hp = 1 else kill(p); return end
+    end
+    U.set(p, P.HP, hp)
+    U.set(p, P.Armor, armor)
+    pcall(function() p:RefreshWidgetHP() end)
+end
+
+-- Slow nanotech healing between fights; bleeding blocks it.
+local function regenStep(p, t, dt)
+    local c = cfg()
+    local addr = U.addr(p)
+    if c.Wounds.Bleeding then
+        local pct = W.bleed(addr, t, dt)
+        if pct > 0 then Pl.applyExternal(p, pct / 100 * U.get(p, P.MaxHP, 100), "bleeding") end
+    end
+    local r = c.Regen.Enabled and c.Regen[HTR.mode]
+    if not r then return end
+    local resting = not W.isBleeding(addr, t) and t - (Pl.lastHurt or -1e9) >= r.Delay
+    -- The game heals the player with its own suit stat (HPRecoverRate). HTR scales it per
+    -- mode and pauses it while bleeding or shortly after a hit.
+    local cur = U.get(p, "HPRecoverRate", 0)
+    if Pl.baseRegen == nil or (cur > 0 and math.abs(cur - (Pl.setRegen or -1)) > 1e-4) then
+        Pl.baseRegen = cur -- first look, or the game recomputed the stat (new suit)
+    end
+    local want = resting and Pl.baseRegen * r.HP or 0
+    if W.fracture(addr, t) then want = want * 0.5 end -- broken bone: half healing
+    if math.abs(cur - want) > 1e-4 then U.set(p, "HPRecoverRate", want); Pl.setRegen = want end
+    if not resting then return end
+    local armor, maxArmor = U.get(p, P.Armor, 0), U.get(p, P.MaxArmor, 0)
+    local changed = false
+    if maxArmor > 0 and armor < maxArmor and r.Armor > 0 then
+        U.set(p, P.Armor, math.min(maxArmor, armor + maxArmor * r.Armor / 100 * dt)); changed = true
+    end
+    if changed then pcall(function() p:RefreshWidgetHP() end) end
+end
+
+-- Hook: ALS_Base_C:ReceiveTick - leftovers, absorb upkeep, bleeding, healing.
 function Pl.onTick(self)
     local p = self:get()
     Pl.tick = Pl.tick + 1
@@ -172,11 +235,17 @@ function Pl.onTick(self)
         if G.PlayerClassNames[U.className(p) or ""] then Pl.resolve(p, nil, nil) end
         return
     end
-    local t = os.clock()
-    if t > Pl.nextAbsorb then
-        Pl.nextAbsorb = t + 1.0
-        if G.PlayerClassNames[U.className(p) or ""] then Pl.enforceAbsorb(p) end
-    end
+    local clock = os.clock()
+    if clock < Pl.nextAbsorb then return end
+    Pl.nextAbsorb = clock + 0.25
+    if not G.PlayerClassNames[U.className(p) or ""] then return end
+    Pl.enforceAbsorb(p)
+    Pl.lastPos = U.location(p)
+    if not enabled() then return end
+    local t = os.clock() -- one clock for wounds, healing and hit times
+    local dt = math.min(1.0, t - (Pl.lastStep or t))
+    Pl.lastStep = t
+    if dt > 0 then regenStep(p, t, dt) end
 end
 
 return Pl

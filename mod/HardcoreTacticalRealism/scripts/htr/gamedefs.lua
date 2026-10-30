@@ -76,6 +76,23 @@ for _, guid in ipairs({ "C6643AF84D4AB4342E72C7AF57715CE6", "9DAC8CC648A8DCFEE1B
     G.PlayerProjectileHits[#G.PlayerProjectileHits + 1] = G.HandWeapon .. ":OnProjectileHit_" .. guid
 end
 
+G.Fn.NpcRadial   = G.Shooter .. ":ReceiveRadialDamage"
+G.Fn.SoldierHit  = G.Soldier .. ":ReceivePointDamage"
+-- gamepad: the on-foot "switch camera" action (4 quick presses = HTR mode, crouched = ships toggle)
+G.Fn.PadCamera   = G.ALSBase .. ":InpActEvt_GP_SwitchCamera1_K2Node_EnhancedInputActionEvent_22"
+
+-- Ships vs infantry: your ship's guns and AI ship rounds
+G.ShipGun = "/Game/1Data/Weapons/Turret_Mesh_Actor.Turret_Mesh_Actor_C"
+G.ShipGunHits = {}
+for _, guid in ipairs({ "44CEBFE94D5634B6FCFBF4985AF60A9B", "1D7F31224BA57FF5F279EDAFC609672C", "97ECA7354EDC78711071CF95F79CB4F4",
+    "BD8415344C5BC892F719A28ABD306C47", "98B3A5FC4F97A74FED563FA3F7E5843A", "89D9A10041D68A9FCC09EB917EB9097D" }) do
+    G.ShipGunHits[#G.ShipGunHits + 1] = G.ShipGun .. ":OnProjectileHit_" .. guid
+end
+G.AIShipImpacts = {}
+for _, n in ipairs({ "S_AI_Ammo", "S_AI_Ammo_Capital_Enemy", "S_AI_Ammo_Capital_Enemy1_Ally", "S_AI_Railgun_Ally", "S_AI_Railgun_Enemy" }) do
+    G.AIShipImpacts[#G.AIShipImpacts + 1] = "/Game/1Data/Weapons/N_New_Weapon_Ship/AI_Ammos/" .. n .. "." .. n .. "_C:OnImpact"
+end
+
 -- Properties (names exactly as in the Blueprints; some contain spaces or '?') --
 G.P = {
     -- shooter NPC
