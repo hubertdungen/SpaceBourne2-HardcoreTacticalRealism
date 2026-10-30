@@ -18,7 +18,9 @@ my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
 [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS).
 **Realism set:** [Split Controls](https://github.com/hubertdungen/SpaceBourne2-SplitControls)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/5)) separates the vertical invert for ship
-and on foot, per device. Coming soon: Silent Ops (stealth), Gear Without Levels, Tactical
+and on foot, per device. [Silent Ops](https://github.com/hubertdungen/SpaceBourne2-SilentOps)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/6)) adds stealth, takedowns and suppressors on
+top of HTR's awareness. Coming soon: Gear Without Levels, Tactical
 Engineering, Faction Power, Tactical First Person.
 
 ## Install (2 minutes)
