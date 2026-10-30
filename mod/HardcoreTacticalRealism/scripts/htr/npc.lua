@@ -302,8 +302,15 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     U.set(sol, P.HP, hp)
     if U.LogHits then U.log(string.format("SQUAD %s(%s) <- %s %s zone=%s => %.1f hp (vanilla %.1f)", tostring(U.className(sol)), vside, aside, caliber, zone, dmg, applied)) end
     if hp < 0 then
-        if U.get(sol, "InInjuredMode", false) then pcall(function() sol:Deaded() end)
-        else pcall(function() sol:EnterInjuredMode() end) end
+        -- Tactical: injured first, as vanilla. Realism: headshots and heavy overkill kill
+        -- outright, other lethal hits by chance (Damage.SquadOutrightDeath).
+        local outright = (cfg().Damage.SquadOutrightDeath or {})[HTR.mode] or 0
+        local fatal = HTR.base == "Realism" and (zone == "head" or hp < -0.5 * U.get(sol, P.MaxHP, 100))
+        if U.get(sol, "InInjuredMode", false) or fatal or math.random() < outright then
+            pcall(function() sol:Deaded() end)
+        else
+            pcall(function() sol:EnterInjuredMode() end)
+        end
     end
 end
 

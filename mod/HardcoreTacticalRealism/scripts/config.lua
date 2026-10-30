@@ -42,6 +42,9 @@ return {
         RobotVitality     = 1.2,
         PirateArmorShift  = -1,   -- pirates/raiders wear one armor class less
         ExplosionRadius   = 600,  -- cm; grenade/rocket damage fades to 0 at this distance
+        -- Squad soldiers: chance a lethal hit kills outright instead of "injured first".
+        -- In the Realism modes headshots and heavy overkill always kill outright.
+        SquadOutrightDeath = { ["Tactical"] = 0, ["Tactical Hardcore"] = 0, ["Realism"] = 0.8, ["Realism Hardcore"] = 0.95 },
         HelmetMinPass     = 0.4,  -- no helmet fully stops a headshot: at least 40% gets through
                                   -- (any firearm kills in 1-2 headshots); applies in every mode
     },

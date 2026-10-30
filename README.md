@@ -112,8 +112,10 @@ a tougher body (about 8–9 rifle hits, 3 to the head).
 | Ally → ally, allied turrets | vanilla, max 10 % HP per hit | same |
 | Enemy → enemy, ally ↔ enemy | 100 % (realistic) | same |
 
-Ground turrets fight for their own team. Your squad soldiers now take realistic damage too
-(they go down injured first, as in vanilla).
+Ground turrets fight for their own team. Your squad soldiers now take realistic damage too:
+in the Tactical modes they go down injured first (as vanilla); in the Realism modes headshots
+and heavy overkill kill outright and other lethal hits almost always do (80 % / 95 %), so both
+sides follow the same lethal rules.
 
 ## AI and doctrines
 

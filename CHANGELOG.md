@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-10-30
+
+- Squad soldiers in the Realism modes no longer always go down injured first: headshots and heavy
+  overkill kill outright, other lethal hits by chance (80 % Realism, 95 % Realism Hardcore;
+  `Damage.SquadOutrightDeath`). Tactical modes keep the vanilla injured-first rule.
+
 ## 0.3.0 — 2026-10-30
 
 - Tactical now keeps the damage you and your allies take between 100 % and 150 % of vanilla

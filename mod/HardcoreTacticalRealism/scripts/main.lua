@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.3.0"
+local VERSION = "0.3.1"
 
 local U = require("htr.util")
 
@@ -39,6 +39,7 @@ default(cfg.Damage, "GlobalToNPCs", 1.0); default(cfg.Damage, "MinPercentPerHit"
 default(cfg.Damage, "BossVitality", 1.8); default(cfg.Damage, "TankVitality", 2.0)
 default(cfg.Damage, "RobotVitality", 1.2); default(cfg.Damage, "PirateArmorShift", -1)
 default(cfg.Damage, "HelmetMinPass", 0.4); default(cfg.Damage, "ExplosionRadius", 600)
+default(cfg.Damage, "SquadOutrightDeath", { ["Tactical"] = 0, ["Tactical Hardcore"] = 0, ["Realism"] = 0.8, ["Realism Hardcore"] = 0.95 })
 require("htr.ballistics").HeadMinPass = cfg.Damage.HelmetMinPass
 cfg.Wounds = cfg.Wounds or {}
 default(cfg.Wounds, "Bleeding", true)
