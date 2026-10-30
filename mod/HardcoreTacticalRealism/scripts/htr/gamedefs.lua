@@ -110,6 +110,16 @@ G.P = {
     Mercenary = "IsMercinerySubClassSetted", Cyborg = "CyborgModeOn?", Weapon = "CurrentWeapon",
     MeleeOn = "MeleeAttackOn?", MeleeWeapon = "As Master Melee Weapon",
 }
+-- Item data (S_Item_Data) of the player's weapon and suit, read by the optional gear bonus
+G.Item = {
+    WeaponData    = "Weapon_Data",                                  -- Master_Hand_Weapon_C (S_Equiped_HandWeapon)
+    WeaponItem    = "ItemData_2_DAF7632548C524437769A9884E99CE86",  -- S_Equiped_HandWeapon -> S_Item_Data
+    CharacterData = "CharacterData",                                -- Q1_Character_C (S_Character_Data_1)
+    SuitItem      = "ArmorData_48_7F9011B443DE8EDE80BF42ADE651F30B", -- S_Character_Data_1 -> equipped suit
+    Level         = "ItemLevel_32_36C68C8841BC84733BDEE38AC9296BF6", -- 1..99
+    Rarity        = "ItemTier_31_620BE1F64621359F21DE589574539BBB",  -- 1 common .. 4
+}
+
 -- Blackboard keys used by the shooter behaviour trees
 G.BB = { JustGotDamage = "JustGotDamage", FirstInteract = "IsFirstInteract", InCover = "InCover?", InCombat = "InCombat?" }
 

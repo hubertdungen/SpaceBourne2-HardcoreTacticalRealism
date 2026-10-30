@@ -75,6 +75,28 @@ return {
         ["Realism Hardcore"]  = { Delay = 15, HP = 0.12, Armor = 0.3 },
     },
 
+    -- Gear bonus (OFF by default; F8 toggles in game, remembered). For a light RPG feel:
+    -- weapon and armor level (and item rarity) add a SMALL extra on top of the ballistics.
+    -- They never decide whether a weapon works: a level 5 rifle still drops a level 60
+    -- raider in a few hits, just one more than a level 60 rifle would need.
+    --   quality = log(level) / log(MaxLevel): level 1 = 0, 10 = 56 %, 30 = 83 %, MaxLevel = 100 %
+    --   weapon: up to +WeaponPen penetration points and +WeaponDamage damage
+    --   armor:  up to +ArmorRating protection points and ArmorWear less wear (only where there is armor)
+    -- Levels: your weapon and suit items (each rarity step above common counts as RarityLevels
+    -- levels), NPCs and turrets their own level, squad soldiers your level. Works the same for
+    -- both sides, so it also fits the Realism modes; switch it off per mode in Modes.
+    GearBonus = {
+        Enabled      = false,
+        ToggleKey    = "F8",
+        MaxLevel     = 60,
+        RarityLevels = 5,
+        WeaponPen    = 8,     -- armor ratings are light 35, medium 50, heavy 64, power 72
+        WeaponDamage = 0.15,  -- +15 %
+        ArmorRating  = 8,
+        ArmorWear    = 0.25,  -- 25 % less wear
+        Modes = { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true },
+    },
+
     -- Ships vs infantry: ship guns (yours and AI ships') hit people on foot.
     Ships = {
         Enabled         = true,  -- starting state; F9 toggles in game (remembered)

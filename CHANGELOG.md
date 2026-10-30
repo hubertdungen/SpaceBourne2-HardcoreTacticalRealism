@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 — 2026-10-30
+
+- **Optional gear bonus (F8, off by default).** For a light RPG feel: weapon and armor level and
+  item rarity add a small extra on top of the ballistics — up to +8 penetration and +15 % damage
+  for weapons, up to +8 protection and 25 % less wear for armor, with diminishing returns
+  (level 10 ≈ half, level 60 = full). Your weapon item, NPC and turret levels, your level for your
+  suit and squad. Same rules for both sides; can be switched off per mode (`GearBonus` in config).
+- **Ground turrets** now hit like heavy emplaced guns (one round every 1.5 s; one hit kills an
+  unarmored target, two through armor). Before, each turret round did less than a rifle bullet.
+- Measured in game with the gear bonus on: same frame times as without mods.
+
 ## 0.3.2 — 2026-10-30 (performance fix — please update)
 
 - **Fixed the freezes when shooting.** Every hit of yours (suppression), every hit on an enemy

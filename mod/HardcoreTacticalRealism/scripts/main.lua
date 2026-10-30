@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.3.2"
+local VERSION = "0.4.0"
 
 local U = require("htr.util")
 
@@ -64,6 +64,12 @@ default(cfg.FriendlyFire, "PlayerToAlly", { Tactical = 0.35, Realism = 1.0 })
 default(cfg.FriendlyFire, "AllyToPlayer", { Tactical = 0.35, Realism = 1.0 })
 default(cfg.FriendlyFire, "AllyToAllyCapPercent", 10); default(cfg.FriendlyFire, "EnemyToEnemy", 1.0)
 default(cfg.Debug, "Log", false); default(cfg.Debug, "LogHits", false); default(cfg.Debug, "SlowHookMs", 8)
+cfg.GearBonus = cfg.GearBonus or {}
+default(cfg.GearBonus, "Enabled", false); default(cfg.GearBonus, "ToggleKey", "F8")
+default(cfg.GearBonus, "MaxLevel", 60); default(cfg.GearBonus, "RarityLevels", 5)
+default(cfg.GearBonus, "WeaponPen", 8); default(cfg.GearBonus, "WeaponDamage", 0.15)
+default(cfg.GearBonus, "ArmorRating", 8); default(cfg.GearBonus, "ArmorWear", 0.25)
+default(cfg.GearBonus, "Modes", { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true })
 
 U.Verbose = cfg.Debug.Log
 U.LogHits = cfg.Debug.LogHits
@@ -122,18 +128,23 @@ end
 
 HTR.setMode(loadMode())
 
--- Ships vs infantry on/off (F9), remembered in state.txt.
+-- Ships vs infantry (F9) and gear bonus (F8) on/off, remembered in state.txt.
 do
     local f = io.open(STATE, "r")
     local s = f and f:read("a") or ""
     if f then f:close() end
     local v = s:match("ships=(%a+)")
     if v then HTR.shipsOn = (v == "on") else HTR.shipsOn = cfg.Ships.Enabled end
+    local g = s:match("gear=(%a+)")
+    if g then HTR.gearOn = (g == "on") else HTR.gearOn = cfg.GearBonus.Enabled == true end
 end
 
 local function saveState()
     local f = io.open(STATE, "w")
-    if f then f:write("mode=" .. HTR.mode .. "\nships=" .. (HTR.shipsOn and "on" or "off") .. "\n"); f:close() end
+    if f then
+        f:write("mode=" .. HTR.mode .. "\nships=" .. (HTR.shipsOn and "on" or "off") .. "\ngear=" .. (HTR.gearOn and "on" or "off") .. "\n")
+        f:close()
+    end
 end
 
 local H = require("htr.hooks")
@@ -143,7 +154,8 @@ local N = require("htr.npc")
 local Pl = require("htr.player")
 local S = require("htr.ships")
 
-U.log(string.format("=== HTR %s loaded, mode=%s ===", VERSION, HTR.mode))
+U.log(string.format("=== HTR %s loaded, mode=%s, ships=%s, gear bonus=%s ===", VERSION, HTR.mode, tostring(HTR.shipsOn),
+    tostring(HTR.gearOn)))
 
 -- Hooks ----------------------------------------------------------------------
 H.add(G.Fn.NpcCalculateStats, N.onCalculateStats, "NPC stats")
@@ -243,6 +255,17 @@ local function toggleShips(ctx)
         or "HTR: SHIPS VS INFANTRY OFF - ship guns ignore people on foot (vanilla)", ctx)
 end
 
+local function toggleGear(ctx)
+    HTR.gearOn = not HTR.gearOn
+    saveState()
+    U.warn("gear bonus " .. (HTR.gearOn and "ON" or "OFF"))
+    local g = cfg.GearBonus
+    pcall(U.notify, HTR.gearOn and string.format(
+        "HTR: GEAR BONUS ON - weapon and armor level give a small extra (up to +%d penetration, +%d%% damage, +%d protection)",
+        g.WeaponPen, math.floor(g.WeaponDamage * 100 + 0.5), g.ArmorRating)
+        or "HTR: GEAR BONUS OFF - only caliber, armor and hit zone count", ctx)
+end
+
 local function bindKey(name, fn)
     if name and name ~= "" and Key and Key[name] then
         RegisterKeyBind(Key[name], function() ExecuteInGameThread(fn) end)
@@ -250,6 +273,7 @@ local function bindKey(name, fn)
 end
 bindKey(cfg.ToggleModeKey, cycleMode)
 bindKey(cfg.Ships.ToggleKey, toggleShips)
+bindKey(cfg.GearBonus.ToggleKey, toggleGear)
 
 -- Gamepad: 4 quick presses of "switch camera" cycle the mode (crouched: ships toggle).
 -- Four presses leave the camera where it was.

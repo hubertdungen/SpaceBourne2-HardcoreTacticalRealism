@@ -21,6 +21,7 @@ local G = require("htr.gamedefs")
 local B = require("htr.ballistics")
 local C = require("htr.classify")
 local W = require("htr.wounds")
+local GB = require("htr.gear")
 local P = G.P
 
 local Pl = { pending = {}, passthrough = false, radialTick = -1, tick = 0, nextAbsorb = 0, owned = false }
@@ -80,13 +81,17 @@ local function computeHit(p, entry, shooter, bone)
     if side == "ally" and c.Features.FriendlyFireRules then ff = ff * HTR.ff(c.FriendlyFire.AllyToPlayer) end
     local zone = C.zoneOf(bone, false)
     local maxHP, armor, maxArmor = U.get(p, P.MaxHP, 100), U.get(p, P.Armor, 0), U.get(p, P.MaxArmor, 0)
+    -- optional gear bonus: the shooter's weapon level vs your suit's level (0 when off)
+    local wq, aq = 0, 0
+    if caliber and GB.active() then wq, aq = GB.weapon(shooter), GB.suit(p) end
+    Pl.lastGear = string.format("gear w%.2f a%.2f", wq, aq)
 
     -- Wounds in every mode (less often in the Tactical modes, see Wounds.Frequency).
     local freq = HTR.woundFreq("player")
     if c.Wounds.Bleeding and caliber and not entry.radial and freq > 0 then
         local integ = (maxArmor > 0) and (armor / maxArmor) or 0
-        local wPct, _, wPass = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
-            integrity = integ, vitality = c.Realism.PlayerVitality, minPct = 0, rnd = 0.5 })
+        local wPct, _, wPass = B.compute(GB.apply({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
+            integrity = integ, vitality = c.Realism.PlayerVitality, minPct = 0, rnd = 0.5 }, wq, aq))
         local t = os.clock()
         local new = W.onHit(U.addr(p), zone, wPct * ff, wPass, t, HTR.sideMultiplier("player") * freq, freq)
         if new and t > (Pl.woundMsgAt or 0) then
@@ -98,8 +103,8 @@ local function computeHit(p, entry, shooter, bone)
 
     if realism and caliber and not entry.radial then
         local integrity = (maxArmor > 0) and (armor / maxArmor) or 0
-        local hpPct, ablation, pass = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
-            integrity = integrity, vitality = c.Realism.PlayerVitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random() })
+        local hpPct, ablation, pass = B.compute(GB.apply({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
+            integrity = integrity, vitality = c.Realism.PlayerVitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random() }, wq, aq))
         return hpPct / 100 * maxHP * ff, ablation / 100 * maxArmor * ff, "realism", caliber, zone, side
     end
     local d
@@ -150,8 +155,8 @@ function Pl.resolve(p, shooter, bone)
             armor = math.max(0, armor - (abl or 0))
         end
         if U.LogHits then
-            U.log(string.format("PLAYER <- %s %s zone=%s raw=%.1f mode=%s => hp %.1f armor %.1f", tostring(side), tostring(caliber),
-                tostring(zone), e.raw, HTR.mode, hp, armor))
+            U.log(string.format("PLAYER <- %s %s zone=%s raw=%.1f mode=%s %s => hp %.1f armor %.1f", tostring(side), tostring(caliber),
+                tostring(zone), e.raw, HTR.mode, tostring(Pl.lastGear), hp, armor))
         end
         shooter, bone = nil, nil -- only the first queued hit belongs to this projectile
     end
@@ -248,6 +253,7 @@ function Pl.onTick(self)
     end
     if pos and not Pl.lastPos then HTR.wakeHooks = true end -- first step on foot: register the rest quickly
     Pl.lastPos = pos
+    HTR.playerLevel = U.get(p, P.PlayerLevel, HTR.playerLevel or 1) -- squad / turret gear level (gear bonus)
     if not enabled() then return end
     local t = os.clock() -- one clock for wounds, healing and hit times
     local dt = math.min(1.0, t - (Pl.lastStep or t))

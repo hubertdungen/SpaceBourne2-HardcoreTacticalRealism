@@ -42,7 +42,7 @@ B.Calibers = {
     npc_boss      = { dmg = 55,  pen = 50 },
     npc_melee     = { dmg = 65,  pen = 50, melee = true },
     squad_rifle   = { dmg = 52,  pen = 42 },
-    turret        = { dmg = 45,  pen = 52 }, -- ground turrets (team battles, bases)
+    turret        = { dmg = 100, pen = 72 }, -- ground turrets: heavy emplaced gun, one round every ~1.5 s
     explosion     = { dmg = 150, pen = 60, tick = true }, -- grenades/rockets at the blast centre
     ship          = { dmg = 300, pen = 95, tick = true }, -- ship guns hitting infantry
     generic       = { dmg = 50,  pen = 40 },
@@ -82,6 +82,7 @@ end
   args: caliber (key), zone, armor (class key), hasHelmet (bool),
         integrity (0..1 armor condition), vitality (body multiplier),
         minPct (floor per hit, % of body), rnd (0..1 random)
+        optional gear bonus (gear.lua): penBonus, dmgMult, ratingBonus, wearMult
   returns hpPct (% of max HP to remove), ablationPct (% of armor condition lost), pass
 ]]
 function B.compute(a)
@@ -89,18 +90,22 @@ function B.compute(a)
     local cls = a.ratings or B.Armor[a.armor] or B.Armor.none
     local zone = a.zone or "unknown"
     local zm = B.Zones[zone] or B.Zones.unknown
+    local limb = (zone == "arm" or zone == "leg")
     local rating
     if zone == "head" then
         rating = a.hasHelmet and cls.helmet or 0
-    elseif zone == "arm" or zone == "leg" then
+    elseif limb then
         rating = cls.body * B.LimbFactor
     else
         rating = cls.body
     end
+    if rating > 0 and a.ratingBonus then -- better-made armor, only where there is armor
+        rating = rating + a.ratingBonus * (limb and B.LimbFactor or 1)
+    end
     local integrity = math.max(0, math.min(1, a.integrity or 1))
     rating = rating * (0.35 + 0.65 * integrity) -- damaged armor protects less
-    local raw = cal.dmg * zm * (0.9 + 0.2 * (a.rnd or 0.5))
-    local pass = B.passFraction(cal.pen, rating)
+    local raw = cal.dmg * zm * (0.9 + 0.2 * (a.rnd or 0.5)) * (a.dmgMult or 1)
+    local pass = B.passFraction(cal.pen + (a.penBonus or 0), rating)
     if zone == "head" and not cal.tick and pass < B.HeadMinPass then pass = B.HeadMinPass end
     local eff = raw * pass
     local minPct = a.minPct or 10
@@ -109,7 +114,7 @@ function B.compute(a)
     if eff < minPct then eff = minPct end
     local hpPct = eff / math.max(0.1, a.vitality or 1)
     local ablation = 0
-    if rating > 0 then ablation = raw * (1 - pass) * B.Ablation end
+    if rating > 0 then ablation = raw * (1 - pass) * B.Ablation * (a.wearMult or 1) end
     return hpPct, ablation, pass
 end
 

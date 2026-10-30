@@ -9,6 +9,7 @@ local C = require("htr.classify")
 local DOC = require("htr.doctrines")
 local W = require("htr.wounds")
 local S = require("htr.ships")
+local GB = require("htr.gear")
 local P, BB = G.P, G.BB
 
 local N = { state = {}, count = 0, aimWrite = nil, pos = {} }
@@ -83,7 +84,7 @@ function N.ensure(npc)
     if st then return st end
     if N.count > 600 then N.state = {}; N.count = 0 end -- keep memory bounded
     local cn = U.className(npc)
-    st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn }
+    st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1) }
     st.armor, st.helmet, st.vitality = C.protectionOf(npc, cn, cfg())
     N.state[a] = st
     N.count = N.count + 1
@@ -172,10 +173,11 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
 
     local armor, maxArmor = U.get(npc, P.Armor, 0), U.get(npc, P.MaxArmor, 0)
     local integrity = (maxArmor > 0) and (armor / maxArmor) or 1.0
-    local hpPct, ablation, pass = B.compute({
+    local wq, aq = GB.weapon(attacker), GB.npcArmor(st) -- optional gear bonus (0 when off)
+    local hpPct, ablation, pass = B.compute(GB.apply({
         caliber = caliber, zone = zone, armor = st.armor, hasHelmet = st.helmet, integrity = integrity,
         vitality = st.vitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random(),
-    })
+    }, wq, aq))
     if c.Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
         W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side), HTR.woundFreq(st.side))
     end
@@ -199,8 +201,8 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     end
     out:set(dmg)
     if U.LogHits then
-        U.log(string.format("HIT %s(%s) <- %s %s zone=%s bone=%s armor=%s cond=%.2f => %.1f%% (%.1f hp, vanilla %.1f)",
-            tostring(st.cn), st.doctrine, aside, caliber, zone, bone, st.armor, integrity, hpPct * f, dmg, vanilla))
+        U.log(string.format("HIT %s(%s L%s) <- %s %s zone=%s bone=%s armor=%s cond=%.2f gear w%.2f a%.2f => %.1f%% (%.1f hp, vanilla %.1f)",
+            tostring(st.cn), st.doctrine, tostring(st.level), aside, caliber, zone, bone, st.armor, integrity, wq, aq, hpPct * f, dmg, vanilla))
     end
 end
 
@@ -289,8 +291,8 @@ function N.onRadial(self, dmgP, dtypeP, originP, hitP, instigP, causerP)
     local o = originP:get()
     local d = U.dist({ X = o.X, Y = o.Y, Z = o.Z }, U.location(npc))
     local falloff = math.max(0, 1 - d / cfg().Damage.ExplosionRadius)
-    local pct = B.compute({ caliber = "explosion", zone = "torso", armor = st.armor, hasHelmet = st.helmet,
-        integrity = 1, vitality = st.vitality, minPct = 0, rnd = math.random() }) * falloff
+    local pct = B.compute(GB.apply({ caliber = "explosion", zone = "torso", armor = st.armor, hasHelmet = st.helmet,
+        integrity = 1, vitality = st.vitality, minPct = 0, rnd = math.random() }, 0, GB.npcArmor(st))) * falloff
     hp = hp - pct / 100 * maxHP * sideFactor(aside, st.side)
     U.set(npc, P.HP, math.max(0, hp))
     if U.LogHits then U.log(string.format("BLAST %s <- %s d=%.0f => %.1f%%", tostring(st.cn), aside, d, pct)) end
@@ -324,8 +326,9 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     end
     local zone = C.zoneOf((function() local ok, s = pcall(function() return boneP:get():ToString() end); return ok and s or "None" end)(), false)
     local caliber = C.caliberOf(attacker, aside, acn, sol)
-    local hpPct = B.compute({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
-        hasHelmet = true, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() })
+    local hpPct = B.compute(GB.apply({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
+        hasHelmet = true, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() },
+        GB.weapon(attacker), GB.soldierArmor()))
     local dmg = hpPct / 100 * U.get(sol, P.MaxHP, 100) * sideFactor(aside, vside) / HTR.sideMultiplier(vside)
     if vside == "ally" and aside == "enemy" and HTR.base == "Tactical" then
         dmg = U.clamp(dmg, applied * cfg().Tactical.MinIncomingVsVanilla, applied * cfg().Tactical.MaxIncomingVsVanilla)

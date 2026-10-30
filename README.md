@@ -42,6 +42,7 @@ HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). 
 | Key | What it does |
 |---|---|
 | **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
+| **F8** | Gear bonus on/off (off by default; see below) |
 | **F9** | Ships vs infantry on/off (shown on the HUD) |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
 
@@ -60,7 +61,8 @@ Enemies always use the realistic model.
 
 ## Damage model
 
-- Damage = **caliber vs armor + hit zone**. NPC level, weapon level and rarity no longer matter.
+- Damage = **caliber vs armor + hit zone**. NPC level, weapon level and rarity no longer matter
+  (unless you switch on the small optional gear bonus, F8).
 - Unarmored targets drop in **1–2 rifle hits**, heavy armor in **5–6**, power armor and
   robots in **6–8**. Snipers kill almost anything in one hit; melee kills in one or two blows.
 - **Headshots** kill a bare head with any firearm, and **no helmet stops a headshot
@@ -81,7 +83,35 @@ Enemies always use the realistic model.
 | Knife / Sword / Hammer | 1 | 1 | 2 / 1 / 1 | 2 / 2 / 1 | 3 / 2 / 2 |
 
 Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have
-a tougher body (about 8–9 rifle hits, 3 to the head).
+a tougher body (about 8–9 rifle hits, 3 to the head). Ground turrets (team battles, bases) are
+heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through
+any armor.
+
+## Gear bonus (optional, F8 — off by default)
+
+For players who still like a bit of RPG feel. With the gear bonus on, weapon and armor **level**
+(and item rarity) add a **small extra** on top of the ballistics — they never decide whether a
+weapon works. A level 5 rifle still drops a level 60 raider in a few hits; a level 60 rifle just
+needs one hit fewer.
+
+- **Weapon:** up to +8 penetration points and +15 % damage.
+- **Armor:** up to +8 protection points and 25 % less wear (only where there is armor).
+- **Scale:** diminishing returns — level 1 gives nothing, level 10 gives 56 % of the bonus,
+  level 30 gives 83 %, level 60 the full bonus. Each rarity step above common counts as 5 levels.
+- **Whose level:** your weapon item and your level for your suit; NPCs and turrets their own
+  level; squad soldiers your level. It works the same for both sides, so it also fits the
+  Realism modes (you can switch it off per mode in `config.lua`). In the Tactical modes the damage
+  you and your allies take stays at 100–150 % of vanilla, so there the bonus mostly changes the
+  damage your side deals.
+
+| Rifle vs heavy armor, hits to kill | armor L1 | armor L10 | armor L30 | armor L60 |
+|---|---|---|---|---|
+| Rifle L1 | 5 | 6 | 6 | 6 |
+| Rifle L10 | 4 | 5 | 5 | 5 |
+| Rifle L30 | 4 | 4 | 5 | 5 |
+| Rifle L60 | 4 | 4 | 4 | 5 |
+
+Gear bonus off (the default) = the tables above, for every level.
 
 ## Wounds and healing
 
@@ -144,8 +174,8 @@ can hold a firefight instead of dropping as soon as they show up.
 
 `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua` (open with Notepad,
 restart the game after saving): mode and keys, every feature on/off, Hardcore multiplier,
-helmet rule, wounds and healing per mode, ships vs infantry strength, friendly fire,
-boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
+helmet rule, wounds and healing per mode, gear bonus strength, ships vs infantry strength,
+friendly fire, boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
 and `htr\doctrines.lua` (how each kind of NPC fights).
 
 ## Known limitations

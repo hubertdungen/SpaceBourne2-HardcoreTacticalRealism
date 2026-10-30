@@ -12,6 +12,8 @@ local B = require("htr.ballistics")
 local C = require("htr.classify")
 local P = G.P
 
+local GB = require("htr.gear")
+
 local S = {}
 
 local function cfg() return HTR.cfg.Ships end
@@ -30,8 +32,8 @@ function S.hurtShooter(N, npc, pct, side)
     if side == "ally" and st.side == "ally" and HTR.cfg.Features.FriendlyFireRules then
         f = f * HTR.ff(HTR.cfg.FriendlyFire.PlayerToAlly)
     end
-    local hp = B.compute({ caliber = "ship", zone = "torso", armor = st.armor, hasHelmet = st.helmet,
-        integrity = 1, vitality = st.vitality, minPct = 0, rnd = 0.5 })
+    local hp = B.compute(GB.apply({ caliber = "ship", zone = "torso", armor = st.armor, hasHelmet = st.helmet,
+        integrity = 1, vitality = st.vitality, minPct = 0, rnd = 0.5 }, 0, GB.npcArmor(st)))
     local loss = hp * (pct / B.Calibers.ship.dmg) / 100 * U.get(npc, P.MaxHP, 100) * f
     local left = U.get(npc, P.HP, 0) - loss
     U.set(npc, P.HP, math.max(0, left))
