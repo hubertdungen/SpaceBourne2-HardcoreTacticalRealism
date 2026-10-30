@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.4.2 — 2026-10-30
+
+- **Enemies (pirates most of all) spent fights running instead of shooting back.** Every hit
+  could send an NPC sprinting for cover again (50–100 % chance by doctrine, plus near misses),
+  with no pause between reactions, so under sustained fire it was always on the move. Now an
+  NPC that broke for cover fights from there for a while (5–8 s by doctrine) before it can be
+  sent running again.
+- NPCs also resume firing as soon as they aim at you again: vanilla only starts an NPC's fire
+  at the moment it first spots you while aiming. Same for companions.
+- Pirates break less easily: retreat below 30 % HP (was 45 %), panic chance 25 % (was 35 %).
+- **Robots never bleed**, but heavy hits can still wreck an arm (shaky aim) or a leg.
+- **Squad soldiers bleed** like everyone else; once down, the game's bleed-out timer and medics
+  take over as before.
+- **Squad keeps up:** vanilla squad soldiers walk after you and teleport next to you once 30 m
+  behind ("spawning out of nowhere"). They now run beyond 6 m and sprint beyond 15 m, so only a
+  stuck soldier still teleports (`Squad` in config).
+- **Slow perks (new, on by default, F11):** on foot, perk energy refills 4x slower and the
+  turret / barricade / ground-slam / auto-revive cooldowns run 4x slower (`Perks` in config).
+- **Situational awareness (new):** relaxed enemies notice you only up close (55 % of their
+  sight range); alert ones spot and shoot farther (125 %) (`Awareness` in config).
+- Tested in game: enemies kept firing back after diving for cover and under 20 s of sustained
+  fire; perk energy regen 4x slower on foot; detection 45 m → 56 m once alert. Frame times with
+  HTR 0.4.2: on foot 105 fps, 99 % of frames under 20 ms, worst 29 ms; in space 120 fps, worst
+  38 ms; no periodic stutter. (A stutter every 1 s found during testing comes from SB2 HOTAS
+  0.3.0's triple-monitor HUD option, not HTR; reported to that mod.)
+
 ## 0.4.1 — 2026-10-30
 
 - **Fixed: no on-screen message when pressing F7 / F8 / F9** (and for bleeding / broken bones).

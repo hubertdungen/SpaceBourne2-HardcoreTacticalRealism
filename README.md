@@ -12,6 +12,14 @@ Inspired by Cyberpunk 2077 *Hardcore Realism*, Fallout: New Vegas *Realistic Com
 Overhaul* and *NPC AI Improvement* (no code from those mods is used). Works together with
 my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
 
+**Links:** [GitHub](https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism) ·
+[Nexus Mods](https://www.nexusmods.com/games/spacebourne2/mods/4) ·
+[Steam discussion](https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/) ·
+[SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS).
+More realism mods for SpaceBourne 2 are in the works (engineering turrets, tactical first
+person, stealth, gear at any level, faction power, split ship/foot invert); they will be
+linked here as they come out.
+
 ## Install (2 minutes)
 
 HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). Pick one:
@@ -44,9 +52,17 @@ HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). 
 | **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
 | **F8** | Gear bonus on/off (off by default; see below) |
 | **F9** | Ships vs infantry on/off (shown on the HUD) |
+| **F11** | Slow perks on/off (on by default; see below) |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
 
-Both choices are remembered between sessions. Keys can be changed in `config.lua`.
+All choices are remembered between sessions. Keys can be changed in `config.lua`.
+
+## Perks (F11 — slow by default)
+
+With realistic damage, perks such as the turret, barricade, ground slam, shield or slow time
+turn into super powers. HTR makes the suit's perk energy refill **4x slower on foot** and the
+turret / barricade / ground-slam / auto-revive cooldowns run 4x slower, so a perk is a tactical
+tool you save for the right moment. Ship energy is not affected. F11 switches back to vanilla.
 
 ## Modes
 
@@ -119,6 +135,9 @@ Gear bonus off (the default) = the tables above, for every level.
   15–25 s until the suit's nanites clot it (up to 3 wounds at once). Bleeding stops healing.
 - **Broken bones:** a heavy hit to an arm or leg can break it. NPCs with a broken arm aim
   badly; for you, healing is halved until the nanites fuse the bone (about a minute).
+- **Robots** never bleed, but a heavy hit can still wreck an arm (shaky aim) or a leg.
+- **Squad soldiers** bleed too; once they go down, the game's own bleed-out timer takes over
+  and a medic (or you) can still bring them back.
 - Enemies get wounded in every mode. You and your allies get wounded rarely in Tactical,
   more in Tactical Hardcore, and fully in Realism; Hardcore modes bleed twice as fast.
 - **Healing:** your suit's own healing is kept but slowed by mode — Tactical 70 %, Tactical
@@ -155,7 +174,14 @@ can hold a firefight instead of dropping as soon as they show up.
   and centre-mass aim instead of vanilla's random feet/above-the-head points.
 - Vanilla behaviour that never triggered now works: breaking line of sight when hit, falling
   back when badly hurt, calling allies, peeking from cover every 2.5 s instead of 5 s.
+- **NPCs keep fighting:** an NPC that dives for cover fights from there for a few seconds
+  before your fire can send it running again (no more enemies that only run under fire), and it
+  resumes firing as soon as it aims at you again.
+- **Your squad keeps up:** vanilla squad soldiers walk, fall behind and then teleport next to
+  you. HTR makes them run and sprint after you, so only a stuck soldier still teleports.
 - **Suppression:** your rounds landing close make enemies duck and shoot worse.
+- **Situational awareness:** relaxed enemies (no fight yet) only notice you up close; once
+  alert (they spotted you, got hit or were warned) they spot and shoot much farther.
 - **Arrival grace:** after an elevator ride, a new dungeon floor or a level load, and for
   freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody
   gets massacred the moment a floor loads.
@@ -163,7 +189,7 @@ can hold a firefight instead of dropping as soon as they show up.
 
 | Doctrine | Who | How they fight |
 |---|---|---|
-| Pirate | raiders, salvagers | slow, spray, wide spread, panic when mates die, flee early |
+| Pirate | raiders, salvagers | slow, spray, wide spread, may panic when mates die or flee when badly hurt |
 | Militia | low-tier troops | better than pirates, still sloppy |
 | Regular | standard faction troops | quick, accurate, cover, grenades |
 | Elite | high-tier troops, guards, bosses | fastest reactions, tight aim, grenades, alert the area |
@@ -175,7 +201,7 @@ can hold a firefight instead of dropping as soon as they show up.
 `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua` (open with Notepad,
 restart the game after saving): mode and keys, every feature on/off, Hardcore multiplier,
 helmet rule, wounds and healing per mode, gear bonus strength, ships vs infantry strength,
-friendly fire, boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
+perk speed, enemy awareness ranges, squad pace, friendly fire, boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
 and `htr\doctrines.lua` (how each kind of NPC fights).
 
 ## Known limitations

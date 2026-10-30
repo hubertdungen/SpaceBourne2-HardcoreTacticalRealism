@@ -19,7 +19,8 @@ local ZONE = {
 local MAX_WOUNDS = 3
 
 -- Called for every hit. Returns "bleed" / "fracture" / nil (what is new).
-function W.onHit(key, zone, hpPct, pass, t, scale, freq)
+-- noBleed: machines (robots) never bleed, but a heavy limb hit still wrecks the arm or leg.
+function W.onHit(key, zone, hpPct, pass, t, scale, freq, noBleed)
     freq = freq or 1
     if not key or hpPct <= 0 then return nil end
     local s = W.list[key]
@@ -29,7 +30,7 @@ function W.onHit(key, zone, hpPct, pass, t, scale, freq)
         s.fracture, s.fractureUntil = zone, t + 60 -- nanites fuse the bone in about a minute
         new = "fracture"
     end
-    if pass >= 0.5 and hpPct >= 12 then
+    if not noBleed and pass >= 0.5 and hpPct >= 12 then
         local chance = math.min(0.8, math.max(0.25, hpPct / 100)) * freq
         if math.random() < chance then
             local z = ZONE[zone] or ZONE.unknown

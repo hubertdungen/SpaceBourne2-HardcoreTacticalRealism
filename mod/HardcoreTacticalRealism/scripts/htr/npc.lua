@@ -84,7 +84,8 @@ function N.ensure(npc)
     if st then return st end
     if N.count > 600 then N.state = {}; N.count = 0 end -- keep memory bounded
     local cn = U.className(npc)
-    st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1) }
+    st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1),
+        robot = U.get(npc, P.Robot, false) or cn == "Q1_Shooter_Robot_C" }
     st.armor, st.helmet, st.vitality = C.protectionOf(npc, cn, cfg())
     N.state[a] = st
     N.count = N.count + 1
@@ -96,6 +97,31 @@ end
 
 local function setExtent(eye, prop, dist)
     return pcall(function() eye[prop].Distance = dist end)
+end
+
+--[[ Situational awareness. A relaxed enemy (no fight yet) notices you only up close;
+     once alert (blackboard InCombat?, set by the game when it spots you, gets hit or is
+     warned by a mate) it scans, spots and shoots much farther. Allies stay alert.
+     Switched from the 1 Hz think, only when the state changes. ]]
+local function setAwareness(npc, st, alert)
+    st.alert = alert
+    local aw, d = cfg().Awareness, doctrine(st)
+    local sight = d.sight * (alert and aw.AlertSight or aw.RelaxedSight)
+    if U.get(npc, P.Sniper, false) and alert then sight = math.max(sight, d.sight * 2) end
+    local eye, rifle = U.get(npc, P.EyeSight, nil), U.get(npc, P.EyeRifle, nil)
+    if U.valid(eye) then
+        setExtent(eye, "DetectPyramidExtent", sight)
+        setExtent(eye, "LostPyramidExtent", sight + 500)
+    end
+    if U.valid(rifle) then
+        setExtent(rifle, "DetectPyramidExtent", sight)
+        setExtent(rifle, "LostPyramidExtent", sight + 300)
+    end
+    if U.Verbose then U.log(string.format("%s %s: sight %.0f m", tostring(st.cn), alert and "alert" or "relaxed", sight / 100)) end
+end
+
+local function awarenessOn(st)
+    return feat("SmarterAI") and cfg().Awareness.Enabled and st.side == "enemy"
 end
 
 -- One-time per NPC: armor model handover, ballistics and doctrine values.
@@ -132,6 +158,7 @@ function N.applyTuning(npc, st)
             setExtent(rifle, "DetectPyramidExtent", d.sight)
             setExtent(rifle, "LostPyramidExtent", d.sight + 300)
         end
+        if awarenessOn(st) then setAwareness(npc, st, U.bbGetBool(npc, BB.InCombat) == true) end
     end
 end
 
@@ -179,7 +206,8 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
         vitality = st.vitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random(),
     }, wq, aq))
     if c.Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
-        W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side), HTR.woundFreq(st.side))
+        W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side), HTR.woundFreq(st.side),
+            st.robot)
     end
 
     local f = c.Damage.GlobalToNPCs
@@ -224,7 +252,11 @@ function N.onReceivePoint(self)
     if not st then return end
     local d = doctrine(st)
     local t = U.now(npc)
-    if math.random() < d.reactToHits then
+    -- One "break line of sight" at a time: after diving for cover an NPC fights from there for
+    -- a while. Without this, sustained fire re-triggered it on every hit and NPCs (pirates most)
+    -- spent the whole fight sprinting instead of shooting back.
+    if (st.reactAt or 0) < t and math.random() < d.reactToHits then
+        st.reactAt = t + (d.reactEvery or 6)
         -- re-enable the "hit -> break line of sight" branches of the behaviour tree
         U.bbSetBool(npc, BB.FirstInteract, false)
         U.bbSetBool(npc, BB.JustGotDamage, true)
@@ -326,9 +358,12 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     end
     local zone = C.zoneOf((function() local ok, s = pcall(function() return boneP:get():ToString() end); return ok and s or "None" end)(), false)
     local caliber = C.caliberOf(attacker, aside, acn, sol)
-    local hpPct = B.compute(GB.apply({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
+    local hpPct, _, pass = B.compute(GB.apply({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
         hasHelmet = true, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() },
         GB.weapon(attacker), GB.soldierArmor()))
+    if cfg().Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
+        W.onHit(U.addr(sol), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(vside) * HTR.woundFreq(vside), HTR.woundFreq(vside))
+    end
     local dmg = hpPct / 100 * U.get(sol, P.MaxHP, 100) * sideFactor(aside, vside) / HTR.sideMultiplier(vside)
     if vside == "ally" and aside == "enemy" and HTR.base == "Tactical" then
         dmg = U.clamp(dmg, applied * cfg().Tactical.MinIncomingVsVanilla, applied * cfg().Tactical.MaxIncomingVsVanilla)
@@ -348,6 +383,45 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
             pcall(function() sol:EnterInjuredMode() end)
         end
     end
+end
+
+-- Hook: Master_Soldier_C:UpdateBattle (vanilla 1.5 s timer) - squad soldiers bleed.
+-- Only wounded soldiers cost anything. Once down (injured mode) the vanilla bleed-out
+-- timer takes over: a medic or you can still revive them.
+local soldierBleedT = {}
+function N.onSoldierUpdate(self)
+    local sol = self:get()
+    local a = U.addr(sol)
+    if not (a and W.list[a]) then return end
+    if U.get(sol, P.Dead, false) or U.get(sol, P.Injured, false) then W.heal(a); soldierBleedT[a] = nil; return end
+    local t = os.clock()
+    local dt = math.min(3.0, t - (soldierBleedT[a] or t))
+    soldierBleedT[a] = t
+    local pct = W.bleed(a, t, dt)
+    if pct <= 0 then return end
+    local hp = U.get(sol, P.HP, 0) - pct / 100 * U.get(sol, P.MaxHP, 100)
+    U.set(sol, P.HP, hp)
+    if hp < 0 then
+        W.heal(a); soldierBleedT[a] = nil
+        pcall(function() sol:EnterInjuredMode() end)
+    end
+end
+
+-- Hook: Master_Soldier_C:SetWalkSpeed(_Guarded) - squad soldiers following you.
+-- Vanilla always sets the walk gait, so soldiers fall behind and then teleport next to
+-- you once 30 m away ("spawning out of nowhere"). HTR makes them run or sprint to keep up,
+-- so the teleport only rescues a soldier that is really stuck.
+function N.onSoldierMove(self)
+    local sq = cfg().Squad
+    if not (sq and sq.KeepUp) then return end
+    local sol = self:get()
+    if U.get(sol, "AI_Type", 1) ~= 1 then return end -- only your side follows you
+    if U.get(sol, P.Dead, false) or U.get(sol, P.Injured, false) then return end
+    local d = U.dist(U.location(sol), U.location(U.playerPawn(sol)))
+    if d >= 1e9 then return end
+    local gait = (d > sq.SprintBeyond) and G.Gait.Sprint or ((d > sq.RunBeyond) and G.Gait.Run or G.Gait.Walk)
+    pcall(function() sol:SetDesiredGait(gait) end)
+    pcall(function() sol:SetGait(gait) end)
 end
 
 -- Hook: Q1_Shooter_AI_C:CheckMeleeDistance (vanilla 1 Hz timer) - our "think" tick.
@@ -376,6 +450,10 @@ function N.onThink(self)
         U.bbSetBool(npc, BB.JustGotDamage, false)
         st.clearJGDAt = nil
     end
+    if awarenessOn(st) then
+        local alert = U.bbGetBool(npc, BB.InCombat) == true
+        if alert ~= st.alert then setAwareness(npc, st, alert) end
+    end
     local d = doctrine(st)
     if feat("NPCGrenades") and feat("SmarterAI") and d.grenades and st.side == "enemy" then
         if U.bbGetBool(npc, BB.InCombat) and not U.get(npc, P.CanSee, true) then
@@ -390,7 +468,21 @@ function N.onThink(self)
     end
 end
 
--- Hook: RifleEye OnTargetDetected / OnTargetUpdated - human aim.
+--[[ Resume fire. Vanilla starts an NPC's firing only at the moment its rifle eye first
+     spots a target while the NPC is aiming, and every shot stops the firing for good once
+     it is not aiming (sprinting to cover, fleeing, repositioning). Vanilla NPCs almost never
+     left aiming mid-fight; HTR's hit, suppression and morale reactions make them do it often,
+     so without this they ran around and never fired again while they could still see you.
+     StartShoot is guarded in the Blueprint: calling it while already firing does nothing. ]]
+local function resumeFire(npc, st, t)
+    if (st.fireCheckAt or 0) > t then return end
+    st.fireCheckAt = t + 0.5
+    if U.get(npc, P.RotationMode, 0) ~= G.Rotation.Aiming then return end
+    if U.get(npc, P.ThrowingGrenade, false) or U.get(npc, P.SwordAttack, false) then return end
+    pcall(function() npc:StartShoot() end)
+end
+
+-- Hook: RifleEye OnTargetDetected / OnTargetUpdated (the NPC's gun sees a target) - human aim.
 -- Vanilla aims almost perfectly at random body points (feet, above the head...).
 -- HTR re-aims each point at centre mass or the point itself, plus doctrine spread.
 function N.onRifleEye(self)
@@ -400,6 +492,7 @@ function N.onRifleEye(self)
     local t = U.now(npc)
     N.track(npc)
     applyPending(npc, st, t) -- NPCs in a fight react to queued effects within ~0.3 s
+    if feat("SmarterAI") and not U.get(npc, P.Dead, false) then resumeFire(npc, st, t) end
     if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
     local d = doctrine(st)
     local tgtStruct = U.get(npc, P.ShootTarget, nil)
@@ -457,8 +550,10 @@ function N.onPlayerProjectileHit(self, proj, hit, attach, ploc)
         if st.side == "enemy" then
             n = n + 1
             st.suppressedUntil = t + 2.5 -- worse aim right away
-            if (st.duckAt or 0) < t and math.random() < doctrine(st).coverOnSuppress then
+            local d = doctrine(st)
+            if (st.duckAt or 0) < t and (st.reactAt or 0) < t and math.random() < d.coverOnSuppress then
                 st.duckAt = t + 4
+                st.reactAt = t + (d.reactEvery or 6)
                 st.duckReq = true -- breaks line of sight on its next hook
             end
         end

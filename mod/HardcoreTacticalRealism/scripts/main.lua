@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.1"
+local VERSION = "0.4.2"
 
 local U = require("htr.util")
 
@@ -70,6 +70,13 @@ default(cfg.GearBonus, "MaxLevel", 60); default(cfg.GearBonus, "RarityLevels", 5
 default(cfg.GearBonus, "WeaponPen", 8); default(cfg.GearBonus, "WeaponDamage", 0.15)
 default(cfg.GearBonus, "ArmorRating", 8); default(cfg.GearBonus, "ArmorWear", 0.25)
 default(cfg.GearBonus, "Modes", { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true })
+cfg.Perks = cfg.Perks or {}
+default(cfg.Perks, "SlowOnFoot", true); default(cfg.Perks, "ToggleKey", "F11")
+default(cfg.Perks, "EnergyRegen", 0.25); default(cfg.Perks, "Cooldown", 0.25)
+cfg.Awareness = cfg.Awareness or {}
+default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
+cfg.Squad = cfg.Squad or {}
+default(cfg.Squad, "KeepUp", true); default(cfg.Squad, "RunBeyond", 600); default(cfg.Squad, "SprintBeyond", 1500)
 
 U.Verbose = cfg.Debug.Log
 U.LogHits = cfg.Debug.LogHits
@@ -137,12 +144,15 @@ do
     if v then HTR.shipsOn = (v == "on") else HTR.shipsOn = cfg.Ships.Enabled end
     local g = s:match("gear=(%a+)")
     if g then HTR.gearOn = (g == "on") else HTR.gearOn = cfg.GearBonus.Enabled == true end
+    local pk = s:match("perks=(%a+)")
+    if pk then HTR.perksSlow = (pk == "slow") else HTR.perksSlow = cfg.Perks.SlowOnFoot ~= false end
 end
 
 local function saveState()
     local f = io.open(STATE, "w")
     if f then
-        f:write("mode=" .. HTR.mode .. "\nships=" .. (HTR.shipsOn and "on" or "off") .. "\ngear=" .. (HTR.gearOn and "on" or "off") .. "\n")
+        f:write("mode=" .. HTR.mode .. "\nships=" .. (HTR.shipsOn and "on" or "off") .. "\ngear=" .. (HTR.gearOn and "on" or "off")
+            .. "\nperks=" .. (HTR.perksSlow and "slow" or "vanilla") .. "\n")
         f:close()
     end
 end
@@ -153,9 +163,10 @@ local G = require("htr.gamedefs")
 local N = require("htr.npc")
 local Pl = require("htr.player")
 local S = require("htr.ships")
+local PK = require("htr.perks")
 
-U.log(string.format("=== HTR %s loaded, mode=%s, ships=%s, gear bonus=%s ===", VERSION, HTR.mode, tostring(HTR.shipsOn),
-    tostring(HTR.gearOn)))
+U.log(string.format("=== HTR %s loaded, mode=%s, ships=%s, gear bonus=%s, slow perks=%s ===", VERSION, HTR.mode,
+    tostring(HTR.shipsOn), tostring(HTR.gearOn), tostring(HTR.perksSlow)))
 
 -- Hooks ----------------------------------------------------------------------
 H.add(G.Fn.NpcCalculateStats, N.onCalculateStats, "NPC stats")
@@ -169,9 +180,13 @@ for i, path in ipairs(G.PlayerProjectileHits) do H.add(path, N.onPlayerProjectil
 H.add(G.Fn.PlayerIncome, Pl.onIncome, "player damage")
 H.add(G.Fn.PlayerRadial, Pl.onRadial, "player radial")
 H.add(G.Fn.PlayerTick, Pl.onTick, "player tick")
+H.add(G.Fn.PerkRegen, PK.onRegen, "slow perks")
 for i, path in ipairs(G.NpcProjectileHits) do H.add(path, Pl.onShooterProjectileHit, "shooter hit " .. i) end
 H.add(G.Fn.NpcRadial, N.onRadial, "NPC blast")
 H.add(G.Fn.SoldierHit, N.onSoldierHit, "squad soldier damage")
+H.add(G.Fn.SoldierUpdate, N.onSoldierUpdate, "squad soldier bleeding")
+H.add(G.Fn.SoldierWalkSpeed, N.onSoldierMove, "squad keeps up")
+H.add(G.Fn.SoldierWalkSpeedOrder, N.onSoldierMove, "squad keeps up (orders)")
 for i, path in ipairs(G.ShipGunHits) do
     H.add(path, function(...) S.onPlayerShipHit(N, Pl, ...) end, "ship gun " .. i)
 end
@@ -263,6 +278,14 @@ local function toggleGear(ctx)
         or "HTR: gear bonus OFF - only caliber, armor and hit zone count", ctx)
 end
 
+local function togglePerks(ctx)
+    HTR.perksSlow = not HTR.perksSlow
+    saveState()
+    U.warn("slow perks " .. (HTR.perksSlow and "ON" or "OFF"))
+    pcall(U.notify, HTR.perksSlow and "HTR: slow perks ON - perk energy and cooldowns recover 4x slower on foot"
+        or "HTR: slow perks OFF - vanilla perk energy", ctx)
+end
+
 local function bindKey(name, fn)
     if name and name ~= "" and Key and Key[name] then
         RegisterKeyBind(Key[name], function() ExecuteInGameThread(fn) end)
@@ -271,6 +294,7 @@ end
 bindKey(cfg.ToggleModeKey, cycleMode)
 bindKey(cfg.Ships.ToggleKey, toggleShips)
 bindKey(cfg.GearBonus.ToggleKey, toggleGear)
+bindKey(cfg.Perks.ToggleKey, togglePerks)
 
 -- Gamepad: 4 quick presses of "switch camera" cycle the mode (crouched: ships toggle).
 -- Four presses leave the camera where it was.

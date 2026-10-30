@@ -59,7 +59,8 @@ return {
 
     Wounds = {
         Bleeding        = true, -- penetrating hits can open bleeding wounds (nanites clot them in 15-25 s);
-                                -- heavy limb hits can break an arm (shaky aim) or leg
+                                -- heavy limb hits can break an arm (shaky aim) or leg.
+                                -- Robots never bleed, but their arms and legs can still be wrecked.
         -- how often you and your allies get wounded (enemies always 1.0)
         Frequency = { ["Tactical"] = 0.4, ["Tactical Hardcore"] = 0.6, ["Realism"] = 1.0, ["Realism Hardcore"] = 1.0 },
     },
@@ -96,6 +97,23 @@ return {
         ArmorWear    = 0.25,  -- 25 % less wear
         Modes = { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true },
     },
+
+    -- Slow perks (ON by default; F11 toggles in game, remembered). With realistic damage,
+    -- perks (turret, barricade, ground slam, shield, slow time...) become super powers.
+    -- On foot, the suit's perk energy refills EnergyRegen times as fast as vanilla and the
+    -- turret / barricade / ground-slam / auto-revive cooldowns run Cooldown times as fast.
+    -- Ship energy is not affected. 1.0 = vanilla.
+    Perks = { SlowOnFoot = true, ToggleKey = "F11", EnergyRegen = 0.25, Cooldown = 0.25 },
+
+    -- Situational awareness of enemies: relaxed (they haven't noticed a fight yet) they only
+    -- notice you up close; once alert (they spotted you, got hit or were warned) they scan,
+    -- spot and shoot much farther. Multipliers on each doctrine's sight range.
+    Awareness = { Enabled = true, RelaxedSight = 0.55, AlertSight = 1.25 },
+
+    -- Your ground squad following you. Vanilla makes them walk, so they fall behind and
+    -- teleport next to you once 30 m away. KeepUp makes them run (beyond RunBeyond cm)
+    -- and sprint (beyond SprintBeyond cm), so only a stuck soldier still teleports.
+    Squad = { KeepUp = true, RunBeyond = 600, SprintBeyond = 1500 },
 
     -- Ships vs infantry: ship guns (yours and AI ships') hit people on foot.
     Ships = {

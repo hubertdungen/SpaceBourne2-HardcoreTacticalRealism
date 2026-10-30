@@ -11,6 +11,8 @@ needed to play.
 - `kis.py` — renders those JSON dumps as readable pseudo-code:
   `python kis.py --all <dumpDir> <codeDir>`
 - `curves.py` — prints curve tables (stats per level).
+- `bt.py` — prints a behaviour tree from a dump as an outline (decorators, tasks, EQS queries):
+  `python bt.py <dumpDir>\SB2\Content\1Data\11_AI\1_VAL_ShootCover.uasset.json`
 
 After an update: dump `1Data/11_AI/Q1_Shooter_AI`, `1Data/Q1_Character` and
 `1Data/Weapons/Hand_Weapons/Weapons/Master_Hand_Weapon`, check that every name in

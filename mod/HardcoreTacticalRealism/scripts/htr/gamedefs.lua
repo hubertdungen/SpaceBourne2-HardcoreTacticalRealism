@@ -59,7 +59,10 @@ G.Fn = {
     PlayerIncome       = G.Player .. ":CalculateIncomeDamage",     -- (Damage, out Dead?, out ArmorDamage?)
     PlayerRadial       = G.Player .. ":ReceiveRadialDamage",
     PlayerTick         = G.ALSBase .. ":ReceiveTick",
+    PerkRegen          = G.ALSBase .. ":Regenerators",             -- 0.25 s: perk energy + cooldowns
 }
+-- Perks with a cooldown counter (Perk_Learned_DAta structs on ALS_Base); the others only use energy
+G.CooldownPerks = { "P_Turret", "P_Barricade", "P_GroundSlum", "P_AutoResurect" }
 -- Projectile-hit events: (OutProjectileObject, OutHitResult, OutAttachComponents, OutProjectileLocation, OutProjectileDirection)
 G.NpcProjectileHits = {
     G.Shooter .. ":OnProjectileHit_03F94406443931C1DCEDC2920A189A84",
@@ -78,6 +81,10 @@ end
 
 G.Fn.NpcRadial   = G.Shooter .. ":ReceiveRadialDamage"
 G.Fn.SoldierHit  = G.Soldier .. ":ReceivePointDamage"
+-- squad soldiers: 1.5 s update (no target -> SetWalkSpeed: walk gait, teleport to you beyond 30 m)
+G.Fn.SoldierUpdate        = G.Soldier .. ":UpdateBattle"
+G.Fn.SoldierWalkSpeed     = G.Soldier .. ":SetWalkSpeed"
+G.Fn.SoldierWalkSpeedOrder= G.Soldier .. ":SetWalkSpeed_Guarded"
 -- gamepad: the on-foot "switch camera" action (4 quick presses = HTR mode, crouched = ships toggle)
 G.Fn.PadCamera   = G.ALSBase .. ":InpActEvt_GP_SwitchCamera1_K2Node_EnhancedInputActionEvent_22"
 
@@ -105,6 +112,9 @@ G.P = {
     HeadShot = "Head Shot", BoneName = "Bone Name", ProjSpeed = "In Projectile Speed", ProjLife = "In Projectile Life Time",
     ShootRate = "ShootRate", MaxAmmo = "MaxAmmo", SwordAttack = "SwordAttackOn", CanSee = "CanSeeTheTarget",
     ShootTarget = "ShooTarget", EyeSight = "XVisionEye", EyeRifle = "RifleEye", LastDetected = "LastDetectedActor",
+    RotationMode = "RotationMode", ThrowingGrenade = "ThrowingGranede", Injured = "InInjuredMode",
+    -- player perks (ALS_Base)
+    EnergyRegen = "EnergyRegenRate", PerkCooldown = "CD_11_004AEE844C3C3A073EF8EAAC2B628430",
     -- player
     PlayerAbsorb = "DamageAbsorbChance_0_0", PlayerLevel = "PlayerLevel", GodMode = "GodModeOn?",
     Mercenary = "IsMercinerySubClassSetted", Cyborg = "CyborgModeOn?", Weapon = "CurrentWeapon",
@@ -126,6 +136,8 @@ G.BB = { JustGotDamage = "JustGotDamage", FirstInteract = "IsFirstInteract", InC
 -- Enums
 G.AIType  = { Enemy = 0, Ally = 1, Civil = 2, Natural = 3, Guard = 4 }
 G.SubType = { Shooter = 0, Tank = 1, Melee = 2, Mage = 3 }
+G.Rotation = { Velocity = 0, Looking = 1, Aiming = 2 } -- ALS rotation mode; NPCs only fire while Aiming
+G.Gait     = { Walk = 0, Run = 1, Sprint = 2 }
 
 -- Skeleton bone name -> hit zone (lower case)
 G.BoneZone = {
