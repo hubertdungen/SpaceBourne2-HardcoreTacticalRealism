@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0 — 2026-10-30
+
+- Four modes, cycled with F7 and announced on the HUD: Tactical, Tactical Hardcore, Realism,
+  Realism Hardcore. "Realism" is the former "Hardcore" mode; the new "Hardcore" variants double
+  all damage (you, allies and enemies) on top of their base rules. Old configs/state still load.
+- New options: `HardcoreDamageMultiplier` (2.0) and `HardcoreAlsoForEnemies` (true).
+- Ground turrets now fight for their team (allied turrets count as allies, enemy turrets as
+  enemies) with their own caliber; turret and battle-drone hits on the player are attributed.
+- Planned: ships hitting NPCs and the player on foot (toggleable).
+
 ## 0.1.0 — 2026-10-30
 
 First public release.

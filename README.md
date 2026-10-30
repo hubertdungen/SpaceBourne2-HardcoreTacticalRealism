@@ -34,15 +34,19 @@ Overhaul* and *NPC AI Improvement*. No code from those mods is used.
 Shotgun pellets are counted individually: one close blast kills an unarmored target.
 Bosses have a tougher body (about 8–9 rifle hits, 3 to the head).
 
-**Two modes** — switch with **F7** in game (remembered between sessions)
-- **Tactical** (default): enemies die fast; damage *you* take is capped at **+50 %** of vanilla.
-  Your allies are just as sturdy.
-- **Hardcore**: you and your allies take damage under **exactly the same rules** as enemies.
+**Four modes** — **F7** cycles them in game (shown on the HUD, remembered between sessions)
+- **Tactical** (default): enemies die fast; damage *you* take follows weapon and hit zone but is
+  capped at **+50 %** of vanilla. Your allies get the same protection.
+- **Tactical Hardcore**: Tactical with **all damage doubled** (you, allies and enemies; the
+  Tactical caps are applied first).
+- **Realism**: you and your allies take damage under **exactly the same rules** as enemies.
   Your suit's armor rating and condition protect you; a few rifle hits kill.
+- **Realism Hardcore**: Realism with **all damage doubled**.
 
 **Friendly fire**
-- You ↔ allies (companions, squad, crew): reduced in Tactical (35 %), fully real in Hardcore.
+- You ↔ allies (companions, squad, crew): reduced in the Tactical modes (35 %), fully real in the Realism modes.
 - Allies ↔ allies and allied turrets: vanilla damage, capped at 10 % of HP per hit.
+- Ground turrets fight for their own team: allied turrets count as allies, enemy turrets as enemies.
 - Enemies ↔ enemies: fully realistic. Allies ↔ enemies: fully realistic, so your squad
   and companions now actually kill things.
 
@@ -97,15 +101,22 @@ For deeper changes:
 - `htr\ballistics.lua` — caliber damage/penetration, armor ratings, hit-zone multipliers.
 - `htr\doctrines.lua` — reaction time, sight range, bullet speed, fire rate, spread, morale.
 
-## Known limitations (v0.1)
+## Known limitations
 
-- Ship combat is untouched (on-foot only).
+- Ship combat is untouched (on-foot only). Ships cannot hurt NPCs on foot yet — planned
+  (see below).
 - Beam weapons, grenades and explosions hitting NPCs use vanilla damage.
 - NPC grenades are off by default (`NPCGrenades`, experimental).
 - The game has no faction field on soldiers, so doctrines use the game's raider flag,
   troop tier, guard/robot/boss flags and companion status.
 - The squad soldiers you command take vanilla damage (their attacks are realistic).
 - Tested on the Steam build of 26 Oct 2026. Feedback and logs (`htr.log`) are welcome.
+
+## Planned
+
+- **Ships vs infantry:** your ship's (and enemy ships') weapons hit and heavily damage NPCs
+  and the player on foot, with an on/off option.
+- Realistic damage for squad soldiers, grenades and beam weapons; NPC grenade use.
 
 ## After a game update
 

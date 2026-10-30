@@ -138,4 +138,15 @@ function U.playerPawn()
     return nil
 end
 
+-- On-screen message through the game's own HUD system messages.
+local MSG_LIB = "/Game/1Data/FunctionsMacros/Q1FunctionLibary.Default__Q1FunctionLibary_C"
+function U.notify(text)
+    local lib = StaticFindObject(MSG_LIB)
+    local p = U.playerPawn()
+    if not (U.valid(lib) and U.valid(p)) then return false end
+    local ok = pcall(function() lib:SendSystemMessage(FText(text), 4.0, false, 0, nil, p) end)
+    if not ok then ok = pcall(function() lib:SendSystemMessage(text, 4.0, false, 0, nil, p) end) end
+    return ok
+end
+
 return U

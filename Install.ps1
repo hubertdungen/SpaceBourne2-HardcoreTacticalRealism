@@ -90,4 +90,4 @@ if ($at -ge 0) { $lines[$at] = "$Name : 1" } else {
 }
 Set-Content $modsTxt -Value $lines -Encoding ASCII
 Write-Host "Hardcore Tactical Realism installed in $win64"
-Write-Host "Settings: $dest\scripts\config.lua   (F7 in game switches Tactical / Hardcore)"
+Write-Host "Settings: $dest\scripts\config.lua   (F7 in game cycles Tactical / Tactical Hardcore / Realism / Realism Hardcore)"

@@ -1,5 +1,6 @@
 --[[
-  Player side: Tactical / Hardcore incoming damage.
+  Player side: incoming damage for the four modes
+  (Tactical / Tactical Hardcore / Realism / Realism Hardcore).
 
   How it works (all verified in game):
    1. The player's DamageAbsorbChance is held at 100 %, so vanilla
@@ -67,26 +68,27 @@ end
 -- Damage for one queued hit. Returns hpDamage, armorDamage (absolute units).
 local function computeHit(p, entry, shooter, bone)
     local c = cfg()
-    local mode = HTR.mode
+    local realism = (HTR.base == "Realism")
     local side, cn, caliber = "other", nil, nil
     if U.valid(shooter) then
         side, cn = C.sideOf(shooter)
         caliber = C.caliberOf(shooter, side, cn, p)
     end
-    local ff = 1.0
-    if side == "ally" and c.Features.FriendlyFireRules then ff = c.FriendlyFire.AllyToPlayer[mode] or 1 end
+    -- friendly fire factor x "Hardcore" double damage
+    local ff = HTR.sideMultiplier("player")
+    if side == "ally" and c.Features.FriendlyFireRules then ff = ff * HTR.ff(c.FriendlyFire.AllyToPlayer) end
     local zone = C.zoneOf(bone, false)
     local maxHP, armor, maxArmor = U.get(p, P.MaxHP, 100), U.get(p, P.Armor, 0), U.get(p, P.MaxArmor, 0)
 
-    if mode == "Hardcore" and caliber and not entry.radial then
+    if realism and caliber and not entry.radial then
         local integrity = (maxArmor > 0) and (armor / maxArmor) or 0
         local hpPct, ablation = B.compute({ caliber = caliber, zone = zone, ratings = playerArmorRatings(p), hasHelmet = true,
-            integrity = integrity, vitality = c.Hardcore.PlayerVitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random() })
-        return hpPct / 100 * maxHP * ff, ablation / 100 * maxArmor * ff, "hardcore", caliber, zone, side
+            integrity = integrity, vitality = c.Realism.PlayerVitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random() })
+        return hpPct / 100 * maxHP * ff, ablation / 100 * maxArmor * ff, "realism", caliber, zone, side
     end
     local d
-    if mode == "Hardcore" then
-        d = math.min(entry.raw * c.Hardcore.UnattributedMultiplier, maxHP * c.Hardcore.UnattributedMaxPercent / 100)
+    if realism then
+        d = math.min(entry.raw * c.Realism.UnattributedMultiplier, maxHP * c.Realism.UnattributedMaxPercent / 100)
     else
         local f = 1.25
         if caliber then

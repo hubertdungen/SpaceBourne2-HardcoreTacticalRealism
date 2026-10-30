@@ -118,7 +118,7 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
 
     -- Allied NPCs / turrets hitting allies: vanilla damage, capped.
     if ff and st.side == "ally" and (aside == "ally" or aside == "other") then
-        out:set(math.min(vanilla, maxHP * c.FriendlyFire.AllyToAllyCapPercent / 100))
+        out:set(math.min(vanilla, maxHP * c.FriendlyFire.AllyToAllyCapPercent / 100) * HTR.sideMultiplier("ally"))
         return
     end
 
@@ -137,14 +137,18 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
 
     local f = c.Damage.GlobalToNPCs
     if ff then
-        if aside == "player" and st.side == "ally" then f = f * (c.FriendlyFire.PlayerToAlly[HTR.mode] or 1) end
+        if aside == "player" and st.side == "ally" then f = f * HTR.ff(c.FriendlyFire.PlayerToAlly) end
         if aside == "enemy" and st.side == "enemy" then f = f * c.FriendlyFire.EnemyToEnemy end
     end
     local dmg = hpPct / 100 * maxHP * f
     -- Tactical keeps your allies about as sturdy as vanilla (max +50%).
-    if st.side == "ally" and aside == "enemy" and HTR.mode == "Tactical" then
+    if st.side == "ally" and aside == "enemy" and HTR.base == "Tactical" then
         dmg = math.min(dmg, vanilla * c.Tactical.MaxIncomingVsVanilla)
     end
+    -- "Hardcore" modes: your side (and optionally enemies) takes double damage.
+    local sideMult = HTR.sideMultiplier(st.side)
+    dmg = dmg * sideMult
+    f = f * sideMult
     if maxArmor > 0 and ablation > 0 then
         U.set(npc, P.Armor, math.max(0, armor - ablation / 100 * maxArmor))
     end

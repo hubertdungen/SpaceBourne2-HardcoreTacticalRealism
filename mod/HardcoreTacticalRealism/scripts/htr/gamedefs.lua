@@ -13,6 +13,8 @@ G.ALSBase    = "/Game/Locomotion/Blueprints/CharacterLogic/ALS_Base.ALS_Base_C"
 G.Soldier    = "/Game/1Data/11_AI/BattleAI/Master_Soldier.Master_Soldier_C" -- player squad / ground battles
 G.BattleAI   = "/Game/1Data/11_AI/TeamBattle/Q1_Battle_AI.Q1_Battle_AI_C"
 G.HandWeapon = "/Game/1Data/Weapons/Hand_Weapons/Weapons/Master_Hand_Weapon.Master_Hand_Weapon_C"
+G.Turret     = "/Game/1Data/11_AI/TeamBattle/BattleObjects/RTS_Turret.RTS_Turret_C"   -- ground turrets (AI_Type = team)
+G.Drone      = "/Game/1Data/11_AI/TeamBattle/Battle_Drone.Battle_Drone_C"
 G.ShootCoverBT = "/Game/1Data/11_AI/1_VAL_ShootCover.1_VAL_ShootCover"
 
 -- Short class names (GetClass():GetFName()) -----------------------------------
@@ -25,6 +27,7 @@ G.PirateClassNames  = { CargoShooter_C = true, SalvageDungeonEnemy_C = true }
 G.GuardClassNames   = { Q1_GuardShooter_C = true }
 G.PlayerClassNames  = { Q1_Character_C = true }
 G.SoldierClassNames = { Master_Soldier_C = true }
+G.TurretClassNames  = { RTS_Turret_C = true }
 
 -- Player hand weapon class -> HTR caliber (see ballistics.lua)
 G.WeaponCaliber = {
@@ -63,6 +66,8 @@ G.NpcProjectileHits = {
     G.Shooter .. ":OnProjectileHit_EA71D2CB4AF2DDD1487199994F37FD32",
     G.Soldier .. ":OnProjectileHit_7BDC272F4B923FF09908358E50762F8D",
     G.BattleAI .. ":OnProjectileHit_9835CF3447B6AF136D21F992D0240016",
+    G.Turret .. ":OnProjectileHit_C3F8D03949DD49D1E6C65EA11C41015D",
+    G.Drone .. ":OnProjectileHit_D0A49B3840F72CF10A2487AC824BB302",
 }
 G.PlayerProjectileHits = {}
 for _, guid in ipairs({ "C6643AF84D4AB4342E72C7AF57715CE6", "9DAC8CC648A8DCFEE1BE598B9C94CA79", "52750BFC4CD152D861F06D9309C7FA39",

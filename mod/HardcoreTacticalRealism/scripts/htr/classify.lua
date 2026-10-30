@@ -24,6 +24,7 @@ local function familyOf(actor, cn)
             if G.PlayerClassNames[n] then f = "player" break end
             if G.ShooterClassNames[n] then f = "shooter" break end
             if G.SoldierClassNames[n] then f = "soldier" break end
+            if G.TurretClassNames[n] then f = "turret" break end
             cls = cls:GetSuperStruct()
         end
     end)
@@ -46,8 +47,8 @@ function C.sideOf(actor)
         end
         return "enemy", cn
     end
-    if fam == "soldier" then
-        -- Master_Soldier family: AI_Type 1 = player's squad
+    if fam == "soldier" or fam == "turret" then
+        -- Master_Soldier family and ground turrets: AI_Type 1 = player's side
         local t = U.get(actor, "AI_Type", 1)
         return (t == 1) and "ally" or "enemy", cn
     end
@@ -110,6 +111,7 @@ function C.caliberOf(attacker, side, cn, victim)
         return "npc_rifle"
     end
     if fam == "soldier" then return "squad_rifle" end
+    if fam == "turret" then return "turret" end
     return "generic"
 end
 

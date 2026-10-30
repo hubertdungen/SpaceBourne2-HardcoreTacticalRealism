@@ -6,18 +6,25 @@
 ]]
 
 return {
-    -- "Tactical": enemies die fast; damage YOU take is at most +50% of vanilla.
-    -- "Hardcore": you and your allies take damage with exactly the same
-    --             caliber/armor/hit-zone rules as enemies. Very lethal.
+    -- Enemies always use the realistic model. The mode decides what happens to YOUR side:
+    --   "Tactical"          damage you take follows weapon and hit zone, capped at +50% of vanilla
+    --   "Tactical Hardcore" Tactical, with ALL damage doubled (you, allies and enemies)
+    --   "Realism"           you and your allies follow exactly the same caliber/armor/hit-zone
+    --                       rules as enemies
+    --   "Realism Hardcore"  Realism, with ALL damage doubled (you, allies and enemies)
     Mode = "Tactical",
 
-    -- Key that switches Tactical <-> Hardcore in game (remembered in state.txt).
+    -- Key that cycles the four modes in game (shown on screen, remembered in state.txt).
     -- Any UE4SS key name: F1..F12, NUM_ZERO.. etc. Set to "" to disable.
     ToggleModeKey = "F7",
 
+    -- What the "Hardcore" modes multiply damage by.
+    HardcoreDamageMultiplier = 2.0,
+    HardcoreAlsoForEnemies   = true, -- false = only you and your allies take the extra damage
+
     Features = {
         RealisticDamageToNPCs   = true,  -- caliber vs armor + hit zones, no level scaling
-        RealisticDamageToPlayer = true,  -- Tactical/Hardcore rules for damage you take
+        RealisticDamageToPlayer = true,  -- the Mode rules for damage you take
         FriendlyFireRules       = true,  -- see FriendlyFire below
         SmarterAI               = true,  -- reactions, retreat, alerts, cover, suppression
         FactionDoctrines        = true,  -- pirates fight differently from elite troops
@@ -42,7 +49,7 @@ return {
         HeadMultiplier       = 1.5, -- extra damage when you are hit in the head (still capped)
     },
 
-    Hardcore = {
+    Realism = {
         PlayerVitality       = 1.0, -- 1.2 = you can take 20% more punishment
         UnattributedMultiplier = 2.0, -- explosions/DoT/unknown sources vs vanilla
         UnattributedMaxPercent = 60,  -- ...but never more than this % of max HP at once
@@ -50,8 +57,9 @@ return {
 
     FriendlyFire = {
         -- Damage factor between you and allied NPCs (companions, squad, crew).
-        PlayerToAlly = { Tactical = 0.35, Hardcore = 1.0 },
-        AllyToPlayer = { Tactical = 0.35, Hardcore = 1.0 },
+        -- "Tactical" applies to both Tactical modes, "Realism" to both Realism modes.
+        PlayerToAlly = { Tactical = 0.35, Realism = 1.0 },
+        AllyToPlayer = { Tactical = 0.35, Realism = 1.0 },
         -- Allied NPCs / allied turrets hitting each other: vanilla damage,
         -- but never more than this % of the victim's max HP per hit.
         AllyToAllyCapPercent = 10,

@@ -41,6 +41,7 @@ B.Calibers = {
     npc_boss      = { dmg = 55,  pen = 50 },
     npc_melee     = { dmg = 65,  pen = 50, melee = true },
     squad_rifle   = { dmg = 52,  pen = 42 },
+    turret        = { dmg = 45,  pen = 52 }, -- ground turrets (team battles, bases)
     generic       = { dmg = 50,  pen = 40 },
 }
 
