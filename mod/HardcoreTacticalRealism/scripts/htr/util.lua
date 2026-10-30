@@ -149,6 +149,22 @@ function U.playerPawn(ctx)
     return nil
 end
 
+-- Which modifier is held right now: "SHIFT", "CONTROL", "ALT" or "" (none), asked of the game's
+-- own input. Used to keep plain keys quiet while a modifier is held. Key presses only.
+local PC
+local MOD_KEYS = { { "SHIFT", "LeftShift" }, { "SHIFT", "RightShift" }, { "CONTROL", "LeftControl" },
+    { "CONTROL", "RightControl" }, { "ALT", "LeftAlt" }, { "ALT", "RightAlt" } }
+function U.modifierState()
+    if not U.valid(PC) then PC = FindFirstOf("PlayerController") end
+    if not U.valid(PC) then return "" end
+    for _, m in ipairs(MOD_KEYS) do
+        local ok, down = pcall(function() return PC:IsInputKeyDown({ KeyName = FName(m[2]) }) end)
+        if ok and down then return m[1] end
+    end
+    return ""
+end
+function U.modifierDown() return U.modifierState() ~= "" end
+
 -- On-screen message. Verified on screen: on foot, the HUD warning the game uses for
 -- "No Target Nearby" (right side, warning icon); elsewhere (e.g. in a ship), the red
 -- warning line it uses for "In Cooldown..." (top left). (SendSystemMessage, used up to

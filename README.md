@@ -50,7 +50,7 @@ HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). 
 | Key | What it does |
 |---|---|
 | **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
-| **Ctrl+Insert** | Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load |
+| **Shift+F7** | Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load |
 | **F9** | Ships vs infantry on/off (shown on the HUD) |
 | **F11** | Slow perks on/off (on by default; see below) |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
@@ -78,7 +78,7 @@ Enemies always use the realistic model.
 ## Damage model
 
 - Damage = **caliber vs armor + hit zone**. NPC level, weapon level and rarity no longer matter
-  (unless you switch on the small optional gear bonus, Ctrl+Insert).
+  (unless you switch on the small optional gear bonus, Shift+F7).
 - Unarmored targets drop in **1–2 rifle hits**, heavy armor in **5–6**, power armor and
   robots in **6–8**. Snipers kill almost anything in one hit; melee kills in one or two blows.
 - **Headshots** kill a bare head with any firearm, and **no helmet stops a headshot
@@ -103,7 +103,7 @@ a tougher body (about 8–9 rifle hits, 3 to the head). Ground turrets (team bat
 heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through
 any armor.
 
-## Gear bonus (optional, Ctrl+Insert — off by default)
+## Gear bonus (optional, Shift+F7 — off by default)
 
 For players who still like a bit of RPG feel. With the gear bonus on, weapon and armor **level**
 (and item rarity) add a **small extra** on top of the ballistics — they never decide whether a

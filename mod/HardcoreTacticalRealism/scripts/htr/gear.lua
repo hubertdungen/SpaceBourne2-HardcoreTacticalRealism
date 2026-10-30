@@ -1,5 +1,5 @@
 --[[
-  Optional gear bonus (off by default, Ctrl+Insert / GearBonus in config.lua).
+  Optional gear bonus (off by default, Shift+F7 / GearBonus in config.lua).
   For players who like a bit of RPG feel: weapon and armor level (and item rarity)
   give a SMALL bonus on top of the ballistic model. They never decide whether a
   weapon can kill - a level 5 rifle still drops a level 60 raider in a few hits.

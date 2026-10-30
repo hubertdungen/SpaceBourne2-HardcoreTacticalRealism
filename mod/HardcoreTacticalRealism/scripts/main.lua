@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.3"
+local VERSION = "0.4.4"
 
 local U = require("htr.util")
 
@@ -65,7 +65,7 @@ default(cfg.FriendlyFire, "AllyToPlayer", { Tactical = 0.35, Realism = 1.0 })
 default(cfg.FriendlyFire, "AllyToAllyCapPercent", 10); default(cfg.FriendlyFire, "EnemyToEnemy", 1.0)
 default(cfg.Debug, "Log", false); default(cfg.Debug, "LogHits", false); default(cfg.Debug, "SlowHookMs", 8)
 cfg.GearBonus = cfg.GearBonus or {}
-default(cfg.GearBonus, "Enabled", false); default(cfg.GearBonus, "ToggleKey", "Ctrl+Insert")
+default(cfg.GearBonus, "Enabled", false); default(cfg.GearBonus, "ToggleKey", "Shift+F7")
 default(cfg.GearBonus, "MaxLevel", 60); default(cfg.GearBonus, "RarityLevels", 5)
 default(cfg.GearBonus, "WeaponPen", 8); default(cfg.GearBonus, "WeaponDamage", 0.15)
 default(cfg.GearBonus, "ArmorRating", 8); default(cfg.GearBonus, "ArmorWear", 0.25)
@@ -135,7 +135,7 @@ end
 
 HTR.setMode(loadMode())
 
--- Ships vs infantry (F9) and gear bonus (Ctrl+Insert) on/off, remembered in state.txt.
+-- Ships vs infantry (F9) and gear bonus (Shift+F7) on/off, remembered in state.txt.
 do
     local f = io.open(STATE, "r")
     local s = f and f:read("a") or ""
@@ -286,11 +286,14 @@ local function togglePerks(ctx)
         or "HTR: slow perks OFF - vanilla perk energy", ctx)
 end
 
--- Keys: a UE4SS key name ("F7", "INS", "PAGE_DOWN"...), optionally with modifiers: "Ctrl+Insert",
--- "Shift+Home". The game itself uses F1-F6, F8 (quick load), F10 and F12 (Steam screenshot):
--- a plain bind on one of those would fire the game's action too, so HTR refuses it and falls
--- back to its default (0.4.0-0.4.2 shipped F8 for the gear bonus, which also quick-loaded).
+-- Keys: a UE4SS key name ("F7", "DEL"...), optionally with modifiers: "Shift+F7", "Ctrl+F9".
+-- The game itself uses F1-F6, F8 (quick load), F10 and F12 (Steam screenshot): a plain bind on
+-- one of those would fire the game's action too, so HTR refuses it and falls back to its default
+-- (0.4.0-0.4.2 shipped F8 for the gear bonus, which also quick-loaded). Only F7, F9 and F11 are
+-- free F-keys, and many laptops have no Insert/Home/End, so the gear bonus is Shift+F7.
+-- On foot, Shift alone only runs while moving; Ctrl opens the map and Alt crouches.
 local GAME_KEYS = { F1 = 1, F2 = 1, F3 = 1, F4 = 1, F5 = 1, F6 = 1, F8 = 1, F10 = 1, F12 = 1 }
+local OLD_GEAR_KEYS = { ["F8"] = true, ["CTRL+INSERT"] = true } -- 0.4.0-0.4.2 and 0.4.3 defaults
 local KEY_ALIAS = { INSERT = "INS", DELETE = "DEL", PAGEDOWN = "PAGE_DOWN", PAGEUP = "PAGE_UP", ESC = "ESCAPE" }
 local MODS = { CTRL = "CONTROL", CONTROL = "CONTROL", SHIFT = "SHIFT", ALT = "ALT" }
 local function parseKey(spec)
@@ -310,19 +313,26 @@ local function bindKey(spec, fn, fallback, what)
         key, mods = parseKey(fallback)
     end
     if not key then return nil end
-    local cb = function() ExecuteInGameThread(fn) end
     if #mods > 0 and ModifierKey then
         local list = {}
         for _, m in ipairs(mods) do list[#list + 1] = ModifierKey[m] end
-        RegisterKeyBind(Key[key], list, cb)
+        RegisterKeyBind(Key[key], list, function() ExecuteInGameThread(fn) end)
     else
-        RegisterKeyBind(Key[key], cb)
+        -- belt and braces: a plain key stays quiet while a modifier is held
+        RegisterKeyBind(Key[key], function()
+            ExecuteInGameThread(function() if not U.modifierDown() then fn() end end)
+        end)
     end
     return key
 end
+local gearKey = cfg.GearBonus.ToggleKey
+if type(gearKey) == "string" and OLD_GEAR_KEYS[gearKey:upper():gsub("%s", "")] then
+    if gearKey:upper() == "F8" then U.warn("gear bonus key F8 is the game's quick load; using Shift+F7") end
+    gearKey = "Shift+F7"
+end
 bindKey(cfg.ToggleModeKey, cycleMode, "F7", "mode")
 bindKey(cfg.Ships.ToggleKey, toggleShips, "F9", "ships")
-bindKey(cfg.GearBonus.ToggleKey, toggleGear, "Ctrl+Insert", "gear bonus")
+bindKey(gearKey, toggleGear, "Shift+F7", "gear bonus")
 bindKey(cfg.Perks.ToggleKey, togglePerks, "F11", "slow perks")
 
 -- Gamepad: 4 quick presses of "switch camera" cycle the mode (crouched: ships toggle).

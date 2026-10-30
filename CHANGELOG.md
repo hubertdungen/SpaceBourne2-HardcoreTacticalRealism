@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.4 — 2026-10-30
+
+- **Gear bonus key is now Shift+F7**, because many laptops have no Insert key (Ctrl+Insert in
+  0.4.3). Configs that still say F8 or Ctrl+Insert switch over automatically. Shift was chosen
+  because, on foot, Shift alone only runs while moving; Ctrl opens the map and Alt crouches.
+- HTR's plain keys (F7, F9, F11) stay quiet while Shift, Ctrl or Alt is held, so Shift+F7 does
+  not also cycle the mode.
+- Verified in game with real key presses: F7 cycles the mode, Shift+F7 toggles the gear bonus
+  (mode unchanged), F11 toggles slow perks; an old `F8` config moves to Shift+F7 by itself.
+
 ## 0.4.3 — 2026-10-30 (please update)
 
 - **Fixed: F8 also quick-loaded your game.** F8 is SpaceBourne 2's quick load, so toggling the gear
