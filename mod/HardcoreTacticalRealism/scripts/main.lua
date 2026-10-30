@@ -54,6 +54,8 @@ cfg.Ships = cfg.Ships or {}
 default(cfg.Ships, "Enabled", true); default(cfg.Ships, "ToggleKey", "F9")
 default(cfg.Ships, "DirectHitDamage", 300); default(cfg.Ships, "SplashDamage", 150); default(cfg.Ships, "SplashRadius", 500)
 default(cfg, "GamepadToggles", true)
+cfg.Arrival = cfg.Arrival or {}
+default(cfg.Arrival, "GraceSeconds", 4); default(cfg.Arrival, "SpawnGraceSeconds", 3)
 default(cfg.Tactical, "MaxIncomingVsVanilla", 1.5); default(cfg.Tactical, "MinIncomingVsVanilla", 1.0)
 default(cfg.Tactical, "HeadMultiplier", 1.5)
 default(cfg.Realism, "PlayerVitality", 1.0); default(cfg.Realism, "UnattributedMultiplier", 2.0)

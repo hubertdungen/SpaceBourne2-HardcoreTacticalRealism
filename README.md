@@ -126,6 +126,9 @@ can hold a firefight instead of dropping as soon as they show up.
 - Vanilla behaviour that never triggered now works: breaking line of sight when hit, falling
   back when badly hurt, calling allies, peeking from cover every 2.5 s instead of 5 s.
 - **Suppression:** your rounds landing close make enemies duck and shoot worse.
+- **Arrival grace:** after an elevator ride, a new dungeon floor or a level load, and for
+  freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody
+  gets massacred the moment a floor loads.
 - Companions' bullets work (vanilla gave them a 0-second projectile life).
 
 | Doctrine | Who | How they fight |

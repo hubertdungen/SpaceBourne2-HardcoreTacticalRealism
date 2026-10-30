@@ -60,6 +60,7 @@ end
 
 -- One-time per NPC: armor model handover, ballistics and doctrine values.
 function N.applyTuning(npc, st)
+    st.spawnT = os.clock()
     if feat("RealisticDamageToNPCs") then
         -- HTR handles armor itself; vanilla's flat armor pool (and its overflow bug) is switched off.
         -- CurrentArmor/MaxArmor stay as the armor *condition* shown on the HP bar.
@@ -375,6 +376,11 @@ function N.onRifleEye(self)
     if t - (st.acquiredAt or t) < d.settle then spread = spread * 2.2 end
     if st.suppressedUntil and t < st.suppressedUntil then spread = spread * 1.8 end
     if W.fracture(U.addr(npc), os.clock()) == "arm" then spread = spread * 1.8 end -- broken arm: shaky aim
+    -- Arrival grace (elevators, new floors, fresh spawns): nobody aims well for a few seconds.
+    local now = os.clock()
+    if now < (HTR.arrivalUntil or 0) or now - (st.spawnT or 0) < cfg().Arrival.SpawnGraceSeconds then
+        spread = spread * 6
+    end
     S.track(npc)
     if U.speed(npc) > 150 then spread = spread * 1.4 end
     if U.speed(target) > 350 then spread = spread * 1.25 end

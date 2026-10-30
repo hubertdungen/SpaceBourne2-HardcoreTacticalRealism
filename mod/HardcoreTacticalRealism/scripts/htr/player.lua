@@ -240,7 +240,13 @@ function Pl.onTick(self)
     Pl.nextAbsorb = clock + 0.25
     if not G.PlayerClassNames[U.className(p) or ""] then return end
     Pl.enforceAbsorb(p)
-    Pl.lastPos = U.location(p)
+    local pos = U.location(p)
+    -- A jump of more than 15 m between steps = elevator / new floor / loaded level:
+    -- start the arrival grace (see Arrival in config.lua).
+    if pos and Pl.lastPos and U.dist(pos, Pl.lastPos) > 1500 then
+        HTR.arrivalUntil = os.clock() + cfg().Arrival.GraceSeconds
+    end
+    Pl.lastPos = pos
     if not enabled() then return end
     local t = os.clock() -- one clock for wounds, healing and hit times
     local dt = math.min(1.0, t - (Pl.lastStep or t))

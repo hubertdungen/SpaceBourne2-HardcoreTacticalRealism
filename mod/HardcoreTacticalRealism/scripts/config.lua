@@ -49,6 +49,11 @@ return {
                                   -- (any firearm kills in 1-2 headshots); applies in every mode
     },
 
+    -- Arrival grace: after an elevator ride / new floor / level load, and for freshly spawned
+    -- NPCs, everyone (enemies and allies) aims very badly for a few seconds, so dungeon floors
+    -- don't start with an instant massacre.
+    Arrival = { GraceSeconds = 4, SpawnGraceSeconds = 3 },
+
     -- Gamepad: press "switch camera" 4 times quickly = next mode; crouched = ships toggle.
     GamepadToggles = true,
 

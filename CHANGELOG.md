@@ -7,6 +7,9 @@
   `Damage.SquadOutrightDeath`). Tactical modes keep the vanilla injured-first rule.
 - Squad soldiers wear at least medium armor and a helmet and have a 20 % tougher body, so they
   can hold a firefight (in the Tactical modes they stay as sturdy as vanilla).
+- Arrival grace for dungeons: after an elevator ride, a new floor or a level load, and for freshly
+  spawned NPCs, everyone aims very badly for a few seconds (Arrival in config.lua), so floors no
+  longer start with an instant massacre on either side.
 
 ## 0.3.0 — 2026-10-30
 
