@@ -272,7 +272,10 @@ end
 
 -- Hook: Master_Soldier_C:ReceivePointDamage (your ground squad / team-battle soldiers).
 -- Vanilla already subtracted self.Damage from armor or HP; HTR swaps it for the realistic value.
-local SOLDIER_ARMOR = { [0] = "light", [1] = "light", [2] = "medium", [3] = "heavy", [4] = "heavy" }
+-- Squad soldiers are issued military kit: at least medium armor and a helmet, and a slightly
+-- tougher body, so they can hold a firefight instead of dropping as soon as they show up.
+local SOLDIER_ARMOR = { [0] = "medium", [1] = "medium", [2] = "medium", [3] = "heavy", [4] = "heavy" }
+local SOLDIER_VITALITY = 1.2
 function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, dirP, instigP, causerP)
     if not feat("RealisticDamageToNPCs") then return end
     local sol = self:get()
@@ -292,7 +295,7 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     local zone = C.zoneOf((function() local ok, s = pcall(function() return boneP:get():ToString() end); return ok and s or "None" end)(), false)
     local caliber = C.caliberOf(attacker, aside, acn, sol)
     local hpPct = B.compute({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
-        hasHelmet = true, integrity = 1, vitality = 1, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() })
+        hasHelmet = true, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() })
     local dmg = hpPct / 100 * U.get(sol, P.MaxHP, 100) * sideFactor(aside, vside) / HTR.sideMultiplier(vside)
     if vside == "ally" and aside == "enemy" and HTR.base == "Tactical" then
         dmg = U.clamp(dmg, applied * cfg().Tactical.MinIncomingVsVanilla, applied * cfg().Tactical.MaxIncomingVsVanilla)

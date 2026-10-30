@@ -115,7 +115,8 @@ a tougher body (about 8–9 rifle hits, 3 to the head).
 Ground turrets fight for their own team. Your squad soldiers now take realistic damage too:
 in the Tactical modes they go down injured first (as vanilla); in the Realism modes headshots
 and heavy overkill kill outright and other lethal hits almost always do (80 % / 95 %), so both
-sides follow the same lethal rules.
+sides follow the same lethal rules. They wear at least medium armor and a helmet, so they
+can hold a firefight instead of dropping as soon as they show up.
 
 ## AI and doctrines
 

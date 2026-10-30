@@ -5,6 +5,8 @@
 - Squad soldiers in the Realism modes no longer always go down injured first: headshots and heavy
   overkill kill outright, other lethal hits by chance (80 % Realism, 95 % Realism Hardcore;
   `Damage.SquadOutrightDeath`). Tactical modes keep the vanilla injured-first rule.
+- Squad soldiers wear at least medium armor and a helmet and have a 20 % tougher body, so they
+  can hold a firefight (in the Tactical modes they stay as sturdy as vanilla).
 
 ## 0.3.0 — 2026-10-30
 
