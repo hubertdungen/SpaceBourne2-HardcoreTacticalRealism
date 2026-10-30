@@ -36,7 +36,7 @@ HTR is a Lua mod for [b]UE4SS[/b] (the script loader most SpaceBourne 2 mods use
 [code]
 Key                     What it does
 F7                      Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD)
-F8                      Gear bonus on/off (off by default; see below)
+Ctrl+Insert             Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load
 F9                      Ships vs infantry on/off (shown on the HUD)
 F11                     Slow perks on/off (on by default; see below)
 Gamepad (experimental)  press Switch camera 4 times quickly = next mode; crouched = ships toggle
@@ -66,7 +66,7 @@ Enemies always use the realistic model.
 [size=5][b]Damage model[/b][/size]
 
 [list]
-[*]Damage = [b]caliber vs armor + hit zone[/b]. NPC level, weapon level and rarity no longer matter (unless you switch on the small optional gear bonus, F8).
+[*]Damage = [b]caliber vs armor + hit zone[/b]. NPC level, weapon level and rarity no longer matter (unless you switch on the small optional gear bonus, Ctrl+Insert).
 [*]Unarmored targets drop in [b]1–2 rifle hits[/b], heavy armor in [b]5–6[/b], power armor and robots in [b]6–8[/b]. Snipers kill almost anything in one hit; melee kills in one or two blows.
 [*][b]Headshots[/b] kill a bare head with any firearm, and [b]no helmet stops a headshot completely[/b] (at least 40 % always gets through): 1–2 headshots kill through any helmet. This applies to everyone — NPCs shooting NPCs included (vanilla has no NPC headshots).
 [*]Armor [b]wears down[/b] as it stops rounds (the armor bar shows its condition); worn armor protects less. Vanilla's armor-overflow bug is gone.
@@ -86,7 +86,7 @@ Knife / Sword / Hammer             1      1      2 / 1 / 1  2 / 2 / 1  3 / 2 / 2
 Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have a tougher body (about 8–9 rifle hits, 3 to the head). Ground turrets (team battles, bases) are heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through any armor.
 
 [line]
-[size=5][b]Gear bonus (optional, F8 — off by default)[/b][/size]
+[size=5][b]Gear bonus (optional, Ctrl+Insert — off by default)[/b][/size]
 
 For players who still like a bit of RPG feel. With the gear bonus on, weapon and armor [b]level[/b] (and item rarity) add a [b]small extra[/b] on top of the ballistics — they never decide whether a weapon works. A level 5 rifle still drops a level 60 raider in a few hits; a level 60 rifle just needs one hit fewer.
 
