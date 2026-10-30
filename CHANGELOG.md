@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.3 — 2026-10-30 (please update)
+
+- **Fixed: F8 also quick-loaded your game.** F8 is SpaceBourne 2's quick load, so toggling the gear
+  bonus with F8 (0.4.0–0.4.2) also loaded your last quick save. The gear bonus is now on
+  **Ctrl+Insert**. Configs that still say F8 are switched over automatically (logged in
+  `htr.log`), and HTR now refuses any plain key the game itself uses (F1–F6, F8, F10, F12).
+- Keys in `config.lua` accept modifiers, e.g. `"Ctrl+Insert"`, `"Shift+Home"`.
+
 ## 0.4.2 — 2026-10-30
 
 - **Enemies (pirates most of all) spent fights running instead of shooting back.** Every hit

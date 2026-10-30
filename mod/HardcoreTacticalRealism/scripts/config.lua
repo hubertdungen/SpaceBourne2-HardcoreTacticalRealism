@@ -15,7 +15,9 @@ return {
     Mode = "Tactical",
 
     -- Key that cycles the four modes in game (shown on screen, remembered in state.txt).
-    -- Any UE4SS key name: F1..F12, NUM_ZERO.. etc. Set to "" to disable.
+    -- Any UE4SS key name (F7, NUM_ZERO, INS, PAGE_DOWN...), optionally with Ctrl/Shift/Alt:
+    -- "Ctrl+Insert". Set to "" to disable. Keys the game uses itself (F1-F6, F8 quick load,
+    -- F10, F12) are refused without a modifier.
     ToggleModeKey = "F7",
 
     -- What the "Hardcore" modes multiply damage by.
@@ -76,7 +78,7 @@ return {
         ["Realism Hardcore"]  = { Delay = 15, HP = 0.12, Armor = 0.3 },
     },
 
-    -- Gear bonus (OFF by default; F8 toggles in game, remembered). For a light RPG feel:
+    -- Gear bonus (OFF by default; Ctrl+Insert toggles in game, remembered). For a light RPG feel:
     -- weapon and armor level (and item rarity) add a SMALL extra on top of the ballistics.
     -- They never decide whether a weapon works: a level 5 rifle still drops a level 60
     -- raider in a few hits, just one more than a level 60 rifle would need.
@@ -88,7 +90,7 @@ return {
     -- both sides, so it also fits the Realism modes; switch it off per mode in Modes.
     GearBonus = {
         Enabled      = false,
-        ToggleKey    = "F8",
+        ToggleKey    = "Ctrl+Insert", -- not F8: that is the game's quick load
         MaxLevel     = 60,
         RarityLevels = 5,
         WeaponPen    = 8,     -- armor ratings are light 35, medium 50, heavy 64, power 72
