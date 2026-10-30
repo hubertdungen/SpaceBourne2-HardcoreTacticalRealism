@@ -15,4 +15,18 @@ if ($main -notmatch "VERSION = `"$([regex]::Escape($Version))`"") { throw "main.
 $zip = Join-Path $root "release\$name.zip"
 if (Test-Path $zip) { Remove-Item $zip }
 Compress-Archive -Path "$out\*" -DestinationPath $zip
-Get-Item $zip | Select-Object Name, Length
+
+# Nexus "lite" build: no executables (Nexus quarantines DLL/CMD/PS1). Extract into the
+# "SpaceBourne 2" folder; enabled.txt makes UE4SS load it without editing mods.txt.
+$lite = Join-Path $root "release\$name-lite"
+if (Test-Path $lite) { Remove-Item $lite -Recurse -Force }
+$liteMod = "$lite\SB2\Binaries\Win64\Mods\HardcoreTacticalRealism"
+New-Item -ItemType Directory -Force "$liteMod\scripts\htr" | Out-Null
+Copy-Item "$out\mod\HardcoreTacticalRealism\scripts\*.lua" "$liteMod\scripts\"
+Copy-Item "$out\mod\HardcoreTacticalRealism\scripts\htr\*.lua" "$liteMod\scripts\htr\"
+New-Item -ItemType File "$liteMod\enabled.txt" | Out-Null
+Copy-Item "$root\README.md", "$root\CHANGELOG.md", "$root\LICENSE" $liteMod
+$liteZip = Join-Path $root "release\$name-lite.zip"
+if (Test-Path $liteZip) { Remove-Item $liteZip }
+Compress-Archive -Path "$lite\*" -DestinationPath $liteZip
+Get-Item $zip, $liteZip | Select-Object Name, Length

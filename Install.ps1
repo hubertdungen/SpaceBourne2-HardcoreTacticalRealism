@@ -73,6 +73,8 @@ $dest = Join-Path $mods $Name
 $keepCfg = $null
 if (Test-Path (Join-Path $dest 'scripts\config.lua')) { $keepCfg = Get-Content (Join-Path $dest 'scripts\config.lua') -Raw }
 New-Item -ItemType Directory -Force (Join-Path $dest 'scripts\htr') | Out-Null
+# A Nexus "lite" install enables itself with enabled.txt; mods.txt takes over now (never both).
+Remove-Item (Join-Path $dest 'enabled.txt') -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $PSScriptRoot "mod\$Name\scripts\*.lua") (Join-Path $dest 'scripts') -Force
 Copy-Item (Join-Path $PSScriptRoot "mod\$Name\scripts\htr\*.lua") (Join-Path $dest 'scripts\htr') -Force
 if ($keepCfg) {

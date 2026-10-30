@@ -85,6 +85,11 @@ The installer reuses UE4SS if you already have it (for example from **SB2 HOTAS*
 mods work together), otherwise it installs the bundled UE4SS 3.0.1. The game executable
 is never modified. Updating: run the new `Install.cmd`; your `config.lua` is kept.
 
+**Lite / Nexus build (`-lite.zip`, no executables):** needs UE4SS 3.0.x in the game already
+(e.g. from SB2 HOTAS, or [RE-UE4SS 3.0.1](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/v3.0.1)).
+Extract the zip into your `SpaceBourne 2` folder — it enables itself (`enabled.txt`), no
+`mods.txt` editing needed.
+
 **Manual install:** copy `ue4ss\dwmapi.dll`, `ue4ss\UE4SS.dll` and `ue4ss\UE4SS-settings.ini`
 into `SpaceBourne 2\SB2\Binaries\Win64\` (skip if UE4SS is already there), copy
 `mod\HardcoreTacticalRealism` into `...\Win64\Mods\`, and add the line
