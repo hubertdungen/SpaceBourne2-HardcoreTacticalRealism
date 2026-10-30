@@ -1,11 +1,15 @@
 --[[
   Shared helpers. Safety rules used everywhere in HTR:
    * Game objects are only touched inside hook callbacks (they are alive there)
-     or right after FindAllOf. No object is kept from one frame to the next;
+     or right after an engine lookup. No object is kept from one frame to the next;
      per-NPC state is keyed by address and holds plain numbers only.
    * Never call RegisterLoadMapPreHook/PostHook: they crash this game.
    * Hooks are only placed on Blueprint functions (native hooks called from
      Blueprint code receive garbage parameters in UE4SS 3.0 and crash).
+   * Never scan all objects (FindAllOf/FindFirstOf) in code that runs during a fight:
+     one scan costs ~50 ms in this game (0.3.1 did twelve per shot = 630 ms freezes).
+     NPCs are found through npc.lua's position registry instead.
+   * GetAllActorsOfClass with a Lua out-table corrupts the Lua state in UE4SS 3.0.1.
 ]]
 
 local U = {}
@@ -126,7 +130,14 @@ function U.bbGetBool(npc, key)
     return ok and v or nil
 end
 
-function U.playerPawn()
+-- The player's pawn. ctx: any live object in the world -> instant engine lookup.
+-- Without ctx it scans every object (~50 ms in this game): key presses only, never in combat code.
+function U.playerPawn(ctx)
+    if ctx ~= nil then
+        local ok, p = pcall(function() return U.gameplayStatics():GetPlayerPawn(ctx, 0) end)
+        if ok and U.valid(p) then return p end
+        return nil
+    end
     local pcs = FindAllOf("PlayerController")
     if not pcs then return nil end
     for _, pc in ipairs(pcs) do
@@ -140,9 +151,9 @@ end
 
 -- On-screen message through the game's own HUD system messages.
 local MSG_LIB = "/Game/1Data/FunctionsMacros/Q1FunctionLibary.Default__Q1FunctionLibary_C"
-function U.notify(text)
+function U.notify(text, ctx)
     local lib = StaticFindObject(MSG_LIB)
-    local p = U.playerPawn()
+    local p = U.playerPawn(ctx)
     if not (U.valid(lib) and U.valid(p)) then return false end
     local ok = pcall(function() lib:SendSystemMessage(FText(text), 4.0, false, 0, nil, p) end)
     if not ok then ok = pcall(function() lib:SendSystemMessage(text, 4.0, false, 0, nil, p) end) end

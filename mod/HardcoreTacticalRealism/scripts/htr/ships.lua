@@ -12,33 +12,18 @@ local B = require("htr.ballistics")
 local C = require("htr.classify")
 local P = G.P
 
-local S = { positions = {} } -- infantry positions (numbers only), refreshed by NPC hooks
+local S = {}
 
 local function cfg() return HTR.cfg.Ships end
 
-function S.track(npc)
-    local a, l = U.addr(npc), U.location(npc)
-    if a and l then S.positions[a] = { X = l.X, Y = l.Y, Z = l.Z, t = os.clock() } end
-end
-
-local function anyoneNear(center, radius)
-    local now = os.clock()
-    for a, p in pairs(S.positions) do
-        if now - p.t > 10 then S.positions[a] = nil
-        elseif U.dist(center, p) < radius + 600 then return true end
-    end
-    return false
-end
-
--- Damage (% of body) for a target at distance d from the impact.
-local function blastPct(d, direct, radius)
-    local c = cfg()
-    if direct then return c.DirectHitDamage end
+-- Splash damage (% of body) at distance d from the impact.
+local function splashPct(d, radius)
     if d >= radius then return 0 end
-    return c.SplashDamage * (1 - d / radius)
+    return cfg().SplashDamage * (1 - d / radius)
 end
 
-local function hurtShooter(N, npc, pct, impact, side)
+-- pct: % of a body; side: who fired ("ally" = your side).
+function S.hurtShooter(N, npc, pct, side)
     local st = N.ensure(npc)
     if not st then return end
     local f = HTR.sideMultiplier(st.side)
@@ -57,26 +42,28 @@ local function hurtShooter(N, npc, pct, impact, side)
     end
 end
 
--- center: impact point; direct: actor hit (may be nil); side: "ally" (your ship / allied ships) or "enemy".
-function S.blast(N, Pl, center, direct, side)
+-- center: impact point; direct: actor hit (may be nil); side: "ally" (your ship / allied ships) or "enemy";
+-- ctx: the live ship gun / round (for the instant player lookup).
+function S.blast(N, Pl, center, direct, side, ctx)
     if not (HTR.shipsOn and center) then return end
     local radius = cfg().SplashRadius
-    local player = Pl.lastPos and U.dist(center, Pl.lastPos) < radius + 600
-    if not (anyoneNear(center, radius) or player or direct) then return end
     local directAddr = direct and U.addr(direct)
-    for _, npc in ipairs(N.allShooters()) do
-        if U.valid(npc) and not U.get(npc, P.Dead, false) then
-            local isDirect = (U.addr(npc) == directAddr)
-            local d = U.dist(center, U.location(npc))
-            local pct = blastPct(d, isDirect, radius)
-            if pct > 0 then hurtShooter(N, npc, pct, center, side) end
+    -- direct hit on an NPC: right away
+    if direct and C.familyOf(direct, U.className(direct) or "") == "shooter" and not U.get(direct, P.Dead, false) then
+        S.hurtShooter(N, direct, cfg().DirectHitDamage, side)
+    end
+    -- splash: queued on every NPC close by, applied on its next hook (within a second)
+    for _, e in ipairs(N.near(center, radius)) do
+        if e.a ~= directAddr then
+            local pct = splashPct(e.d, radius)
+            if pct > 0 then e.st.blastPct = (e.st.blastPct or 0) + pct; e.st.blastSide = side end
         end
     end
     -- the player on foot (a direct hit already goes through the normal damage path)
-    if player then
-        local p = U.playerPawn()
+    if Pl.lastPos and U.dist(center, Pl.lastPos) < radius + 600 then
+        local p = U.playerPawn(ctx)
         if U.valid(p) and G.PlayerClassNames[U.className(p) or ""] and U.addr(p) ~= directAddr then
-            local pct = blastPct(U.dist(center, U.location(p)), false, radius)
+            local pct = splashPct(U.dist(center, U.location(p)), radius)
             if pct > 0 then
                 local f = HTR.sideMultiplier("player")
                 if side == "ally" and HTR.cfg.Features.FriendlyFireRules then f = f * HTR.ff(HTR.cfg.FriendlyFire.AllyToPlayer) end
@@ -92,7 +79,7 @@ function S.onPlayerShipHit(N, Pl, self, proj, hitP, attach, plocP)
     local l = plocP:get()
     local direct
     pcall(function() direct = hitP:get().Actor:Get() end)
-    S.blast(N, Pl, { X = l.X, Y = l.Y, Z = l.Z }, U.valid(direct) and direct or nil, "ally")
+    S.blast(N, Pl, { X = l.X, Y = l.Y, Z = l.Z }, U.valid(direct) and direct or nil, "ally", self:get())
 end
 
 -- Hook: AI ship ammo S_AI_Ammo*:OnImpact(Ricochet, PassedThrough, Location, ..., Actor, ...)
@@ -100,8 +87,9 @@ function S.onAIShipImpact(N, Pl, self, ricochet, passed, locP, vel, normal, exit
     if not HTR.shipsOn then return end
     local l = locP:get()
     local direct = actorP and actorP:get()
-    local side = (U.className(self:get()) or ""):find("Ally") and "ally" or "enemy"
-    S.blast(N, Pl, { X = l.X, Y = l.Y, Z = l.Z }, U.valid(direct) and direct or nil, side)
+    local round = self:get()
+    local side = (U.className(round) or ""):find("Ally") and "ally" or "enemy"
+    S.blast(N, Pl, { X = l.X, Y = l.Y, Z = l.Z }, U.valid(direct) and direct or nil, side, round)
 end
 
 return S

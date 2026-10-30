@@ -155,7 +155,10 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   guard/robot/boss flags and companion status.
 - Gamepad toggles are experimental (untested without a controller).
 - Tested on the Steam build of 26 Oct 2026. Bug reports with `htr.log` (set `Debug.Log = true`)
-  are very welcome.
+  are very welcome; if you ever notice stutter, `htr.log` names any HTR code that took longer
+  than 8 ms.
+- **Versions before 0.3.2 froze the game for a moment on every shot** — fixed in 0.3.2; please update.
+  In-game tests while firing now show the same frame times as the game without mods.
 
 ## After a game update
 

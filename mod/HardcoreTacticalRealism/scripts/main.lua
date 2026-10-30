@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.3.1"
+local VERSION = "0.3.2"
 
 local U = require("htr.util")
 
@@ -63,7 +63,7 @@ default(cfg.Realism, "UnattributedMaxPercent", 60)
 default(cfg.FriendlyFire, "PlayerToAlly", { Tactical = 0.35, Realism = 1.0 })
 default(cfg.FriendlyFire, "AllyToPlayer", { Tactical = 0.35, Realism = 1.0 })
 default(cfg.FriendlyFire, "AllyToAllyCapPercent", 10); default(cfg.FriendlyFire, "EnemyToEnemy", 1.0)
-default(cfg.Debug, "Log", false); default(cfg.Debug, "LogHits", false)
+default(cfg.Debug, "Log", false); default(cfg.Debug, "LogHits", false); default(cfg.Debug, "SlowHookMs", 8)
 
 U.Verbose = cfg.Debug.Log
 U.LogHits = cfg.Debug.LogHits
@@ -137,6 +137,7 @@ local function saveState()
 end
 
 local H = require("htr.hooks")
+H.SLOW = cfg.Debug.SlowHookMs / 1000
 local G = require("htr.gamedefs")
 local N = require("htr.npc")
 local Pl = require("htr.player")
@@ -166,26 +167,47 @@ for i, path in ipairs(G.AIShipImpacts) do
     H.add(path, function(...) S.onAIShipImpact(N, Pl, ...) end, "AI ship round " .. i)
 end
 
--- Behaviour-tree template tweak (applies to every NPC using it).
-local btTuned = false
-local function tuneBehaviourTree()
-    if btTuned or not cfg.Features.SmarterAI then return end
+-- Behaviour-tree template tweak (applies to every NPC using it). A failed lookup costs
+-- ~37 ms, so while the tree is not loaded it is looked for with a growing pause.
+local btTuned, btNext, btRetry = false, 0, 1
+local function tuneBehaviourTree(now)
+    if btTuned or not cfg.Features.SmarterAI or now < btNext then return end
     local node = StaticFindObject(G.PeekCooldownNode)
     if node and node:IsValid() then
         local ok = pcall(function() node.CoolDownTime = 2.5 end) -- vanilla 5 s between peeks from cover
         btTuned = true
         U.log("cover peek cooldown 5 -> 2.5 s: " .. tostring(ok))
+    else
+        btNext, btRetry = now + btRetry, math.min(btRetry * 2, 30)
     end
 end
 
-local lastStatus = ""
+local lastStatus, pollSlowAt, profileAt, lastArrival = "", -1e9, os.clock() + 30, nil
 LoopAsync(1000, function()
     ExecuteInGameThread(function()
+        local t0 = os.clock()
+        local registered = 0
         local ok, err = pcall(function()
-            H.poll()
-            tuneBehaviourTree()
+            -- arrived somewhere new (level load, elevator, new floor): look for new classes now
+            if HTR.arrivalUntil ~= lastArrival or HTR.wakeHooks then
+                lastArrival, HTR.wakeHooks = HTR.arrivalUntil, false
+                H.wake()
+                btNext, btRetry = 0, 1
+            end
+            registered = H.poll(t0)
+            tuneBehaviourTree(t0)
         end)
         if not ok then U.warn("poll: " .. tostring(err)) end
+        local dt = os.clock() - t0
+        if registered == 0 and dt > H.SLOW and t0 - pollSlowAt > 30 then
+            pollSlowAt = t0
+            U.warn(string.format("slow hook poll: %.0f ms", dt * 1000))
+        end
+        if t0 > profileAt then
+            profileAt = t0 + 30
+            local prof = H.profile()
+            if U.Verbose and prof ~= "" then U.log("profile 30 s: " .. prof) end
+        end
         local on, off = H.status()
         local s = string.format("hooks active %d, waiting %d", on, off)
         if s ~= lastStatus then lastStatus = s; U.log(s) end
@@ -201,7 +223,8 @@ local MODE_TEXT = {
     ["Realism Hardcore"]  = "HTR mode: REALISM HARDCORE - Realism, and all damage is doubled",
 }
 
-local function cycleMode() -- runs on the game thread
+-- ctx: a live object if the caller has one (gamepad), else nil (keyboard: one slower lookup).
+local function cycleMode(ctx) -- runs on the game thread
     local nextMode = MODES[1]
     for i, name in ipairs(MODES) do
         if name == HTR.mode then nextMode = MODES[i % #MODES + 1] end
@@ -209,15 +232,15 @@ local function cycleMode() -- runs on the game thread
     HTR.setMode(nextMode)
     saveState()
     U.warn("mode is now " .. HTR.mode)
-    pcall(U.notify, MODE_TEXT[HTR.mode] or ("HTR mode: " .. HTR.mode))
+    pcall(U.notify, MODE_TEXT[HTR.mode] or ("HTR mode: " .. HTR.mode), ctx)
 end
 
-local function toggleShips()
+local function toggleShips(ctx)
     HTR.shipsOn = not HTR.shipsOn
     saveState()
     U.warn("ships vs infantry " .. (HTR.shipsOn and "ON" or "OFF"))
     pcall(U.notify, HTR.shipsOn and "HTR: SHIPS VS INFANTRY ON - ship guns now hit people on foot"
-        or "HTR: SHIPS VS INFANTRY OFF - ship guns ignore people on foot (vanilla)")
+        or "HTR: SHIPS VS INFANTRY OFF - ship guns ignore people on foot (vanilla)", ctx)
 end
 
 local function bindKey(name, fn)
@@ -238,8 +261,8 @@ if cfg.GamepadToggles then
         taps = taps + 1
         if taps >= 4 then
             taps = 0
-            local crouched = U.get(self:get(), "Stance", 0) == 1
-            if crouched then toggleShips() else cycleMode() end
+            local pawn = self:get()
+            if U.get(pawn, "Stance", 0) == 1 then toggleShips(pawn) else cycleMode(pawn) end
         end
     end, "gamepad toggles")
 end

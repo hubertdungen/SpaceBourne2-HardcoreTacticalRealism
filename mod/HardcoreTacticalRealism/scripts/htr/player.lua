@@ -92,7 +92,7 @@ local function computeHit(p, entry, shooter, bone)
         if new and t > (Pl.woundMsgAt or 0) then
             Pl.woundMsgAt = t + 8
             pcall(U.notify, new == "fracture" and ("Broken " .. zone .. " - healing is halved until the nanites fuse the bone")
-                or "You are bleeding - get to cover, the nanites are clotting the wound")
+                or "You are bleeding - get to cover, the nanites are clotting the wound", p)
         end
     end
 
@@ -246,6 +246,7 @@ function Pl.onTick(self)
     if pos and Pl.lastPos and U.dist(pos, Pl.lastPos) > 1500 then
         HTR.arrivalUntil = os.clock() + cfg().Arrival.GraceSeconds
     end
+    if pos and not Pl.lastPos then HTR.wakeHooks = true end -- first step on foot: register the rest quickly
     Pl.lastPos = pos
     if not enabled() then return end
     local t = os.clock() -- one clock for wounds, healing and hit times

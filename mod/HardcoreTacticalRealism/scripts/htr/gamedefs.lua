@@ -88,8 +88,10 @@ for _, guid in ipairs({ "44CEBFE94D5634B6FCFBF4985AF60A9B", "1D7F31224BA57FF5F27
     "BD8415344C5BC892F719A28ABD306C47", "98B3A5FC4F97A74FED563FA3F7E5843A", "89D9A10041D68A9FCC09EB917EB9097D" }) do
     G.ShipGunHits[#G.ShipGunHits + 1] = G.ShipGun .. ":OnProjectileHit_" .. guid
 end
+-- Only classes that define their own OnImpact. S_AI_Railgun_Ally/Enemy inherit S_AI_Ammo's,
+-- so the S_AI_Ammo hook already covers them (hooking a function that does not exist costs ~37 ms per look).
 G.AIShipImpacts = {}
-for _, n in ipairs({ "S_AI_Ammo", "S_AI_Ammo_Capital_Enemy", "S_AI_Ammo_Capital_Enemy1_Ally", "S_AI_Railgun_Ally", "S_AI_Railgun_Enemy" }) do
+for _, n in ipairs({ "S_AI_Ammo", "S_AI_Ammo_Capital_Enemy", "S_AI_Ammo_Capital_Enemy1_Ally" }) do
     G.AIShipImpacts[#G.AIShipImpacts + 1] = "/Game/1Data/Weapons/N_New_Weapon_Ship/AI_Ammos/" .. n .. "." .. n .. "_C:OnImpact"
 end
 

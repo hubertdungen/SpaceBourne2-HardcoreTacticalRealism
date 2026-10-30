@@ -111,5 +111,6 @@ return {
     Debug = {
         Log     = false,  -- write HardcoreTacticalRealism\htr.log (errors are always written)
         LogHits = false,  -- log every hit (verbose; for tuning)
+        SlowHookMs = 8,   -- performance watchdog: HTR code slower than this is reported in htr.log
     },
 }

@@ -11,24 +11,63 @@ local W = require("htr.wounds")
 local S = require("htr.ships")
 local P, BB = G.P, G.BB
 
-local N = { state = {}, count = 0, aimWrite = nil }
+local N = { state = {}, count = 0, aimWrite = nil, pos = {} }
 
 local function cfg() return HTR.cfg end
 local function feat(name) return HTR.cfg.Features[name] end
 
--- Every live shooter NPC, including Blueprint subclasses (companions, guards, bosses...).
-function N.allShooters()
-    local out, seen = {}, {}
-    for name in pairs(G.ShooterClassNames) do
-        local list = FindAllOf(name)
-        if list then
-            for _, o in ipairs(list) do
-                local a = U.addr(o)
-                if a and not seen[a] then seen[a] = true; out[#out + 1] = o end
-            end
+--[[ Position registry. Every NPC reports where it is from its own hooks (its 1 Hz
+     think, its aim updates). Anything that affects other NPCs (alerts, suppression,
+     morale, ship splash) looks them up here and queues the effect in their state;
+     each NPC applies its queue on its next hook, within a second. HTR never searches
+     the world for NPCs: 0.3.1 did (FindAllOf, ~630 ms) and froze the game on every shot. ]]
+local FRESH = 3.0 -- s; a live NPC reports at least once a second
+
+function N.track(npc)
+    local a, l = U.addr(npc), U.location(npc)
+    if a and l then N.pos[a] = { X = l.X, Y = l.Y, Z = l.Z, t = os.clock() } end
+end
+
+-- Tracked NPCs within radius of center: list of { a = address, st = state, d = distance }.
+function N.near(center, radius)
+    local out, now = {}, os.clock()
+    if not center then return out end
+    for a, p in pairs(N.pos) do
+        if now - p.t > FRESH then
+            N.pos[a] = nil -- dead, despawned or unloaded
+        else
+            local st = N.state[a]
+            local d = U.dist(center, p)
+            if st and d < radius then out[#out + 1] = { a = a, st = st, d = d } end
         end
     end
     return out
+end
+
+-- Effects queued by other NPCs or by your shots, applied by this NPC's own hook.
+local function applyPending(npc, st, t)
+    if st.duckReq then
+        st.duckReq = nil
+        U.bbSetBool(npc, BB.FirstInteract, false)
+        U.bbSetBool(npc, BB.JustGotDamage, true)
+        st.clearJGDAt = t + 2.0
+    end
+    if st.alertReq then
+        st.alertReq = nil
+        local target = U.playerPawn(npc)
+        if target then pcall(function() npc:CheckForFirstFocus(target) end) end
+        if U.Verbose then U.log("alerted by a mate: " .. tostring(st.cn)) end
+    end
+    if st.panicReq then
+        st.panicReq = nil
+        pcall(function() npc:RunAwayFromGranede() end)
+        if U.Verbose then U.log("panics after a mate died: " .. tostring(st.cn)) end
+    end
+    if st.blastPct then
+        local pct, side = st.blastPct, st.blastSide
+        st.blastPct, st.blastSide = nil, nil
+        S.hurtShooter(N, npc, pct, side)
+    end
 end
 
 local function doctrine(st)
@@ -165,18 +204,12 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     end
 end
 
--- Allies of `npc` (same side) inside radius start hunting `target`.
-function N.alertAllies(npc, st, radius, target)
-    if st.side ~= "enemy" or radius <= 0 or not U.valid(target) then return end
-    local here = U.location(npc)
-    local list = N.allShooters()
-    for _, o in ipairs(list) do
-        if U.valid(o) and not U.get(o, P.Dead, false) and U.dist(here, U.location(o)) < radius then
-            local ost = N.ensure(o)
-            if ost and ost.side == "enemy" and U.addr(o) ~= U.addr(npc) then
-                pcall(function() o:CheckForFirstFocus(target) end)
-            end
-        end
+-- Enemies near `npc` start hunting the player (applied on their next hook).
+function N.alertAllies(npc, st, radius)
+    if st.side ~= "enemy" or radius <= 0 then return end
+    local me = U.addr(npc)
+    for _, e in ipairs(N.near(U.location(npc), radius)) do
+        if e.a ~= me and e.st.side == "enemy" then e.st.alertReq = true end
     end
 end
 
@@ -202,7 +235,7 @@ function N.onReceivePoint(self)
     end
     if (st.alertAt or 0) < t then
         st.alertAt = t + 4
-        N.alertAllies(npc, st, d.alertRadius, U.playerPawn())
+        N.alertAllies(npc, st, d.alertRadius)
     end
 end
 
@@ -213,22 +246,18 @@ function N.onDead(self)
     local st = a and N.state[a]
     if st and feat("SmarterAI") then
         local d = doctrine(st)
-        N.alertAllies(npc, st, d.alertRadius, U.playerPawn())
+        N.alertAllies(npc, st, d.alertRadius)
         -- morale: undisciplined troops may break when a mate drops next to them
         if st.side == "enemy" then
-            local here = U.location(npc)
-            for _, o in ipairs(N.allShooters()) do
-                if U.valid(o) and not U.get(o, P.Dead, false) and U.dist(here, U.location(o)) < 1500 then
-                    local ost = N.ensure(o)
-                    local od = ost and doctrine(ost)
-                    if od and ost.side == "enemy" and od.panic > 0 and math.random() < od.panic then
-                        pcall(function() o:RunAwayFromGranede() end)
-                    end
+            for _, e in ipairs(N.near(U.location(npc), 1500)) do
+                local od = doctrine(e.st)
+                if e.a ~= a and e.st.side == "enemy" and od.panic > 0 and math.random() < od.panic then
+                    e.st.panicReq = true
                 end
             end
         end
     end
-    if a then N.state[a] = nil; N.count = math.max(0, N.count - 1); W.heal(a) end
+    if a then N.state[a] = nil; N.pos[a] = nil; N.count = math.max(0, N.count - 1); W.heal(a) end
 end
 
 -- Damage factor for victim side `vs` hit by attacker side `as` (friendly fire + Hardcore).
@@ -325,7 +354,9 @@ function N.onThink(self)
     local st = N.ensure(npc)
     if not st then return end
     local t = U.now(npc)
-    S.track(npc)
+    N.track(npc)
+    applyPending(npc, st, t)
+    if U.get(npc, P.Dead, false) then return end -- a queued ship blast may have killed it
     -- bleeding (1 Hz)
     local ct = os.clock()
     local dt = math.min(2.0, ct - (st.lastThink or ct))
@@ -360,16 +391,18 @@ end
 -- Vanilla aims almost perfectly at random body points (feet, above the head...).
 -- HTR re-aims each point at centre mass or the point itself, plus doctrine spread.
 function N.onRifleEye(self)
-    if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
     local npc = self:get()
     local st = N.ensure(npc)
     if not st then return end
+    local t = U.now(npc)
+    N.track(npc)
+    applyPending(npc, st, t) -- NPCs in a fight react to queued effects within ~0.3 s
+    if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
     local d = doctrine(st)
     local tgtStruct = U.get(npc, P.ShootTarget, nil)
     if not tgtStruct then return end
     local target = U.get(tgtStruct, "DetectedActor", nil)
     if not U.valid(target) then return end
-    local t = U.now(npc)
     local ta = U.addr(target)
     if st.targetAddr ~= ta then st.targetAddr = ta; st.acquiredAt = t end
     local spread = d.spread
@@ -381,7 +414,6 @@ function N.onRifleEye(self)
     if now < (HTR.arrivalUntil or 0) or now - (st.spawnT or 0) < cfg().Arrival.SpawnGraceSeconds then
         spread = spread * 6
     end
-    S.track(npc)
     if U.speed(npc) > 150 then spread = spread * 1.4 end
     if U.speed(target) > 350 then spread = spread * 1.25 end
     local from, tl = U.location(npc), U.location(target)
@@ -416,25 +448,19 @@ function N.onPlayerProjectileHit(self, proj, hit, attach, ploc)
     if t - lastSuppress < 0.15 then return end
     lastSuppress = t
     local l = ploc:get()
-    local impact = { X = l.X, Y = l.Y, Z = l.Z }
-    for _, o in ipairs(N.allShooters()) do
-        if U.valid(o) and not U.get(o, P.Dead, false) then
-            local dist = U.dist(impact, U.location(o))
-            if dist < 350 then
-                local st = N.ensure(o)
-                if st and st.side == "enemy" then
-                    st.suppressedUntil = t + 2.5
-                    local d = doctrine(st)
-                    if (st.duckAt or 0) < t and math.random() < d.coverOnSuppress then
-                        st.duckAt = t + 4
-                        U.bbSetBool(o, BB.FirstInteract, false)
-                        U.bbSetBool(o, BB.JustGotDamage, true)
-                        st.clearJGDAt = t + 2.0
-                    end
-                end
+    local n = 0
+    for _, e in ipairs(N.near({ X = l.X, Y = l.Y, Z = l.Z }, 350)) do
+        local st = e.st
+        if st.side == "enemy" then
+            n = n + 1
+            st.suppressedUntil = t + 2.5 -- worse aim right away
+            if (st.duckAt or 0) < t and math.random() < doctrine(st).coverOnSuppress then
+                st.duckAt = t + 4
+                st.duckReq = true -- breaks line of sight on its next hook
             end
         end
     end
+    if n > 0 and U.Verbose then U.log("suppression: " .. n .. " enemies near the impact") end
 end
 
 return N

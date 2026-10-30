@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.2 — 2026-10-30 (performance fix — please update)
+
+- **Fixed the freezes when shooting.** Every hit of yours (suppression), every hit on an enemy
+  (alerting nearby enemies) and every death searched the whole game for NPCs, which took about
+  0.6 s each time. HTR now keeps a light registry of where NPCs are, filled by their own hooks, and
+  hands alerts, suppression, panic and ship-blast splash to each NPC on its next update (< 1 s).
+  Measured in game while firing: worst frame 1.5 s → under 0.1 s, same as without the mod.
+- **Fixed a small stutter every second** since 0.3.0: two railgun hooks pointed at functions that
+  do not exist, and each failed lookup cost ~37 ms every second. Hooks are now looked up per class
+  with a growing pause for classes that are not loaded yet.
+- Player lookups use an instant engine call instead of a full search (affected alerts, wound
+  messages and ship blasts).
+- New performance watchdog: any HTR code slower than `Debug.SlowHookMs` (8 ms) is reported in
+  `htr.log`, so stutter reports come with the culprit.
+
 ## 0.3.1 — 2026-10-30
 
 - Squad soldiers in the Realism modes no longer always go down injured first: headshots and heavy
