@@ -20,7 +20,9 @@ my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/5)) separates the vertical invert for ship
 and on foot, per device. [Silent Ops](https://github.com/hubertdungen/SpaceBourne2-SilentOps)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/6)) adds stealth, takedowns and suppressors on
-top of HTR's awareness. Coming soon: Gear Without Levels, Tactical
+top of HTR's awareness. [Gear Without Levels](https://github.com/hubertdungen/SpaceBourne2-GearWithoutLevels)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/7)) lets you use gear above your level with small
+handling penalties. Coming soon: Tactical
 Engineering, Faction Power, Tactical First Person.
 
 ## Install (2 minutes)
