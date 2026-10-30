@@ -13,12 +13,13 @@ Overhaul* and *NPC AI Improvement* (no code from those mods is used). Works toge
 my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
 
 **Links:** [GitHub](https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism) ·
-[Nexus Mods](https://www.nexusmods.com/games/spacebourne2/mods/4) ·
+[Nexus Mods](https://www.nexusmods.com/spacebourne2/mods/4) ·
 [Steam discussion](https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/) ·
 [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS).
-More realism mods for SpaceBourne 2 are in the works (engineering turrets, tactical first
-person, stealth, gear at any level, faction power, split ship/foot invert); they will be
-linked here as they come out.
+**Realism set:** [Split Controls](https://github.com/hubertdungen/SpaceBourne2-SplitControls)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/5)) separates the vertical invert for ship
+and on foot, per device. Coming soon: Silent Ops (stealth), Gear Without Levels, Tactical
+Engineering, Faction Power, Tactical First Person.
 
 ## Install (2 minutes)
 
