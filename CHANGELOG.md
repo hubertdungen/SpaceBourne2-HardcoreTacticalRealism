@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 — 2026-10-30
+
+- **Fixed: no on-screen message when pressing F7 / F8 / F9** (and for bleeding / broken bones).
+  The game's "system message" HTR used shows nothing on foot; HTR now uses the HUD warning the
+  game itself shows on foot (right side, warning icon), or the red warning line elsewhere.
+  Verified with screenshots in game. Thanks to TheCalcMan for the report.
+
 ## 0.4.0 — 2026-10-30
 
 - **Optional gear bonus (F8, off by default).** For a light RPG feel: weapon and armor level and

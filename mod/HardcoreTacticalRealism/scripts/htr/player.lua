@@ -96,8 +96,8 @@ local function computeHit(p, entry, shooter, bone)
         local new = W.onHit(U.addr(p), zone, wPct * ff, wPass, t, HTR.sideMultiplier("player") * freq, freq)
         if new and t > (Pl.woundMsgAt or 0) then
             Pl.woundMsgAt = t + 8
-            pcall(U.notify, new == "fracture" and ("Broken " .. zone .. " - healing is halved until the nanites fuse the bone")
-                or "You are bleeding - get to cover, the nanites are clotting the wound", p)
+            pcall(U.notify, new == "fracture" and ("Broken " .. zone .. " - healing halved until it fuses")
+                or "You are bleeding - get to cover", p)
         end
     end
 

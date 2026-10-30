@@ -149,15 +149,18 @@ function U.playerPawn(ctx)
     return nil
 end
 
--- On-screen message through the game's own HUD system messages.
+-- On-screen message. Verified on screen: on foot, the HUD warning the game uses for
+-- "No Target Nearby" (right side, warning icon); elsewhere (e.g. in a ship), the red
+-- warning line it uses for "In Cooldown..." (top left). (SendSystemMessage, used up to
+-- 0.4.0, shows nothing on foot.)
 local MSG_LIB = "/Game/1Data/FunctionsMacros/Q1FunctionLibary.Default__Q1FunctionLibary_C"
 function U.notify(text, ctx)
-    local lib = StaticFindObject(MSG_LIB)
     local p = U.playerPawn(ctx)
-    if not (U.valid(lib) and U.valid(p)) then return false end
-    local ok = pcall(function() lib:SendSystemMessage(FText(text), 4.0, false, 0, nil, p) end)
-    if not ok then ok = pcall(function() lib:SendSystemMessage(text, 4.0, false, 0, nil, p) end) end
-    return ok
+    if U.valid(p) and pcall(function() p:TMWPerkWarning(FText(text)) end) then return true end
+    local lib = StaticFindObject(MSG_LIB)
+    local wc = U.valid(p) and p or ctx
+    if not (U.valid(lib) and U.valid(wc)) then return false end
+    return pcall(function() lib:CursorWarningWidget(FText(text), wc) end)
 end
 
 return U

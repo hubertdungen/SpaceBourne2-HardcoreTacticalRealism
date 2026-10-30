@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.0"
+local VERSION = "0.4.1"
 
 local U = require("htr.util")
 
@@ -229,10 +229,10 @@ end)
 
 -- Mode hotkey ------------------------------------------------------------------
 local MODE_TEXT = {
-    ["Tactical"]          = "HTR mode: TACTICAL - damage you take is 100-150% of vanilla",
-    ["Tactical Hardcore"] = "HTR mode: TACTICAL HARDCORE - Tactical, and all damage is doubled",
-    ["Realism"]           = "HTR mode: REALISM - you and your allies follow the same rules as enemies",
-    ["Realism Hardcore"]  = "HTR mode: REALISM HARDCORE - Realism, and all damage is doubled",
+    ["Tactical"]          = "HTR: TACTICAL - you take 100-150% of vanilla damage",
+    ["Tactical Hardcore"] = "HTR: TACTICAL HARDCORE - Tactical, all damage x2",
+    ["Realism"]           = "HTR: REALISM - same rules for you and enemies",
+    ["Realism Hardcore"]  = "HTR: REALISM HARDCORE - Realism, all damage x2",
 }
 
 -- ctx: a live object if the caller has one (gamepad), else nil (keyboard: one slower lookup).
@@ -251,19 +251,16 @@ local function toggleShips(ctx)
     HTR.shipsOn = not HTR.shipsOn
     saveState()
     U.warn("ships vs infantry " .. (HTR.shipsOn and "ON" or "OFF"))
-    pcall(U.notify, HTR.shipsOn and "HTR: SHIPS VS INFANTRY ON - ship guns now hit people on foot"
-        or "HTR: SHIPS VS INFANTRY OFF - ship guns ignore people on foot (vanilla)", ctx)
+    pcall(U.notify, HTR.shipsOn and "HTR: ships vs infantry ON - ship guns hit people on foot"
+        or "HTR: ships vs infantry OFF (vanilla)", ctx)
 end
 
 local function toggleGear(ctx)
     HTR.gearOn = not HTR.gearOn
     saveState()
     U.warn("gear bonus " .. (HTR.gearOn and "ON" or "OFF"))
-    local g = cfg.GearBonus
-    pcall(U.notify, HTR.gearOn and string.format(
-        "HTR: GEAR BONUS ON - weapon and armor level give a small extra (up to +%d penetration, +%d%% damage, +%d protection)",
-        g.WeaponPen, math.floor(g.WeaponDamage * 100 + 0.5), g.ArmorRating)
-        or "HTR: GEAR BONUS OFF - only caliber, armor and hit zone count", ctx)
+    pcall(U.notify, HTR.gearOn and "HTR: gear bonus ON - weapon/armor level give a small extra"
+        or "HTR: gear bonus OFF - only caliber, armor and hit zone count", ctx)
 end
 
 local function bindKey(name, fn)
