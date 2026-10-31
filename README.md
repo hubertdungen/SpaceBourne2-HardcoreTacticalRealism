@@ -16,6 +16,9 @@ my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod ([Nexus](
 [Nexus Mods](https://www.nexusmods.com/spacebourne2/mods/4) ·
 [Steam discussion](https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/) ·
 [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)).
+**Install the whole set in one go:** the [SpaceBourne 2 Realism installer](https://github.com/hubertdungen/SpaceBourne2-Realism)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/11)) lets you tick the mods you want, switches them on and
+updates them all with one click.
 **Realism set:** [Split Controls](https://github.com/hubertdungen/SpaceBourne2-SplitControls)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/5)) separates the vertical invert for ship
 and on foot, per device. [Silent Ops](https://github.com/hubertdungen/SpaceBourne2-SilentOps)
