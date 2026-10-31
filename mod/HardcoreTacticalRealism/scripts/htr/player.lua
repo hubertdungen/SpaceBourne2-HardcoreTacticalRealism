@@ -22,6 +22,7 @@ local B = require("htr.ballistics")
 local C = require("htr.classify")
 local W = require("htr.wounds")
 local GB = require("htr.gear")
+local FB = require("htr.feedback")
 local P = G.P
 
 local Pl = { pending = {}, passthrough = false, radialTick = -1, tick = 0, nextAbsorb = 0, owned = false }
@@ -243,6 +244,10 @@ end
 local function injuryFrame(p)
     local w = cfg().Wounds
     if Pl.legBroken then
+        -- no sprinting on a broken leg (0.4.7); badly hurt as well, you can only walk
+        local g = U.get(p, "DesiredGait", nil)
+        local maxGait = ((Pl.hpFrac or 1) < (w.LegWalkOnlyBelowHP or 0.3)) and G.Gait.Walk or G.Gait.Run
+        if type(g) == "number" and g > maxGait then pcall(function() p:SetDesiredGait(maxGait) end) end
         local ok, cmc = pcall(function() return p.CharacterMovement end)
         if ok and U.valid(cmc) then
             local v = U.get(cmc, "MaxWalkSpeed", 0)
@@ -296,6 +301,14 @@ function Pl.onTick(self)
     Pl.lastStep = t
     if dt > 0 then regenStep(p, t, dt) end
     Pl.addr = U.addr(p)
+    local hp, maxHP = U.get(p, P.HP, 0), U.get(p, P.MaxHP, 100)
+    if type(hp) == "number" and type(maxHP) == "number" and maxHP > 0 then
+        Pl.hpFrac = hp / maxHP
+        if hp > 0 then -- screen effects never stop the rest of the tick
+            local okFB, errFB = pcall(FB.step, p, t, W.rate(Pl.addr, t), Pl.hpFrac)
+            if not okFB and not Pl.fbWarned then Pl.fbWarned = true; U.warn("wound screen effects: " .. tostring(errFB)) end
+        end
+    end
     local frac = W.fracture(Pl.addr, t)
     Pl.legBroken, Pl.armBroken = frac == "leg", frac == "arm"
     if not Pl.legBroken then Pl.limpWritten = nil end

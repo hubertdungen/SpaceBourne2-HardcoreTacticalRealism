@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.7 — 2026-10-31
+
+- **You feel your wounds.** While you bleed, the screen pulses dark red like a heartbeat — stronger
+  and faster the more you bleed. Bleeding hard or below a quarter of your HP, the view lurches now
+  and then. Nothing shows while you are unhurt (`Wounds.ScreenEffects`).
+- **Broken leg: no sprinting.** On top of the limp, you cannot sprint; below 30 % HP you can only
+  walk (`Wounds.LegWalkOnlyBelowHP`).
+- **Crippled enemies lose their nerve.** An enemy whose leg breaks either tries to get away
+  (pirates 60 %, militia 45 %, regulars 25 %) or breaks off and fights from cover. Elites, robots and
+  companions don't flinch (`crippleFlee` in `htr\doctrines.lua`).
+- **Bosses wear better armor:** +10 protection and half the wear (`Damage.BossArmorBonus`,
+  `Damage.BossArmorWear`). A rifle now needs about 12 body hits (was 8) and 3 to the head, a DMR 6,
+  a sniper 3.
+- Tested in game: in a firefight aimed at you, the heartbeat pulse and the lurches showed while
+  you bled (game screenshot), "You are bleeding" appeared without the alarm, and with a broken leg
+  under 30 % HP the game's own gait stayed at walking. Frame times: firefight with sustained fire
+  median 17 ms, 99 % under 33 ms; five enemies shooting at you (bleeding, pulses, broken leg) median
+  19 ms, 99 % under 32 ms, worst 49 ms.
+
 ## 0.4.6 — 2026-10-31
 
 - **"Fatal error" when loading after you die.** Found a SpaceBourne 2 bug behind it (it also

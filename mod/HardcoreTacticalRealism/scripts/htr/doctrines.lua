@@ -14,6 +14,8 @@
   coverOnSuppress chance to duck when your rounds land close
   retreatHP   below this HP fraction, fall back to a hidden position (0 = never)
   panic       chance to run when a nearby ally dies
+  crippleFlee with a broken leg: chance to try to get away; otherwise it breaks line of sight and
+              fights from cover (0 = no morale hit)
   alertRadius cm; allies inside it are alerted when this NPC is hit or dies
   grenades    uses grenades to flush targets out of cover (if NPCGrenades on)
 ]]
@@ -23,17 +25,17 @@ return {
     pirate = {
         label = "Pirate / raider", sense = 0.45, sight = 3500, projSpeed = 36000, fireRate = 0.085, magazine = 30,
         spread = 2.6, settle = 1.0, aimCenter = 0.55, reactToHits = 0.45, coverOnSuppress = 0.25, reactEvery = 8,
-        retreatHP = 0.3, panic = 0.25, alertRadius = 1200, grenades = false,
+        retreatHP = 0.3, panic = 0.25, crippleFlee = 0.6, alertRadius = 1200, grenades = false,
     },
     militia = {
         label = "Militia / low-tier troops", sense = 0.38, sight = 4000, projSpeed = 38000, fireRate = 0.11, magazine = 30,
         spread = 2.0, settle = 0.9, aimCenter = 0.7, reactToHits = 0.7, coverOnSuppress = 0.45, reactEvery = 7,
-        retreatHP = 0.35, panic = 0.2, alertRadius = 1800, grenades = false,
+        retreatHP = 0.35, panic = 0.2, crippleFlee = 0.45, alertRadius = 1800, grenades = false,
     },
     regular = {
         label = "Faction regulars", sense = 0.30, sight = 4500, projSpeed = 42000, fireRate = 0.13, magazine = 30,
         spread = 1.5, settle = 0.7, aimCenter = 0.85, reactToHits = 0.85, coverOnSuppress = 0.6, reactEvery = 6,
-        retreatHP = 0.3, panic = 0.1, alertRadius = 2500, grenades = true,
+        retreatHP = 0.3, panic = 0.1, crippleFlee = 0.25, alertRadius = 2500, grenades = true,
     },
     elite = {
         label = "Elite faction troops", sense = 0.20, sight = 5500, projSpeed = 46000, fireRate = 0.15, magazine = 30,

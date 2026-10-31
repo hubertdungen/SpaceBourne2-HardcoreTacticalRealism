@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.6"
+local VERSION = "0.4.7"
 
 local U = require("htr.util")
 
@@ -44,6 +44,8 @@ require("htr.ballistics").HeadMinPass = cfg.Damage.HelmetMinPass
 cfg.Wounds = cfg.Wounds or {}
 default(cfg.Wounds, "Bleeding", true)
 default(cfg.Wounds, "LegSpeed", 0.5); default(cfg.Wounds, "ArmSway", 6); default(cfg.Wounds, "NpcArmSpread", 3.0)
+default(cfg.Wounds, "LegWalkOnlyBelowHP", 0.3); default(cfg.Wounds, "ScreenEffects", true)
+default(cfg.Damage, "BossArmorBonus", 10); default(cfg.Damage, "BossArmorWear", 0.5)
 default(cfg.Wounds, "Frequency", { ["Tactical"] = 0.4, ["Tactical Hardcore"] = 0.6, ["Realism"] = 1.0, ["Realism Hardcore"] = 1.0 })
 cfg.Regen = cfg.Regen or {}
 default(cfg.Regen, "Enabled", true)

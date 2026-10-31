@@ -45,6 +45,11 @@ function N.near(center, radius)
     return out
 end
 
+local function doctrine(st)
+    if not feat("FactionDoctrines") then return DOC.regular end
+    return DOC[st.doctrine] or DOC.regular
+end
+
 -- Effects queued by other NPCs or by your shots, applied by this NPC's own hook.
 local function applyPending(npc, st, t)
     if st.duckReq then
@@ -64,16 +69,28 @@ local function applyPending(npc, st, t)
         pcall(function() npc:RunAwayFromGranede() end)
         if U.Verbose then U.log("panics after a mate died: " .. tostring(st.cn)) end
     end
+    if st.crippleReq then
+        -- a crippled leg breaks the nerve of anyone but elites, robots and companions: they
+        -- either try to get away (chance by doctrine) or break line of sight and fight from cover
+        st.crippleReq = nil
+        local d = doctrine(st)
+        if (d.crippleFlee or 0) > 0 and feat("SmarterAI") then
+            if math.random() < d.crippleFlee then
+                pcall(function() npc:RunAwayFromGranede() end)
+                if U.Verbose then U.log("crippled, falls back: " .. tostring(st.cn)) end
+            else
+                U.bbSetBool(npc, BB.FirstInteract, false)
+                U.bbSetBool(npc, BB.JustGotDamage, true)
+                st.clearJGDAt = t + 4.0
+                st.reactAt = t + (d.reactEvery or 6)
+            end
+        end
+    end
     if st.blastPct then
         local pct, side = st.blastPct, st.blastSide
         st.blastPct, st.blastSide = nil, nil
         S.hurtShooter(N, npc, pct, side)
     end
-end
-
-local function doctrine(st)
-    if not feat("FactionDoctrines") then return DOC.regular end
-    return DOC[st.doctrine] or DOC.regular
 end
 
 -- Per-NPC state (plain values only), created on first sight of the NPC.
@@ -85,7 +102,7 @@ function N.ensure(npc)
     if N.count > 600 then N.state = {}; N.count = 0 end -- keep memory bounded
     local cn = U.className(npc)
     st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1),
-        robot = U.get(npc, P.Robot, false) or cn == "Q1_Shooter_Robot_C" }
+        robot = U.get(npc, P.Robot, false) or cn == "Q1_Shooter_Robot_C", boss = U.get(npc, P.IsBoss, false) == true }
     st.armor, st.helmet, st.vitality = C.protectionOf(npc, cn, cfg())
     N.state[a] = st
     N.count = N.count + 1
@@ -201,13 +218,19 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     local armor, maxArmor = U.get(npc, P.Armor, 0), U.get(npc, P.MaxArmor, 0)
     local integrity = (maxArmor > 0) and (armor / maxArmor) or 1.0
     local wq, aq = GB.weapon(attacker), GB.npcArmor(st) -- optional gear bonus (0 when off)
-    local hpPct, ablation, pass = B.compute(GB.apply({
+    local args = GB.apply({
         caliber = caliber, zone = zone, armor = st.armor, hasHelmet = st.helmet, integrity = integrity,
         vitality = st.vitality, minPct = c.Damage.MinPercentPerHit, rnd = math.random(),
-    }, wq, aq))
+    }, wq, aq)
+    if st.boss then -- bosses: better-made armor that also wears slower (0.4.7)
+        args.ratingBonus = (args.ratingBonus or 0) + (c.Damage.BossArmorBonus or 0)
+        args.wearMult = (args.wearMult or 1) * (c.Damage.BossArmorWear or 1)
+    end
+    local hpPct, ablation, pass = B.compute(args)
     if c.Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
-        W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side), HTR.woundFreq(st.side),
-            st.robot)
+        local new = W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side),
+            HTR.woundFreq(st.side), st.robot)
+        if new == "fracture" and zone == "leg" then st.crippleReq = true end -- morale hit, applied on its next hook
     end
 
     local f = c.Damage.GlobalToNPCs

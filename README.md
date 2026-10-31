@@ -105,7 +105,8 @@ Enemies always use the realistic model.
 | Knife / Sword / Hammer | 1 | 1 | 2 / 1 / 1 | 2 / 2 / 1 | 3 / 2 / 2 |
 
 Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have
-a tougher body (about 8–9 rifle hits, 3 to the head). Ground turrets (team battles, bases) are
+a tougher body and better-made power armor that wears half as fast (about 12 rifle hits, 3 to
+the head; a DMR needs 6, a sniper 3). Ground turrets (team battles, bases) are
 heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through
 any armor.
 
@@ -140,8 +141,14 @@ Gear bonus off (the default) = the tables above, for every level.
 - **Bleeding:** a round that gets through the armor can open a wound that drains HP for
   15–25 s until the suit's nanites clot it (up to 3 wounds at once). Bleeding stops healing.
 - **Broken bones:** a heavy hit to an arm or leg can break it until the nanites fuse it (about a
-  minute). Broken leg: you limp at half speed; NPCs and squad soldiers can only walk. Broken arm:
+  minute). Broken leg: you limp at half speed and cannot sprint (below 30 % HP you can only walk);
+  NPCs and squad soldiers can only walk, and most enemies lose their nerve: pirates and militia
+  often try to get away, the others break off and fight from cover (elites and robots don't
+  flinch). Broken arm:
   your aim drifts and trembles; NPCs spray with 3x their spread. Your healing is halved meanwhile.
+- **You feel it:** while you bleed, the screen pulses dark red like a heartbeat — stronger and
+  faster the more you bleed; bleeding hard or below a quarter of your HP, the view lurches now and
+  then. Nothing shows while you are unhurt (`Wounds.ScreenEffects`).
 - **Robots** never bleed, but a heavy hit can still wreck an arm (shaky aim) or a leg.
 - **Squad soldiers** bleed too; once they go down, the game's own bleed-out timer takes over
   and a medic (or you) can still bring them back.

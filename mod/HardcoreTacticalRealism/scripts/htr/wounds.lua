@@ -58,6 +58,15 @@ function W.bleed(key, t, dt)
     return total
 end
 
+-- Current bleeding rate: % of max HP per second (0 = not bleeding).
+function W.rate(key, t)
+    local s = W.list[key]
+    if not s then return 0 end
+    local r = 0
+    for _, w in ipairs(s.wounds) do if t < w.untilT then r = r + w.rate end end
+    return r
+end
+
 function W.isBleeding(key, t)
     local s = W.list[key]
     if not s then return false end

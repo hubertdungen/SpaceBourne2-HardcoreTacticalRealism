@@ -40,6 +40,8 @@ return {
         GlobalToNPCs      = 1.0,  -- multiply all damage NPCs take (0.8 = tougher NPCs)
         MinPercentPerHit  = 10,   -- any bullet removes at least this % of HP (caps hits-to-kill at ~10)
         BossVitality      = 1.8,  -- bosses have 1.8x the "body" of a soldier
+        BossArmorBonus    = 10,   -- and better-made power armor: +10 protection points...
+        BossArmorWear     = 0.5,  -- ...that wears half as fast (rifle: ~12 body hits, 3 to the head)
         TankVitality      = 2.0,  -- heavy robot tanks
         RobotVitality     = 1.2,
         PirateArmorShift  = -1,   -- pirates/raiders wear one armor class less
@@ -64,7 +66,10 @@ return {
                                 -- heavy limb hits can break an arm (shaky aim) or leg.
                                 -- Robots never bleed, but their arms and legs can still be wrecked.
         -- Broken bones (about a minute until the nanites fuse them):
-        LegSpeed     = 0.5, -- broken leg: you move at this fraction of the speed; NPCs and squad can only walk
+        LegSpeed     = 0.5, -- broken leg: you move at this fraction of the speed and cannot sprint;
+                            -- NPCs and squad can only walk (and most NPCs lose their nerve)
+        LegWalkOnlyBelowHP = 0.3, -- broken leg and under 30 % HP: you can only walk
+        ScreenEffects = true, -- bleeding: dark-red heartbeat pulse; bleeding hard or under 25 % HP: dizzy lurches
         ArmSway      = 6,   -- broken arm: your aim drifts and trembles (deg/s) while a gun is drawn
         NpcArmSpread = 3.0, -- broken arm: NPC aim spread multiplier
         -- how often you and your allies get wounded (enemies always 1.0)
