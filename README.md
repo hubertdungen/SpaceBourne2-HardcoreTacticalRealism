@@ -36,7 +36,9 @@ your faction power, and the galaxy's factions react. [Tactical Engineering](http
 [Ammo Discipline](https://github.com/hubertdungen/SpaceBourne2-AmmoDiscipline) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/12))
 limits carried ammo and scavenging, so every magazine counts. [Ground Waypoints](https://github.com/hubertdungen/SpaceBourne2-GroundWaypoints)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/13)) shows planet waypoints on foot and on the hoverbike.
-Coming soon: Tactical First Person, Get Out of the Way.
+[Get Out of the Way](https://github.com/hubertdungen/SpaceBourne2-GetOutOfTheWay) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/14))
+makes NPCs step aside naturally when you walk through them.
+Coming soon: Tactical First Person.
 
 ## Install (2 minutes)
 
