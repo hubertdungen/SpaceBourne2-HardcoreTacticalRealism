@@ -174,6 +174,20 @@ Gear bonus off (the default) = the tables above, for every level.
   Hardcore 50 %, Realism 25 %, Realism Hardcore 12 % of vanilla — and it starts 8–15 s after
   your last hit. Armor nanites slowly repair the suit too.
 
+## Not always dead (knockouts)
+
+A lethal hit sometimes knocks the victim out instead of killing: you, your allies and enemies
+(Tactical 18 %, Tactical Hardcore 12 %, Realism 10 %, Realism Hardcore 5 %). Never on a headshot,
+a big explosion or heavy overkill; robots and bosses are never knocked out.
+
+- Someone can bring the downed back: a squad medic fastest, otherwise a squad soldier or a
+  companion. Enemies revive their own by training: elites fast and reliably, regulars slower,
+  militia and pirates rarely, and they often give up under fire.
+- Nobody goes in under fire: the area round the body must be clear. The reviver has to stay with
+  the body for a few seconds, and it can fail.
+- Nobody comes within 45 s: the downed one bleeds out. While you are down you take no damage.
+- Knockout in config: on/off, chance per mode, bleed-out time.
+
 ## Explosions, grenades and ships
 
 - **Explosions** (your grenades, NPC grenades, rockets) do realistic damage that fades with

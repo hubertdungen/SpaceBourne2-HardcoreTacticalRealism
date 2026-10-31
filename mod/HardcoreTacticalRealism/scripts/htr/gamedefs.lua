@@ -88,6 +88,7 @@ G.Fn.NpcRadial   = G.Shooter .. ":ReceiveRadialDamage"
 G.Fn.SoldierHit  = G.Soldier .. ":ReceivePointDamage"
 -- squad soldiers: 1.5 s update (no target -> SetWalkSpeed: walk gait, teleport to you beyond 30 m)
 G.Fn.SoldierUpdate        = G.Soldier .. ":UpdateBattle"
+G.Fn.SoldierInjuredTime   = G.Soldier .. ":InjuredTime" -- 1 s timer while knocked out (bleed-out at 20)
 G.Fn.SoldierWalkSpeed     = G.Soldier .. ":SetWalkSpeed"
 G.Fn.SoldierWalkSpeedOrder= G.Soldier .. ":SetWalkSpeed_Guarded"
 -- gamepad: the on-foot "switch camera" action (4 quick presses = HTR mode, crouched = ships toggle)

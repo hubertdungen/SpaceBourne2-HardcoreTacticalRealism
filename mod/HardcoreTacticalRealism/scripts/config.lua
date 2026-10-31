@@ -47,7 +47,7 @@ return {
         RobotVitality     = 1.2,
         PirateArmorShift  = -1,   -- pirates/raiders wear one armor class less
         ExplosionRadius   = 600,  -- cm; grenade/rocket damage fades to 0 at this distance
-        -- Squad soldiers: chance a lethal hit kills outright instead of "injured first".
+        -- Squad soldiers, only with Knockout.Enabled = false: chance a lethal hit kills outright instead of "injured first".
         -- In the Realism modes headshots and heavy overkill always kill outright.
         SquadOutrightDeath = { ["Tactical"] = 0, ["Tactical Hardcore"] = 0, ["Realism"] = 0.8, ["Realism Hardcore"] = 0.95 },
         HelmetMinPass     = 0.4,  -- no helmet fully stops a headshot: at least 40% gets through
@@ -75,6 +75,17 @@ return {
         NpcArmSpread = 3.0, -- broken arm: NPC aim spread multiplier
         -- how often you and your allies get wounded (enemies always 1.0)
         Frequency = { ["Tactical"] = 0.4, ["Tactical Hardcore"] = 0.6, ["Realism"] = 1.0, ["Realism Hardcore"] = 1.0 },
+    },
+
+    -- Not always dead: a lethal hit sometimes knocks out instead (you, allies and enemies), never on
+    -- a headshot, a big explosion or overkill beyond OverkillPercent of max HP. A medic, a squad
+    -- soldier or a companion can bring you back; enemies revive each other by training (elites fast,
+    -- militia and pirates rarely); robots never. Nobody comes within BleedOutSeconds: dead.
+    Knockout = {
+        Enabled = true,
+        Chance = { ["Tactical"] = 0.18, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.10, ["Realism Hardcore"] = 0.05 },
+        BleedOutSeconds = 45,
+        OverkillPercent = 50,
     },
 
     -- Nanotech healing between fights. HP: multiplier on the game's own suit healing

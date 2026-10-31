@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.9 — 2026-10-31
+
+- **Not always dead.** A lethal hit sometimes knocks the victim out instead: you, your allies and
+  enemies. Chance per mode: Tactical 18 %, Tactical Hardcore 12 %, Realism 10 %, Realism Hardcore 5 %.
+  Never on a headshot, a big explosion or heavy overkill. Robots and bosses are never knocked out.
+- **Someone comes for the downed.** A squad medic comes fastest; otherwise a squad soldier or a
+  companion comes, more slowly. Among enemies, elites revive quickly and reliably, regulars more
+  slowly, and militia and pirates rarely, often giving up under fire.
+  - Nobody goes in under fire: the area round the body must be clear (15 m).
+  - The reviver has to reach the body and stay there for 6–15 s. A revive can fail.
+  - Nobody comes within 45 s: the downed one bleeds out. Your squad's own injured state now lasts
+    as long, and its medics and your "hold to revive" work as before.
+  - You see "Knocked out - a medic is coming" / "help is coming" / "Back on your feet".
+  - Settings: `Knockout` in config (on by default; chance per mode, bleed-out time, overkill limit).
+- Tested in game: an enemy knocked out at 1 HP was revived by a comrade 4 m away after 12 s; you
+  knocked out next to your squad were revived by a soldier who came over (12 s); frame times as in
+  0.4.8 (firefight median 10 ms, 99 % under 24 ms).
+
 ## 0.4.8 — 2026-10-31
 
 - **Slow perks key is now Shift+F3 (on foot).** F11 is the game's fullscreen toggle. Configs that

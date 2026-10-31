@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.8"
+local VERSION = "0.4.9"
 
 local U = require("htr.util")
 
@@ -80,6 +80,9 @@ cfg.Awareness = cfg.Awareness or {}
 default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
 cfg.Squad = cfg.Squad or {}
 default(cfg.Squad, "KeepUp", true); default(cfg.Squad, "RunBeyond", 600); default(cfg.Squad, "SprintBeyond", 1500)
+cfg.Knockout = cfg.Knockout or {}
+default(cfg.Knockout, "Enabled", true); default(cfg.Knockout, "BleedOutSeconds", 45); default(cfg.Knockout, "OverkillPercent", 50)
+default(cfg.Knockout, "Chance", { ["Tactical"] = 0.18, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.10, ["Realism Hardcore"] = 0.05 })
 cfg.Fixes = cfg.Fixes or {}
 default(cfg.Fixes, "EndBulletsAfterHit", true)
 cfg.Messages = cfg.Messages or {}
@@ -201,6 +204,7 @@ for i, path in ipairs(G.NpcProjectileHits) do H.add(path, Pl.onShooterProjectile
 H.add(G.Fn.NpcRadial, N.onRadial, "NPC blast")
 H.add(G.Fn.SoldierHit, N.onSoldierHit, "squad soldier damage")
 H.add(G.Fn.SoldierUpdate, N.onSoldierUpdate, "squad soldier bleeding")
+H.add(G.Fn.SoldierInjuredTime, N.onSoldierInjured, "squad knocked out")
 H.add(G.Fn.SoldierWalkSpeed, N.onSoldierMove, "squad keeps up")
 H.add(G.Fn.SoldierWalkSpeedOrder, N.onSoldierMove, "squad keeps up (orders)")
 for i, path in ipairs(G.ShipGunHits) do
@@ -225,7 +229,8 @@ local function tuneBehaviourTree(now)
     end
 end
 
-local lastStatus, pollSlowAt, profileAt, lastArrival = "", -1e9, os.clock() + 30, nil
+local lastStatus, pollSlowAt, profileAt, lastArrival, lastKO = "", -1e9, os.clock() + 30, nil, nil
+local KO = require("htr.knockout")
 LoopAsync(1000, function()
     ExecuteInGameThread(function()
         local t0 = os.clock()
@@ -239,6 +244,8 @@ LoopAsync(1000, function()
             end
             registered = H.poll(t0)
             tuneBehaviourTree(t0)
+            if next(KO.down) then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end -- knocked-out NPCs
+            lastKO = t0
         end)
         if not ok then U.warn("poll: " .. tostring(err)) end
         local dt = os.clock() - t0

@@ -23,6 +23,8 @@ local C = require("htr.classify")
 local W = require("htr.wounds")
 local GB = require("htr.gear")
 local FB = require("htr.feedback")
+local KO = require("htr.knockout")
+local N = require("htr.npc")
 local P = G.P
 
 local Pl = { pending = {}, passthrough = false, radialTick = -1, tick = 0, nextAbsorb = 0, owned = false }
@@ -139,14 +141,26 @@ local function kill(p)
     if not ok then U.warn("lethal hand-off failed: " .. tostring(err)) end
 end
 
+-- A lethal hit: sometimes knocked out instead (0.4.9, knockout.lua), else HTR's lethal hand-off.
+local function lethal(p, zone, overkill, explosion)
+    if not KO.player and KO.roll(zone, overkill, explosion) then
+        KO.downPlayer(p, os.clock())
+        pcall(U.notify, "Knocked out - hold on, help may come", p)
+        return
+    end
+    kill(p)
+end
+
 function Pl.resolve(p, shooter, bone)
     if #Pl.pending == 0 then return end
     local list = Pl.pending
     Pl.pending = {}
     local hp, armor = U.get(p, P.HP, 0), U.get(p, P.Armor, 0)
     Pl.lastHurt = os.clock()
+    local lastZone, lastBlast = "unknown", false
     for _, e in ipairs(list) do
         local d, abl, kind, caliber, zone, side = computeHit(p, e, shooter, bone)
+        lastZone, lastBlast = zone, e.radial
         if kind == "pool" then
             -- armor soaks first, the rest goes to HP (vanilla's overflow bug fixed)
             if armor > 0 then
@@ -169,7 +183,7 @@ function Pl.resolve(p, shooter, bone)
         if U.get(p, P.GodMode, false) then
             hp = 1
         else
-            kill(p)
+            lethal(p, lastZone, -hp / math.max(1, U.get(p, P.MaxHP, 100)), lastBlast)
             return
         end
     end
@@ -201,7 +215,8 @@ function Pl.applyExternal(p, amount, label)
     end
     if U.LogHits then U.log(string.format("PLAYER <- %s %.1f => hp %.1f", label, amount, hp)) end
     if hp <= 0 then
-        if U.get(p, P.GodMode, false) then hp = 1 else kill(p); return end
+        if U.get(p, P.GodMode, false) then hp = 1
+        else lethal(p, "torso", -hp / math.max(1, U.get(p, P.MaxHP, 100)), label ~= "bleeding"); return end
     end
     U.set(p, P.HP, hp)
     U.set(p, P.Armor, armor)
@@ -294,11 +309,20 @@ function Pl.onTick(self)
     end
     if pos and not Pl.lastPos then HTR.wakeHooks = true end -- first step on foot: register the rest quickly
     Pl.lastPos = pos
+    HTR.playerPos = pos -- knockout.lua: enemies only revive their own when you are not close
     HTR.playerLevel = U.get(p, P.PlayerLevel, HTR.playerLevel or 1) -- squad / turret gear level (gear bonus)
     if not enabled() then return end
     local t = os.clock() -- one clock for wounds, healing and hit times
     local dt = math.min(1.0, t - (Pl.lastStep or t))
     Pl.lastStep = t
+    if KO.player then -- knocked out: no healing or bleeding, wait for help (knockout.lua)
+        local r = KO.updatePlayer(p, t, dt, N.near)
+        if r == "medic" then pcall(U.notify, "Knocked out - a medic is coming", p)
+        elseif r == "help" then pcall(U.notify, "Knocked out - help is coming", p)
+        elseif r == "revived" then pcall(U.notify, "Back on your feet - get to cover", p)
+        elseif r == "bledout" then kill(p) end
+        return
+    end
     if dt > 0 then regenStep(p, t, dt) end
     Pl.addr = U.addr(p)
     local hp, maxHP = U.get(p, P.HP, 0), U.get(p, P.MaxHP, 100)

@@ -10,6 +10,7 @@ local DOC = require("htr.doctrines")
 local W = require("htr.wounds")
 local S = require("htr.ships")
 local GB = require("htr.gear")
+local KO = require("htr.knockout")
 local P, BB = G.P, G.BB
 
 local N = { state = {}, count = 0, aimWrite = nil, pos = {} }
@@ -196,7 +197,7 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     local maxHP = U.get(npc, P.MaxHP, 0)
     if maxHP <= 1.5 then return end -- civilians: one hit, as vanilla
     local st = N.ensure(npc)
-    if not st then return end
+    if not st or st.down then return end -- knocked out: the next hit kills (vanilla damage)
     local c = cfg()
     local attacker = causerP:get()
     local aside, acn = C.sideOf(attacker)
@@ -250,6 +251,16 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     if maxArmor > 0 and ablation > 0 then
         U.set(npc, P.Armor, math.max(0, armor - ablation / 100 * maxArmor))
     end
+    -- not always dead (0.4.9): a lethal hit may leave it knocked out at 1 HP
+    local hpNow = U.get(npc, P.HP, 0)
+    if dmg >= hpNow and hpNow > 1 and not st.robot and not st.boss and st.doctrine ~= "machine"
+        and KO.roll(zone, (dmg - hpNow) / maxHP, false) then
+        dmg = hpNow - 1
+        out:set(dmg)
+        KO.downShooter(npc, st, os.clock())
+        if U.LogHits then U.log("KNOCKED OUT " .. tostring(st.cn) .. " (" .. st.side .. ")") end
+        return
+    end
     out:set(dmg)
     if U.LogHits then
         U.log(string.format("HIT %s(%s L%s) <- %s %s zone=%s bone=%s armor=%s cond=%.2f gear w%.2f a%.2f => %.1f%% (%.1f hp, vanilla %.1f)",
@@ -273,6 +284,7 @@ function N.onReceivePoint(self)
     if U.get(npc, P.Dead, false) then return end
     local st = N.ensure(npc)
     if not st then return end
+    st.hitT = os.clock() -- a reviver under fire stops (knockout.lua)
     local d = doctrine(st)
     local t = U.now(npc)
     -- One "break line of sight" at a time: after diving for cover an NPC fights from there for
@@ -314,7 +326,7 @@ function N.onDead(self)
             end
         end
     end
-    if a then N.state[a] = nil; N.pos[a] = nil; N.count = math.max(0, N.count - 1); W.heal(a) end
+    if a then N.state[a] = nil; N.pos[a] = nil; N.count = math.max(0, N.count - 1); W.heal(a); KO.down[a] = nil end
 end
 
 -- Damage factor for victim side `vs` hit by attacker side `as` (friendly fire + Hardcore).
@@ -400,7 +412,11 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
         -- outright, other lethal hits by chance (Damage.SquadOutrightDeath).
         local outright = (cfg().Damage.SquadOutrightDeath or {})[HTR.mode] or 0
         local fatal = HTR.base == "Realism" and (zone == "head" or hp < -0.5 * U.get(sol, P.MaxHP, 100))
-        if U.get(sol, "InInjuredMode", false) or fatal or math.random() < outright then
+        local dies
+        if U.get(sol, "InInjuredMode", false) then dies = true
+        elseif KO.enabled() then dies = not KO.roll(zone, -hp / U.get(sol, P.MaxHP, 100), false) -- 0.4.9: chance per mode
+        else dies = fatal or math.random() < outright end
+        if dies then
             pcall(function() sol:Deaded() end)
         else
             pcall(function() sol:EnterInjuredMode() end)
@@ -415,6 +431,9 @@ local soldierBleedT = {}
 function N.onSoldierUpdate(self)
     local sol = self:get()
     local a = U.addr(sol)
+    if a and not U.get(sol, P.Dead, false) and not U.get(sol, P.Injured, false) then
+        KO.soldier(sol, a, os.clock(), C.sideOf(sol)) -- position for revives (knockout.lua)
+    end
     if not (a and W.list[a]) then return end
     if U.get(sol, P.Dead, false) or U.get(sol, P.Injured, false) then W.heal(a); soldierBleedT[a] = nil; return end
     local t = os.clock()
@@ -428,6 +447,14 @@ function N.onSoldierUpdate(self)
         W.heal(a); soldierBleedT[a] = nil
         pcall(function() sol:EnterInjuredMode() end)
     end
+end
+
+-- Hook: Master_Soldier_C:InjuredTime (1 s while down) - longer bleed-out (knockout.lua).
+function N.onSoldierInjured(self)
+    if not KO.enabled() then return end
+    local sol = self:get()
+    local a = U.addr(sol)
+    if a then KO.soldierInjured(sol, a, os.clock()) end
 end
 
 -- Hook: Master_Soldier_C:SetWalkSpeed(_Guarded) - squad soldiers following you.
@@ -454,8 +481,10 @@ function N.onThink(self)
     if U.get(npc, P.Dead, false) then return end
     local st = N.ensure(npc)
     if not st then return end
+    if st.down then return end -- knocked out: lies still (knockout.lua runs bleed-out and revive)
     local t = U.now(npc)
     N.track(npc)
+    if st.reviving or st.reviveMoving then KO.drive(npc, st) end
     applyPending(npc, st, t)
     if U.get(npc, P.Dead, false) then return end -- a queued ship blast may have killed it
     -- bleeding (1 Hz)
@@ -514,8 +543,10 @@ function N.onRifleEye(self)
     local npc = self:get()
     local st = N.ensure(npc)
     if not st then return end
+    if st.down then return end
     local t = U.now(npc)
     N.track(npc)
+    if st.reviving or st.reviveMoving then KO.drive(npc, st); return end -- busy reviving: no aiming
     applyPending(npc, st, t) -- NPCs in a fight react to queued effects within ~0.3 s
     if feat("SmarterAI") and not U.get(npc, P.Dead, false) then resumeFire(npc, st, t) end
     if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
