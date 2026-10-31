@@ -1,4 +1,4 @@
-"""Convert README.md to Nexus BBCode (headings, bold/italic, links, lists, tables -> [code])."""
+"""Convert README.md to Nexus BBCode (headings, bold/italic, links, lists; tables -> lists, since Nexus has no tables)."""
 import re, sys
 
 def inline(s):
@@ -8,10 +8,15 @@ def inline(s):
     return re.sub(r'`([^`]+)`', r'\1', s)
 
 def table(rows):
-    cells = [[c.strip() for c in r.strip().strip('|').split('|')] for r in rows if not re.match(r'^\|[-| ]+\|$', r.strip())]
-    cells = [[re.sub(r'\*\*|`', '', c) for c in r] for r in cells]
-    w = [max(len(r[i]) for r in cells if i < len(r)) for i in range(len(cells[0]))]
-    return '[code]\n' + '\n'.join('  '.join(c.ljust(w[i]) for i, c in enumerate(r)).rstrip() for r in cells) + '\n[/code]'
+    # Nexus BBCode has no tables (a [code] block broke links and wrapped badly), so each row becomes
+    # a list item: "[b]first cell[/b]: second cell - third cell ...". The header row is dropped.
+    cells = [[c.strip() for c in r.strip().strip('|').split('|')] for r in rows if not re.match(r'^\|[-:| ]+\|$', r.strip())]
+    items = []
+    for r in cells[1:]:
+        first = re.sub(r'\*\*', '', r[0])
+        rest = [inline(c) for c in r[1:] if c]
+        items.append('[*][b]' + inline(first) + '[/b]' + (': ' + ' - '.join(rest) if rest else ''))
+    return '[list]\n' + '\n'.join(items) + '\n[/list]'
 
 def convert(md):
     out, para, items, kind = [], [], [], None
