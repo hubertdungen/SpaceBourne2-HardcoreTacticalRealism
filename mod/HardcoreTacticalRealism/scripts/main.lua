@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.5"
+local VERSION = "0.4.6"
 
 local U = require("htr.util")
 
@@ -78,8 +78,13 @@ cfg.Awareness = cfg.Awareness or {}
 default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
 cfg.Squad = cfg.Squad or {}
 default(cfg.Squad, "KeepUp", true); default(cfg.Squad, "RunBeyond", 600); default(cfg.Squad, "SprintBeyond", 1500)
+cfg.Fixes = cfg.Fixes or {}
+default(cfg.Fixes, "EndBulletsAfterHit", true)
+cfg.Messages = cfg.Messages or {}
+default(cfg.Messages, "Quiet", true)
 
 U.Verbose = cfg.Debug.Log
+U.Quiet = cfg.Messages.Quiet ~= false
 U.LogHits = cfg.Debug.LogHits
 
 -- Modes ----------------------------------------------------------------------
@@ -165,6 +170,7 @@ local N = require("htr.npc")
 local Pl = require("htr.player")
 local S = require("htr.ships")
 local PK = require("htr.perks")
+local BL = require("htr.bullets")
 
 U.log(string.format("=== HTR %s loaded, mode=%s, ships=%s, gear bonus=%s, slow perks=%s ===", VERSION, HTR.mode,
     tostring(HTR.shipsOn), tostring(HTR.gearOn), tostring(HTR.perksSlow)))
@@ -177,7 +183,14 @@ H.add(G.Fn.NpcOnDead, N.onDead, "NPC death")
 H.add(G.Fn.NpcThink, N.onThink, "NPC think")
 H.add(G.Fn.NpcRifleEyeUpdated, N.onRifleEye, "NPC aim (update)")
 H.add(G.Fn.NpcRifleEyeDetected, N.onRifleEye, "NPC aim (detect)")
-for i, path in ipairs(G.PlayerProjectileHits) do H.add(path, N.onPlayerProjectileHit, "suppression " .. i) end
+-- your bullets: suppression, then the load-crash fix (see htr/bullets.lua), which always runs
+for i, path in ipairs(G.PlayerProjectileHits) do
+    H.add(path, function(self, proj, ...)
+        local ok, err = pcall(N.onPlayerProjectileHit, self, proj, ...)
+        BL.endAfterHit(proj)
+        if not ok then error(err, 0) end
+    end, "player bullet " .. i)
+end
 H.add(G.Fn.PlayerIncome, Pl.onIncome, "player damage")
 H.add(G.Fn.PlayerRadial, Pl.onRadial, "player radial")
 H.add(G.Fn.PlayerTick, Pl.onTick, "player tick")

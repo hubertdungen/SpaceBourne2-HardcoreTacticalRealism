@@ -154,6 +154,18 @@ return {
         EnemyToEnemy = 1.0,
     },
 
+    -- HTR's on-screen messages (mode keys, bleeding, broken bones). Quiet = true: shown without
+    -- the game's red-alert "tu-tu-tu" sound (the game's own warnings keep their sound).
+    Messages = { Quiet = true },
+
+    -- Fixes for SpaceBourne 2 bugs (they also happen without mods).
+    Fixes = {
+        -- Your bullets often stay alive (frozen) after hitting something; loading while many are
+        -- around can crash the game ("Fatal error" when the death screen loads your save after a
+        -- long firefight). HTR ends each bullet right after the game has handled its hit.
+        EndBulletsAfterHit = true,
+    },
+
     Debug = {
         Log     = false,  -- write HardcoreTacticalRealism\htr.log (errors are always written)
         LogHits = false,  -- log every hit (verbose; for tuning)

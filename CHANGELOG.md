@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.4.6 — 2026-10-31
+
+- **"Fatal error" when loading after you die.** Found a SpaceBourne 2 bug behind it (it also
+  happens with no mods at all): bullets from your hand weapon often do not end after they hit
+  something; the projectile stays alive, frozen, for over a minute. Loading while such bullets are
+  around can leave the old map stuck in memory without its WorldSettings, and loading that same
+  map again — which is what the death screen does with your last save — crashes the game
+  (`EXCEPTION_ACCESS_VIOLATION reading 0x268`). HTR now ends each of your bullets right after the
+  game has handled its hit. A frozen bullet did nothing anyway, so nothing changes in play
+  (`Fixes.EndBulletsAfterHit` in config).
+  - Tested in game: a firing burst that crashed the next load 7 times out of 7 (with and without
+    mods) no longer crashes; after a real firefight no bullet is left behind.
+  - Honest note: I could trigger the crash with a scripted burst, not yet with normal play, so
+    there may be other causes. If it happens again, please send `UE4SS.log` and the newest folder
+    in `%LOCALAPPDATA%\SB2\Saved\Crashes`.
+- **HUD messages without the alarm.** HTR's messages (F7 / Shift+F7 / F9 / F11, bleeding, broken
+  bones) no longer play the game's red-alert "tu-tu-tu"; the game's own warnings keep their sound
+  (`Messages.Quiet`).
+- Fixed: after a level load, the check that keeps F7 / F9 / F11 quiet while Shift, Ctrl or Alt is
+  held used the destroyed old controller, which could crash the game on a key press.
+- Tested in game with real key presses: F7 shows its message with the alarm muted (volume back
+  2 s later), Shift+F7 toggles the gear bonus without changing the mode. Frame times in a firefight
+  (5 enemies, your squad, sustained fire), all realism-set mods on: with HTR 0.4.6 median 18.0 ms,
+  99 % under 33 ms, worst 68 ms; without HTR 18.0 / 33 / 67 ms.
+- Thanks to TheCalcMan for his reports (HUD messages, a crash when shooting a raid boss, the ammo
+  idea). The boss crash is still under investigation.
+
 ## 0.4.5 — 2026-10-30
 
 - **Broken bones matter now.** A broken leg makes you limp at half speed at every gait; NPCs and

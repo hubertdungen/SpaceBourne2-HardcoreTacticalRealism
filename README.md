@@ -60,7 +60,8 @@ HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). 
 | **F11** | Slow perks on/off (on by default; see below) |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
 
-All choices are remembered between sessions. Keys can be changed in `config.lua`.
+All choices are remembered between sessions. Keys can be changed in `config.lua`. HTR's
+messages appear on the HUD without the game's red-alert sound (`Messages.Quiet`).
 
 ## Perks (F11 — slow by default)
 
@@ -202,12 +203,21 @@ can hold a firefight instead of dropping as soon as they show up.
 | Machine | robots | fearless, steady, never retreat |
 | Companion | your allies | elite-level aim, no panic |
 
+## Game bugs HTR fixes
+
+- **Crash when loading after you die in a long firefight** ("Fatal error", also without mods):
+  your bullets often stay alive, frozen, after hitting something, and a load with many of them
+  around can crash the game. HTR ends each of your bullets right after its hit (0.4.6).
+- **Armor overflow:** the hit that empties vanilla armor also takes the armor's value from your HP.
+- **Companions' bullets** had a 0-second life and did nothing.
+
 ## Settings
 
 `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua` (open with Notepad,
 restart the game after saving): mode and keys, every feature on/off, Hardcore multiplier,
 helmet rule, wounds and healing per mode, gear bonus strength, ships vs infantry strength,
-perk speed, enemy awareness ranges, squad pace, friendly fire, boss toughness, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
+perk speed, enemy awareness ranges, squad pace, friendly fire, boss toughness, quiet messages,
+game-bug fixes, logging. Deeper tuning: `htr\ballistics.lua` (calibers, armor, hit zones)
 and `htr\doctrines.lua` (how each kind of NPC fights).
 
 ## Known limitations
@@ -217,7 +227,8 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   guard/robot/boss flags and companion status.
 - Gamepad toggles are experimental (untested without a controller).
 - Tested on the Steam build of 26 Oct 2026. Bug reports with `htr.log` (set `Debug.Log = true`)
-  are very welcome; if you ever notice stutter, `htr.log` names any HTR code that took longer
+  are very welcome (for a crash, please add `UE4SS.log` and the newest folder in
+  `%LOCALAPPDATA%\SB2\Saved\Crashes`); if you ever notice stutter, `htr.log` names any HTR code that took longer
   than 8 ms.
 - **Versions before 0.3.2 froze the game for a moment on every shot** — fixed in 0.3.2; please update.
   In-game tests while firing now show the same frame times as the game without mods.

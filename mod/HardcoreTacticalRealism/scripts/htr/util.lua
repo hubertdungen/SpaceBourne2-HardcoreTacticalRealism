@@ -151,14 +151,15 @@ end
 
 -- Which modifier is held right now: "SHIFT", "CONTROL", "ALT" or "" (none), asked of the game's
 -- own input. Used to keep plain keys quiet while a modifier is held. Key presses only.
-local PC
+-- The controller is looked up on every press (~50 ms, a key press can afford it): up to 0.4.5 it
+-- was kept, and after a level load that pointed at the destroyed old controller.
 local MOD_KEYS = { { "SHIFT", "LeftShift" }, { "SHIFT", "RightShift" }, { "CONTROL", "LeftControl" },
     { "CONTROL", "RightControl" }, { "ALT", "LeftAlt" }, { "ALT", "RightAlt" } }
 function U.modifierState()
-    if not U.valid(PC) then PC = FindFirstOf("PlayerController") end
-    if not U.valid(PC) then return "" end
+    local pc = FindFirstOf("PlayerController")
+    if not U.valid(pc) then return "" end
     for _, m in ipairs(MOD_KEYS) do
-        local ok, down = pcall(function() return PC:IsInputKeyDown({ KeyName = FName(m[2]) }) end)
+        local ok, down = pcall(function() return pc:IsInputKeyDown({ KeyName = FName(m[2]) }) end)
         if ok and down then return m[1] end
     end
     return ""
@@ -169,8 +170,35 @@ function U.modifierDown() return U.modifierState() ~= "" end
 -- "No Target Nearby" (right side, warning icon); elsewhere (e.g. in a ship), the red
 -- warning line it uses for "In Cooldown..." (top left). (SendSystemMessage, used up to
 -- 0.4.0, shows nothing on foot.)
+-- Both of those widgets play the game's "can't do that" alarm (GUI_Cant, "tu-tu-tu") with every
+-- message. With Messages.Quiet, HTR silences that one sound for 2 s around its own messages
+-- (a SoundWave's Volume is applied while it plays); the game's own warnings keep their sound.
 local MSG_LIB = "/Game/1Data/FunctionsMacros/Q1FunctionLibary.Default__Q1FunctionLibary_C"
+local CANT = "/Game/11Misc/LGUI/Audio/GUI_Cant.GUI_Cant"
+local cantVolume, unmuteAt = nil, 0
+local function muteAlarm()
+    if not U.Quiet then return end
+    local snd = StaticFindObject(CANT) -- loaded with the HUD (the warning widgets reference it)
+    if not U.valid(snd) then return end
+    if cantVolume == nil then
+        local ok, v = pcall(function() return snd.Volume end)
+        if not (ok and type(v) == "number") then return end
+        cantVolume = v
+    end
+    pcall(function() snd.Volume = 0.0 end)
+    unmuteAt = os.clock() + 2.0
+    ExecuteWithDelay(2100, function()
+        ExecuteInGameThread(function()
+            if os.clock() < unmuteAt then return end -- a newer message keeps it quiet a bit longer
+            local s = StaticFindObject(CANT)
+            if U.valid(s) and cantVolume then pcall(function() s.Volume = cantVolume end) end
+        end)
+    end)
+end
+U.muteAlarm = muteAlarm
+
 function U.notify(text, ctx)
+    pcall(muteAlarm)
     local p = U.playerPawn(ctx)
     if U.valid(p) and pcall(function() p:TMWPerkWarning(FText(text)) end) then return true end
     local lib = StaticFindObject(MSG_LIB)
