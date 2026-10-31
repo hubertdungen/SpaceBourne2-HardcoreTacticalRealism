@@ -33,11 +33,13 @@ def convert(md):
             items.clear()
         kind = None
 
+    # GitHub-only parts (test logs, dev notes) sit between <!-- nexus:skip --> and <!-- /nexus:skip -->.
+    md = re.sub(r'<!--\s*nexus:skip\s*-->.*?<!--\s*/nexus:skip\s*-->', '', md, flags=re.S)
     lines = md.splitlines()
     i = 0
     while i < len(lines):
         l = lines[i]
-        if l.startswith('<p'):
+        if l.startswith('<p') or l.strip().startswith('<!--'):
             i += 1; continue
         if l.startswith('|'):
             flush_para(); flush_list()
