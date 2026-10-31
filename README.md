@@ -42,7 +42,7 @@ Coming soon: Tactical First Person.
 
 ## Install (2 minutes)
 
-HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). Pick one:
+HTR is a Lua mod for **UE4SS**, a free script loader for Unreal Engine games. Pick one:
 
 **A. One-click installer (recommended, includes UE4SS)**
 1. Download `HardcoreTacticalRealism-x.y.z.zip` (the big one) from
