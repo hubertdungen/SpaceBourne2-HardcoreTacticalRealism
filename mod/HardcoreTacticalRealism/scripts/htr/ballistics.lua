@@ -43,6 +43,7 @@ B.Calibers = {
     npc_melee     = { dmg = 65,  pen = 50, melee = true },
     squad_rifle   = { dmg = 52,  pen = 42 },
     turret        = { dmg = 100, pen = 72 }, -- ground turrets: heavy emplaced gun, one round every ~1.5 s
+    turret_light  = { dmg = 55,  pen = 50 }, -- turret perk / mini-turrets: rapid-fire rifle-class gun (10 rounds/s)
     explosion     = { dmg = 150, pen = 60, tick = true }, -- grenades/rockets at the blast centre
     ship          = { dmg = 300, pen = 95, tick = true }, -- ship guns hitting infantry
     generic       = { dmg = 50,  pen = 40 },

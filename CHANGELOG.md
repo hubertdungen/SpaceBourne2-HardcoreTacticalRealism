@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.8 — 2026-10-31
+
+- **Slow perks key is now Shift+F3 (on foot).** F11 is the game's fullscreen toggle. Configs that
+  still say F11 switch over by themselves (logged in `htr.log`), and HTR now refuses F11 with or
+  without a modifier. In a ship Shift+F3 does nothing for HTR (F3 is the fleet's order 3 there).
+- **Turrets:** your turret perk (also used by Tactical Engineering) now counts as yours and fires
+  rifle-class rounds (`turret_light`, 55 / 50) instead of unknown "generic" rounds; the
+  mini-bosses' mini-turrets are hostile with the same light caliber. Team-battle turrets stay heavy.
+- Fixed: a setting HTR reads from a game object that does not have it (e.g. the turret perk's team)
+  now falls back to HTR's default; before, the turret perk's rounds counted as enemy fire.
+- Tested in game: the keys bind as F7 / Shift+F7 / F9 / Shift+F3; a spawned turret-perk turret's
+  hits on enemies count as yours with the light caliber; the alarm volume is restored after messages.
+  Frame times (about 90 fps machine state): firefight with sustained fire, without HTR median 9 ms,
+  99 % under 20 ms; HTR 0.4.5 10 / 24 ms; HTR 0.4.8 10 / 27 ms (a few 25–48 ms frames while bodies
+  drop, as in 0.4.5). Five enemies shooting at you: 0.4.8 median 9 ms, 99 % under 20 ms, worst 39 ms.
+- Quiet messages work together with Silent Ops 0.2, which mutes the same alarm: the real volume is
+  shared between the two mods, so the alarm can't end up silent for good.
+- Links to the whole realism set: Split Controls, Silent Ops, Gear Without Levels, Faction Power,
+  Tactical Engineering and SB2 HOTAS (now on Nexus).
+
 ## 0.4.7 — 2026-10-31
 
 - **You feel your wounds.** While you bleed, the screen pulses dark red like a heartbeat — stronger

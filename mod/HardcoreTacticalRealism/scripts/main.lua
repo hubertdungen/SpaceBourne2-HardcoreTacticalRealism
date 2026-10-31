@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.7"
+local VERSION = "0.4.8"
 
 local U = require("htr.util")
 
@@ -74,7 +74,7 @@ default(cfg.GearBonus, "WeaponPen", 8); default(cfg.GearBonus, "WeaponDamage", 0
 default(cfg.GearBonus, "ArmorRating", 8); default(cfg.GearBonus, "ArmorWear", 0.25)
 default(cfg.GearBonus, "Modes", { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true })
 cfg.Perks = cfg.Perks or {}
-default(cfg.Perks, "SlowOnFoot", true); default(cfg.Perks, "ToggleKey", "F11")
+default(cfg.Perks, "SlowOnFoot", true); default(cfg.Perks, "ToggleKey", "Shift+F3")
 default(cfg.Perks, "EnergyRegen", 0.25); default(cfg.Perks, "Cooldown", 0.25)
 cfg.Awareness = cfg.Awareness or {}
 default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
@@ -295,6 +295,9 @@ local function toggleGear(ctx)
 end
 
 local function togglePerks(ctx)
+    -- on foot only: in a ship F3 is the game's fleet order 3 (key plan rev. 2c)
+    local pawn = U.playerPawn(ctx)
+    if pawn and not G.PlayerClassNames[U.className(pawn) or ""] then return end
     HTR.perksSlow = not HTR.perksSlow
     saveState()
     U.warn("slow perks " .. (HTR.perksSlow and "ON" or "OFF"))
@@ -307,8 +310,11 @@ end
 -- one of those would fire the game's action too, so HTR refuses it and falls back to its default
 -- (0.4.0-0.4.2 shipped F8 for the gear bonus, which also quick-loaded). Only F7, F9 and F11 are
 -- free F-keys, and many laptops have no Insert/Home/End, so the gear bonus is Shift+F7.
+-- F11 is the game's fullscreen toggle (with or without Shift): refused always; slow perks moved
+-- from F11 to Shift+F3 in 0.4.8 (shared key plan of the realism set, rev. 2c).
 -- On foot, Shift alone only runs while moving; Ctrl opens the map and Alt crouches.
-local GAME_KEYS = { F1 = 1, F2 = 1, F3 = 1, F4 = 1, F5 = 1, F6 = 1, F8 = 1, F10 = 1, F12 = 1 }
+local GAME_KEYS = { F1 = 1, F2 = 1, F3 = 1, F4 = 1, F5 = 1, F6 = 1, F8 = 1, F10 = 1, F11 = 1, F12 = 1 }
+local NEVER_KEYS = { F11 = 1 }
 local OLD_GEAR_KEYS = { ["F8"] = true, ["CTRL+INSERT"] = true } -- 0.4.0-0.4.2 and 0.4.3 defaults
 local KEY_ALIAS = { INSERT = "INS", DELETE = "DEL", PAGEDOWN = "PAGE_DOWN", PAGEUP = "PAGE_UP", ESC = "ESCAPE" }
 local MODS = { CTRL = "CONTROL", CONTROL = "CONTROL", SHIFT = "SHIFT", ALT = "ALT" }
@@ -319,7 +325,7 @@ local function parseKey(spec)
         if MODS[part] then mods[#mods + 1] = MODS[part] else key = KEY_ALIAS[part] or part end
     end
     if not (key and Key and Key[key]) then return nil end
-    if #mods == 0 and GAME_KEYS[key] then return nil, "the game uses " .. key end
+    if NEVER_KEYS[key] or (#mods == 0 and GAME_KEYS[key]) then return nil, "the game uses " .. key end
     return key, mods
 end
 local function bindKey(spec, fn, fallback, what)
@@ -349,7 +355,12 @@ end
 bindKey(cfg.ToggleModeKey, cycleMode, "F7", "mode")
 bindKey(cfg.Ships.ToggleKey, toggleShips, "F9", "ships")
 bindKey(gearKey, toggleGear, "Shift+F7", "gear bonus")
-bindKey(cfg.Perks.ToggleKey, togglePerks, "F11", "slow perks")
+local perksKey = cfg.Perks.ToggleKey
+if type(perksKey) == "string" and perksKey:upper():gsub("%s", ""):find("F11$") then
+    U.warn("slow perks key " .. perksKey .. " is the game's fullscreen toggle; using Shift+F3")
+    perksKey = "Shift+F3"
+end
+bindKey(perksKey, togglePerks, "Shift+F3", "slow perks")
 
 -- Gamepad: 4 quick presses of "switch camera" cycle the mode (crouched: ships toggle).
 -- Four presses leave the camera where it was.

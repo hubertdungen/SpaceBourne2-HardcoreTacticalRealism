@@ -2,10 +2,10 @@
 
 On-foot combat in SpaceBourne 2 is an MMO bullet-sponge: a level 30 raider soaks up 15 000 HP plus 15 000 armor, your damage depends on weapon level, and headshots barely matter. [b]HTR replaces that with ballistics[/b]: what kills is the round, where it hits and what armor it hits. Enemies go down fast, fight smarter, bleed, break bones and throw grenades — and so can you. Fight from cover.
 
-Inspired by Cyberpunk 2077 [i]Hardcore Realism[/i], Fallout: New Vegas [i]Realistic Combat Overhaul[/i] and [i]NPC AI Improvement[/i] (no code from those mods is used). Works together with my [url=https://github.com/hubertdungen/SpaceBourne2-HOTAS]SB2 HOTAS[/url] mod.
+Inspired by Cyberpunk 2077 [i]Hardcore Realism[/i], Fallout: New Vegas [i]Realistic Combat Overhaul[/i] and [i]NPC AI Improvement[/i] (no code from those mods is used). Works together with my [url=https://github.com/hubertdungen/SpaceBourne2-HOTAS]SB2 HOTAS[/url] mod ([url=https://www.nexusmods.com/spacebourne2/mods/8]Nexus[/url]).
 
-[b]Links:[/b] [url=https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism]GitHub[/url] · [url=https://www.nexusmods.com/spacebourne2/mods/4]Nexus Mods[/url] · [url=https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/]Steam discussion[/url] · [url=https://github.com/hubertdungen/SpaceBourne2-HOTAS]SB2 HOTAS[/url].
-[b]Realism set:[/b] [url=https://github.com/hubertdungen/SpaceBourne2-SplitControls]Split Controls[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/5]Nexus[/url]) separates the vertical invert for ship and on foot, per device. [url=https://github.com/hubertdungen/SpaceBourne2-SilentOps]Silent Ops[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/6]Nexus[/url]) adds stealth, takedowns and suppressors on top of HTR's awareness. [url=https://github.com/hubertdungen/SpaceBourne2-GearWithoutLevels]Gear Without Levels[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/7]Nexus[/url]) lets you use gear above your level with small handling penalties. Coming soon: Tactical Engineering, Faction Power, Tactical First Person.
+[b]Links:[/b] [url=https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism]GitHub[/url] · [url=https://www.nexusmods.com/spacebourne2/mods/4]Nexus Mods[/url] · [url=https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/]Steam discussion[/url] · [url=https://github.com/hubertdungen/SpaceBourne2-HOTAS]SB2 HOTAS[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/8]Nexus[/url]).
+[b]Realism set:[/b] [url=https://github.com/hubertdungen/SpaceBourne2-SplitControls]Split Controls[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/5]Nexus[/url]) separates the vertical invert for ship and on foot, per device. [url=https://github.com/hubertdungen/SpaceBourne2-SilentOps]Silent Ops[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/6]Nexus[/url]) adds stealth, takedowns and suppressors on top of HTR's awareness. [url=https://github.com/hubertdungen/SpaceBourne2-GearWithoutLevels]Gear Without Levels[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/7]Nexus[/url]) lets you use gear above your level with small handling penalties. [url=https://github.com/hubertdungen/SpaceBourne2-FactionPower]Faction Power[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/9]Nexus[/url]) lets dungeons, strategic sales and missions earn your faction power, and the galaxy's factions react. [url=https://github.com/hubertdungen/SpaceBourne2-TacticalEngineering]Tactical Engineering[/url] makes deployable turrets realistic. [url=https://github.com/hubertdungen/SpaceBourne2-HOTAS]SB2 HOTAS[/url] ([url=https://www.nexusmods.com/spacebourne2/mods/8]Nexus[/url]) adds HOTAS, triple screens and head tracking. Coming soon: Tactical First Person, Ammo Discipline, Get Out of the Way, Ground Waypoints.
 
 [line]
 [size=5][b]Install (2 minutes)[/b][/size]
@@ -39,16 +39,16 @@ Key                     What it does
 F7                      Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD)
 Shift+F7                Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load
 F9                      Ships vs infantry on/off (shown on the HUD)
-F11                     Slow perks on/off (on by default; see below)
+Shift+F3                Slow perks on/off, on foot (on by default; see below). Was F11 before 0.4.8, which is the game's fullscreen toggle
 Gamepad (experimental)  press Switch camera 4 times quickly = next mode; crouched = ships toggle
 [/code]
 
 All choices are remembered between sessions. Keys can be changed in config.lua. HTR's messages appear on the HUD without the game's red-alert sound (Messages.Quiet).
 
 [line]
-[size=5][b]Perks (F11 — slow by default)[/b][/size]
+[size=5][b]Perks (Shift+F3 — slow by default)[/b][/size]
 
-With realistic damage, perks such as the turret, barricade, ground slam, shield or slow time turn into super powers. HTR makes the suit's perk energy refill [b]4x slower on foot[/b] and the turret / barricade / ground-slam / auto-revive cooldowns run 4x slower, so a perk is a tactical tool you save for the right moment. Ship energy is not affected. F11 switches back to vanilla.
+With realistic damage, perks such as the turret, barricade, ground slam, shield or slow time turn into super powers. HTR makes the suit's perk energy refill [b]4x slower on foot[/b] and the turret / barricade / ground-slam / auto-revive cooldowns run 4x slower, so a perk is a tactical tool you save for the right moment. Ship energy is not affected. Shift+F3 (on foot) switches back to vanilla.
 
 [line]
 [size=5][b]Modes[/b][/size]
@@ -84,7 +84,7 @@ Sniper                             1 / 1  1 / 1  1 / 1      1 / 1      2 / 1
 Knife / Sword / Hammer             1      1      2 / 1 / 1  2 / 2 / 1  3 / 2 / 2
 [/code]
 
-Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have a tougher body and better-made power armor that wears half as fast (about 12 rifle hits, 3 to the head; a DMR needs 6, a sniper 3). Ground turrets (team battles, bases) are heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through any armor.
+Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have a tougher body and better-made power armor that wears half as fast (about 12 rifle hits, 3 to the head; a DMR needs 6, a sniper 3). Ground turrets (team battles, bases) are heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through any armor. Your turret perk and the mini-bosses' mini-turrets are light rapid-fire guns with rifle-class rounds.
 
 [line]
 [size=5][b]Gear bonus (optional, Shift+F7 — off by default)[/b][/size]

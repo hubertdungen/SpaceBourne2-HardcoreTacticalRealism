@@ -59,10 +59,16 @@ function U.addr(o)
     return ok and a or nil
 end
 
--- Safe property read with default.
+-- Safe property read with default. UE4SS 3.0.1 answers a property the object does not have with a
+-- placeholder object instead of nil (verified 0.4.8: the turret perk has no AI_Type), so a value
+-- whose type differs from a number/boolean/string default counts as missing.
+local PLAIN = { number = true, boolean = true, string = true }
 function U.get(o, prop, default)
     local ok, v = pcall(function() return o[prop] end)
-    if ok and v ~= nil then return v end
+    if ok and v ~= nil then
+        if default ~= nil and PLAIN[type(default)] and type(v) ~= type(default) then return default end
+        return v
+    end
     return default
 end
 
@@ -181,9 +187,18 @@ local function muteAlarm()
     local snd = StaticFindObject(CANT) -- loaded with the HUD (the warning widgets reference it)
     if not U.valid(snd) then return end
     if cantVolume == nil then
-        local ok, v = pcall(function() return snd.Volume end)
-        if not (ok and type(v) == "number") then return end
-        cantVolume = v
+        -- Silent Ops mutes the same sound: the real volume is shared between the mods, and a 0 read
+        -- while another mod has it muted is never taken as the real volume
+        local shared
+        pcall(function() shared = ModRef:GetSharedVariable("SB2R_CantVolume") end)
+        if type(shared) == "number" and shared > 0 then
+            cantVolume = shared
+        else
+            local ok, v = pcall(function() return snd.Volume end)
+            -- muted right now by another mod: fall back to the game's own value (2.0, read in game)
+            cantVolume = (ok and type(v) == "number" and v > 0) and v or 2.0
+            pcall(function() ModRef:SetSharedVariable("SB2R_CantVolume", cantVolume) end)
+        end
     end
     pcall(function() snd.Volume = 0.0 end)
     unmuteAt = os.clock() + 2.0

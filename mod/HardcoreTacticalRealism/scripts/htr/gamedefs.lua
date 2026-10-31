@@ -27,7 +27,12 @@ G.PirateClassNames  = { CargoShooter_C = true, SalvageDungeonEnemy_C = true }
 G.GuardClassNames   = { Q1_GuardShooter_C = true }
 G.PlayerClassNames  = { Q1_Character_C = true }
 G.SoldierClassNames = { Master_Soldier_C = true }
-G.TurretClassNames  = { RTS_Turret_C = true }
+-- Ground turrets: team-battle guns, your turret perk (also used by Tactical Engineering) and the
+-- mini-bosses' mini-turrets. The last two have no AI_Type: the perk turret counts as yours, the
+-- mini-turret as hostile. Both are light rapid-fire guns (10 rounds/s), not heavy emplacements.
+G.TurretClassNames  = { RTS_Turret_C = true, Player_PerkTurret_C = true, NPC_Shooter_Turret_C = true }
+G.HostileTurretClassNames = { NPC_Shooter_Turret_C = true }
+G.LightTurretClassNames   = { Player_PerkTurret_C = true, NPC_Shooter_Turret_C = true }
 
 -- Player hand weapon class -> HTR caliber (see ballistics.lua)
 G.WeaponCaliber = {

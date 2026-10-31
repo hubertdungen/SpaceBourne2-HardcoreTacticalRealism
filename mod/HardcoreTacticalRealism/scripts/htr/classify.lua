@@ -47,8 +47,9 @@ function C.sideOf(actor)
         end
         return "enemy", cn
     end
+    if fam == "turret" and G.HostileTurretClassNames[cn] then return "enemy", cn end
     if fam == "soldier" or fam == "turret" then
-        -- Master_Soldier family and ground turrets: AI_Type 1 = player's side
+        -- Master_Soldier family and ground turrets: AI_Type 1 = player's side (no AI_Type = yours)
         local t = U.get(actor, "AI_Type", 1)
         return (t == 1) and "ally" or "enemy", cn
     end
@@ -111,7 +112,7 @@ function C.caliberOf(attacker, side, cn, victim)
         return "npc_rifle"
     end
     if fam == "soldier" then return "squad_rifle" end
-    if fam == "turret" then return "turret" end
+    if fam == "turret" then return G.LightTurretClassNames[cn or ""] and "turret_light" or "turret" end
     return "generic"
 end
 

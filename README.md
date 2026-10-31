@@ -10,20 +10,24 @@ grenades — and so can you. Fight from cover.
 
 Inspired by Cyberpunk 2077 *Hardcore Realism*, Fallout: New Vegas *Realistic Combat
 Overhaul* and *NPC AI Improvement* (no code from those mods is used). Works together with
-my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod.
+my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)).
 
 **Links:** [GitHub](https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism) ·
 [Nexus Mods](https://www.nexusmods.com/spacebourne2/mods/4) ·
 [Steam discussion](https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/) ·
-[SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS).
+[SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)).
 **Realism set:** [Split Controls](https://github.com/hubertdungen/SpaceBourne2-SplitControls)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/5)) separates the vertical invert for ship
 and on foot, per device. [Silent Ops](https://github.com/hubertdungen/SpaceBourne2-SilentOps)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/6)) adds stealth, takedowns and suppressors on
 top of HTR's awareness. [Gear Without Levels](https://github.com/hubertdungen/SpaceBourne2-GearWithoutLevels)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/7)) lets you use gear above your level with small
-handling penalties. Coming soon: Tactical
-Engineering, Faction Power, Tactical First Person.
+handling penalties. [Faction Power](https://github.com/hubertdungen/SpaceBourne2-FactionPower)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/9)) lets dungeons, strategic sales and missions earn
+your faction power, and the galaxy's factions react. [Tactical Engineering](https://github.com/hubertdungen/SpaceBourne2-TacticalEngineering)
+makes deployable turrets realistic. [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)) adds HOTAS, triple screens and head tracking.
+Coming soon: Tactical First Person, Ammo Discipline, Get Out of the Way, Ground Waypoints.
 
 ## Install (2 minutes)
 
@@ -57,18 +61,18 @@ HTR is a Lua mod for **UE4SS** (the script loader most SpaceBourne 2 mods use). 
 | **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
 | **Shift+F7** | Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load |
 | **F9** | Ships vs infantry on/off (shown on the HUD) |
-| **F11** | Slow perks on/off (on by default; see below) |
+| **Shift+F3** | Slow perks on/off, on foot (on by default; see below). Was F11 before 0.4.8, which is the game's fullscreen toggle |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
 
 All choices are remembered between sessions. Keys can be changed in `config.lua`. HTR's
 messages appear on the HUD without the game's red-alert sound (`Messages.Quiet`).
 
-## Perks (F11 — slow by default)
+## Perks (Shift+F3 — slow by default)
 
 With realistic damage, perks such as the turret, barricade, ground slam, shield or slow time
 turn into super powers. HTR makes the suit's perk energy refill **4x slower on foot** and the
 turret / barricade / ground-slam / auto-revive cooldowns run 4x slower, so a perk is a tactical
-tool you save for the right moment. Ship energy is not affected. F11 switches back to vanilla.
+tool you save for the right moment. Ship energy is not affected. Shift+F3 (on foot) switches back to vanilla.
 
 ## Modes
 
@@ -108,7 +112,8 @@ Shotgun pellets count individually (one close blast kills an unarmored target). 
 a tougher body and better-made power armor that wears half as fast (about 12 rifle hits, 3 to
 the head; a DMR needs 6, a sniper 3). Ground turrets (team battles, bases) are
 heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through
-any armor.
+any armor. Your turret perk and the mini-bosses' mini-turrets are light rapid-fire guns with
+rifle-class rounds.
 
 ## Gear bonus (optional, Shift+F7 — off by default)
 

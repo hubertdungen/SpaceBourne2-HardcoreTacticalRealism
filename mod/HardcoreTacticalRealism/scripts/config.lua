@@ -17,7 +17,8 @@ return {
     -- Key that cycles the four modes in game (shown on screen, remembered in state.txt).
     -- Any UE4SS key name (F7, NUM_ZERO, DEL...), optionally with Ctrl/Shift/Alt: "Shift+F7".
     -- Set to "" to disable. Keys the game uses itself (F1-F6, F8 quick load, F10, F12) are
-    -- refused without a modifier. (On foot, Ctrl alone opens the map and Alt crouches.)
+    -- refused without a modifier; F11 (fullscreen) is always refused. (On foot, Ctrl alone opens
+    -- the map and Alt crouches.)
     ToggleModeKey = "F7",
 
     -- What the "Hardcore" modes multiply damage by.
@@ -109,12 +110,13 @@ return {
         Modes = { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true },
     },
 
-    -- Slow perks (ON by default; F11 toggles in game, remembered). With realistic damage,
+    -- Slow perks (ON by default; Shift+F3 on foot toggles in game, remembered; was F11 before
+    -- 0.4.8, which is the game's fullscreen toggle - old "F11" settings move over by themselves). With realistic damage,
     -- perks (turret, barricade, ground slam, shield, slow time...) become super powers.
     -- On foot, the suit's perk energy refills EnergyRegen times as fast as vanilla and the
     -- turret / barricade / ground-slam / auto-revive cooldowns run Cooldown times as fast.
     -- Ship energy is not affected. 1.0 = vanilla.
-    Perks = { SlowOnFoot = true, ToggleKey = "F11", EnergyRegen = 0.25, Cooldown = 0.25 },
+    Perks = { SlowOnFoot = true, ToggleKey = "Shift+F3", EnergyRegen = 0.25, Cooldown = 0.25 },
 
     -- Situational awareness of enemies: relaxed (they haven't noticed a fight yet) they only
     -- notice you up close; once alert (they spotted you, got hit or were warned) they scan,
