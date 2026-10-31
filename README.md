@@ -16,6 +16,9 @@ my [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) mod ([Nexus](
 [Nexus Mods](https://www.nexusmods.com/spacebourne2/mods/4) ·
 [Steam discussion](https://steamcommunity.com/app/1646850/discussions/0/573805072991123580/) ·
 [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)).
+**HTR is the core of the realism set.** The other mods were designed as extras on top of it, but none of them needs HTR,
+and HTR needs none of them: every mod works on its own, in any combination. We tested all the extras together without HTR, in game,
+with no errors.
 **Install the whole set in one go:** the [SpaceBourne 2 Realism installer](https://github.com/hubertdungen/SpaceBourne2-Realism)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/11)) lets you tick the mods you want, switches them on and
 updates them all with one click.
