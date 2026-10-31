@@ -1,7 +1,16 @@
 """Convert README.md to Nexus BBCode (headings, bold/italic, links, lists; tables -> lists, since Nexus has no tables)."""
 import re, sys
 
+BASE = ''  # optional 3rd argument: GitHub blob URL that relative links point to (".../blob/main/")
+
+
 def inline(s):
+    # images: absolute ones become [img]; relative ones (docs/banner.png) are dropped, since the
+    # Nexus page shows its own header and gallery
+    s = re.sub(r'!\[[^\]]*\]\((https?://[^)]+)\)', r'[img]\1[/img]', s)
+    s = re.sub(r'!\[[^\]]*\]\([^)]*\)', '', s)
+    # relative links (DESIGN.md, LICENSE) point at the repo on GitHub, or become plain text
+    s = re.sub(r'\[([^\]]+)\]\((?!https?://|#)([^)]+)\)', (lambda m: '[%s](%s%s)' % (m.group(1), BASE, m.group(2))) if BASE else r'\1', s)
     s = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'[url=\2]\1[/url]', s)
     s = re.sub(r'\*\*([^*]+)\*\*', r'[b]\1[/b]', s)
     s = re.sub(r'(?<![*\w])\*([^*]+)\*(?![*\w])', r'[i]\1[/i]', s)
@@ -77,4 +86,7 @@ def convert(md):
     return re.sub(r'\n{3,}', '\n\n', '\n'.join(out)).strip() + '\n'
 
 if __name__ == '__main__':
+    # md2bbcode.py README.md out.bbcode [https://github.com/<owner>/<repo>/blob/main/]
+    if len(sys.argv) > 3:
+        BASE = sys.argv[3]
     open(sys.argv[2], 'w', encoding='utf-8').write(convert(open(sys.argv[1], encoding='utf-8').read()))
