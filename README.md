@@ -25,7 +25,7 @@ top of HTR's awareness. [Gear Without Levels](https://github.com/hubertdungen/Sp
 handling penalties. [Faction Power](https://github.com/hubertdungen/SpaceBourne2-FactionPower)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/9)) lets dungeons, strategic sales and missions earn
 your faction power, and the galaxy's factions react. [Tactical Engineering](https://github.com/hubertdungen/SpaceBourne2-TacticalEngineering)
-makes deployable turrets realistic. [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/10)) makes deployable turrets realistic. [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)) adds HOTAS, triple screens and head tracking.
 Coming soon: Tactical First Person, Ammo Discipline, Get Out of the Way, Ground Waypoints.
 
