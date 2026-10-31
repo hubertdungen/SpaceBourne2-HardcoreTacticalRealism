@@ -33,7 +33,10 @@ handling penalties. [Faction Power](https://github.com/hubertdungen/SpaceBourne2
 your faction power, and the galaxy's factions react. [Tactical Engineering](https://github.com/hubertdungen/SpaceBourne2-TacticalEngineering)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/10)) makes deployable turrets realistic. [SB2 HOTAS](https://github.com/hubertdungen/SpaceBourne2-HOTAS)
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/8)) adds HOTAS, triple screens and head tracking.
-Coming soon: Tactical First Person, Ammo Discipline, Get Out of the Way, Ground Waypoints.
+[Ammo Discipline](https://github.com/hubertdungen/SpaceBourne2-AmmoDiscipline) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/12))
+limits carried ammo and scavenging, so every magazine counts. [Ground Waypoints](https://github.com/hubertdungen/SpaceBourne2-GroundWaypoints)
+([Nexus](https://www.nexusmods.com/spacebourne2/mods/13)) shows planet waypoints on foot and on the hoverbike.
+Coming soon: Tactical First Person, Get Out of the Way.
 
 ## Install (2 minutes)
 
