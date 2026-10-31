@@ -44,26 +44,23 @@ Coming soon: Tactical First Person.
 
 HTR is a Lua mod for **UE4SS**, a free script loader for Unreal Engine games. Pick one:
 
-**A. One-click installer (recommended, includes UE4SS)**
-1. Download `HardcoreTacticalRealism-x.y.z.zip` (the big one) from
-   [GitHub Releases](https://github.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism/releases/latest).
-2. Extract it anywhere (e.g. Downloads) and double-click **`Install.cmd`**.
-   - Steam: found automatically.
-   - GOG / other folder: drag your `SpaceBourne 2` folder onto `Install.cmd`.
-3. Start the game. Done.
+**A. SpaceBourne 2 Realism installer (recommended)**
+Get it on [Nexus](https://www.nexusmods.com/spacebourne2/mods/11) or
+[GitHub](https://github.com/hubertdungen/SpaceBourne2-Realism/releases/latest). Tick HTR and any
+other mods of the set: it installs UE4SS if you don't have it, switches the mods on and keeps them
+updated.
 
-**B. Lua-only file (Nexus, or `-lite.zip` on GitHub) — if you already have UE4SS**
-(for example from SB2 HOTAS):
-1. Open your game folder (`...\SpaceBourne 2`, the one with `SpaceBourne2.exe`).
-2. Extract the zip **there**. It creates `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism`
-   and switches itself on — nothing else to edit.
-3. No UE4SS yet? Get [RE-UE4SS 3.0.1](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/v3.0.1)
+**B. Manual** (Nexus file, or `-lite.zip` on GitHub)
+1. Extract the zip into your game folder (`...\SpaceBourne 2`, the one with `SpaceBourne2.exe`).
+   It creates `SB2\Binaries\Win64\Mods\HardcoreTacticalRealism` and switches itself on.
+2. No UE4SS yet? Get [RE-UE4SS 3.0.1](https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/v3.0.1)
    and copy `dwmapi.dll`, `UE4SS.dll` and `UE4SS-settings.ini` into
-   `SpaceBourne 2\SB2\Binaries\Win64\` — or simply use option A.
+   `SpaceBourne 2\SB2\Binaries\Win64\`.
 
-**Update:** install the new version the same way (the installer keeps your `config.lua`).
-**Uninstall:** `Uninstall.cmd` (option A) or delete the `HardcoreTacticalRealism` folder
-(option B). HTR never writes to your saves, so you can add or remove it at any time.
+**Update:** the installer does it for you, or extract the new zip the same way (your `config.lua`
+is kept when you use the installer). **Uninstall:** untick HTR in the installer or delete the
+`HardcoreTacticalRealism` folder. HTR never writes to your saves, so you can add or remove it at
+any time.
 
 ## Controls
 
