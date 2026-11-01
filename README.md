@@ -183,7 +183,14 @@ a big explosion or heavy overkill; robots and bosses are never knocked out.
 - Nobody goes in under fire: the area round the body must be clear. The reviver has to stay with
   the body for a few seconds, and it can fail.
 - Nobody comes within 45 s: the downed one bleeds out. While you are down you take no damage.
-- Knockout in config: on/off, chance per mode, bleed-out time.
+- `Knockout` in config: on/off, chance per mode, bleed-out time.
+
+**Getting medics.** Your ground soldiers are members of your faction. In your faction's member
+list (the screen where you give members a role such as Soldier, Pilot or Researcher, with
+**Train Soldiers** and **Upgrade Soldier**), each soldier has a type: **Blitzkrieg** (rifle),
+**Tank**, **Medic** or **Reaper**. Pick **Medic** there. You can't change a type while the squad
+is on the field. With HTR, medics come for downed squadmates and for you, and they are the fastest.
+Ordinary soldiers and companions help too, more slowly. Tip: keep at least one medic in the squad.
 
 ## Explosions, grenades and ships
 
