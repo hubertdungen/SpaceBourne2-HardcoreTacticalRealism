@@ -21,10 +21,18 @@ def table(rows):
     # a list item: "[b]first cell[/b]: second cell - third cell ...". The header row is dropped.
     cells = [[c.strip() for c in r.strip().strip('|').split('|')] for r in rows if not re.match(r'^\|[-:| ]+\|$', r.strip())]
     items = []
+    head = [re.sub(r'\*\*|`', '', h) for h in cells[0]] if cells else []
     for r in cells[1:]:
         first = re.sub(r'\*\*', '', r[0])
         rest = [inline(c) for c in r[1:] if c]
-        items.append('[*][b]' + inline(first) + '[/b]' + (': ' + ' - '.join(rest) if rest else ''))
+        if len(r) > 2:
+            # 3+ columns: "first: second (Header3: third, Header4: fourth)" keeps each value's meaning
+            extra = ['%s: %s' % (head[i], inline(r[i])) if i < len(head) and head[i] else inline(r[i])
+                     for i in range(2, len(r)) if r[i]]
+            text = inline(r[1]) + (' (' + ', '.join(extra) + ')' if extra else '')
+        else:
+            text = ' - '.join(rest)
+        items.append('[*][b]' + inline(first) + '[/b]' + (': ' + text if text else ''))
     return '[list]\n' + '\n'.join(items) + '\n[/list]'
 
 def convert(md):
