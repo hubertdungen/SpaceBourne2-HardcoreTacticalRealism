@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.10 — 2026-11-01
+
+- **Knockouts are safe across floors, dungeons and loads.** When you arrive somewhere new (elevator,
+  new floor, dungeon, level load) HTR forgets every knocked-out NPC of the old area without touching
+  it again; their objects may already be gone, and calling into a freed object can close the game
+  without a dialog. Your own knockout stays when you only change floors.
+- Knocked-out NPCs are only updated while you are in the world on foot (not during loads or menus).
+- Tested in game: reloading the area with two knocked-out NPCs down kept the game running and
+  responsive; you were back on foot after the load.
+
 ## 0.4.9 — 2026-10-31
 
 - **Not always dead.** A lethal hit sometimes knocks the victim out instead: you, your allies and

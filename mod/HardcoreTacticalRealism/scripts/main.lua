@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.9"
+local VERSION = "0.4.10"
 
 local U = require("htr.util")
 
@@ -240,11 +240,13 @@ LoopAsync(1000, function()
             if HTR.arrivalUntil ~= lastArrival or HTR.wakeHooks then
                 lastArrival, HTR.wakeHooks = HTR.arrivalUntil, false
                 H.wake()
+                KO.forget(true) -- downed NPCs of the old area may be gone: never touch their objects again
                 btNext, btRetry = 0, 1
             end
             registered = H.poll(t0)
             tuneBehaviourTree(t0)
-            if next(KO.down) then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end -- knocked-out NPCs
+            -- knocked-out NPCs; only while you are in the world (your tick stops during loads and menus)
+            if next(KO.down) and t0 - (HTR.playerTickT or -1e9) < 1.5 then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end
             lastKO = t0
         end)
         if not ok then U.warn("poll: " .. tostring(err)) end

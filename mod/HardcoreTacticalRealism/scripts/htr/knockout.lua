@@ -144,6 +144,14 @@ function KO.downShooter(npc, st, now)
         untilT = now + KO.bleedOut(), at = 0, tried = {} }
 end
 
+-- Arrival somewhere new (elevator, new floor, level load): drop every downed NPC without touching
+-- it - their objects may already be destroyed (calling into a freed object can crash the game).
+function KO.forget(keepPlayer)
+    for _, b in pairs(KO.down) do if b.st then b.st.down = nil end end
+    KO.down, KO.soldiers = {}, {}
+    if not keepPlayer then KO.player = nil end -- a new pawn is never down
+end
+
 -- Once a second on the game thread. near = npc.lua's registry lookup.
 function KO.update(now, dt, near)
     for a, b in pairs(KO.down) do

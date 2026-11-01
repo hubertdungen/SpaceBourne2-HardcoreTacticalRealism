@@ -310,6 +310,11 @@ function Pl.onTick(self)
     if pos and not Pl.lastPos then HTR.wakeHooks = true end -- first step on foot: register the rest quickly
     Pl.lastPos = pos
     HTR.playerPos = pos -- knockout.lua: enemies only revive their own when you are not close
+    HTR.playerTickT = os.clock()
+    -- a level load always brings a new player pawn: forget everyone knocked out in the old world
+    local pa = U.addr(p)
+    if pa and HTR.playerAddr and pa ~= HTR.playerAddr then KO.forget() end
+    HTR.playerAddr = pa
     HTR.playerLevel = U.get(p, P.PlayerLevel, HTR.playerLevel or 1) -- squad / turret gear level (gear bonus)
     if not enabled() then return end
     local t = os.clock() -- one clock for wounds, healing and hit times

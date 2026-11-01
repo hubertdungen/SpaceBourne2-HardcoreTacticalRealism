@@ -45,10 +45,10 @@ With realistic damage, perks such as the turret, barricade, ground slam, shield 
 [size=5][b]Modes[/b][/size]
 
 [list]
-[*][b]Tactical (default)[/b]: follows weapon and hit zone, always [b]100–150 %[/b] of vanilla - rare
-[*][b]Tactical Hardcore[/b]: Tactical, then [b]all damage x2[/b] (both sides) - occasional
-[*][b]Realism[/b]: [b]exactly the same rules as enemies[/b]; your suit is your armor - full
-[*][b]Realism Hardcore[/b]: Realism, then [b]all damage x2[/b] (both sides) - full, bleeding x2
+[*][b]Tactical (default)[/b]: follows weapon and hit zone, always [b]100–150 %[/b] of vanilla (Wounds on your side: rare)
+[*][b]Tactical Hardcore[/b]: Tactical, then [b]all damage x2[/b] (both sides) (Wounds on your side: occasional)
+[*][b]Realism[/b]: [b]exactly the same rules as enemies[/b]; your suit is your armor (Wounds on your side: full)
+[*][b]Realism Hardcore[/b]: Realism, then [b]all damage x2[/b] (both sides) (Wounds on your side: full, bleeding x2)
 [/list]
 
 Enemies always use the realistic model.
@@ -65,12 +65,12 @@ Enemies always use the realistic model.
 [/list]
 
 [list]
-[*][b]Pistol[/b]: 2 / 1 - 4 / 1 - 6 / 2 - 7 / 2 - 8 / 2
-[*][b]SMG[/b]: 2 / 1 - 4 / 1 - 6 / 2 - 8 / 2 - 8 / 2
-[*][b]Rifle[/b]: 2 / 1 - 3 / 1 - 4 / 1 - 5 / 2 - 6 / 2
-[*][b]Hunter (DMR)[/b]: 2 / 1 - 2 / 1 - 2 / 1 - 3 / 1 - 3 / 1
-[*][b]Sniper[/b]: 1 / 1 - 1 / 1 - 1 / 1 - 1 / 1 - 2 / 1
-[*][b]Knife / Sword / Hammer[/b]: 1 - 1 - 2 / 1 / 1 - 2 / 2 / 1 - 3 / 2 / 2
+[*][b]Pistol[/b]: 2 / 1 (light: 4 / 1, medium: 6 / 2, heavy: 7 / 2, power: 8 / 2)
+[*][b]SMG[/b]: 2 / 1 (light: 4 / 1, medium: 6 / 2, heavy: 8 / 2, power: 8 / 2)
+[*][b]Rifle[/b]: 2 / 1 (light: 3 / 1, medium: 4 / 1, heavy: 5 / 2, power: 6 / 2)
+[*][b]Hunter (DMR)[/b]: 2 / 1 (light: 2 / 1, medium: 2 / 1, heavy: 3 / 1, power: 3 / 1)
+[*][b]Sniper[/b]: 1 / 1 (light: 1 / 1, medium: 1 / 1, heavy: 1 / 1, power: 2 / 1)
+[*][b]Knife / Sword / Hammer[/b]: 1 (light: 1, medium: 2 / 1 / 1, heavy: 2 / 2 / 1, power: 3 / 2 / 2)
 [/list]
 
 Shotgun pellets count individually (one close blast kills an unarmored target). Bosses have a tougher body and better-made power armor that wears half as fast (about 12 rifle hits, 3 to the head; a DMR needs 6, a sniper 3). Ground turrets (team battles, bases) are heavy emplaced guns: one round every 1.5 s, one hit kills an unarmored target, two kill through any armor. Your turret perk and the mini-bosses' mini-turrets are light rapid-fire guns with rifle-class rounds.
@@ -88,10 +88,10 @@ For players who still like a bit of RPG feel. With the gear bonus on, weapon and
 [/list]
 
 [list]
-[*][b]Rifle L1[/b]: 5 - 6 - 6 - 6
-[*][b]Rifle L10[/b]: 4 - 5 - 5 - 5
-[*][b]Rifle L30[/b]: 4 - 4 - 5 - 5
-[*][b]Rifle L60[/b]: 4 - 4 - 4 - 5
+[*][b]Rifle L1[/b]: 5 (armor L10: 6, armor L30: 6, armor L60: 6)
+[*][b]Rifle L10[/b]: 4 (armor L10: 5, armor L30: 5, armor L60: 5)
+[*][b]Rifle L30[/b]: 4 (armor L10: 4, armor L30: 5, armor L60: 5)
+[*][b]Rifle L60[/b]: 4 (armor L10: 4, armor L30: 4, armor L60: 5)
 [/list]
 
 Gear bonus off (the default) = the tables above, for every level.
@@ -136,10 +136,10 @@ A lethal hit sometimes knocks the victim out instead of killing: you, your allie
 [size=5][b]Friendly fire[/b][/size]
 
 [list]
-[*][b]You → companions / squad[/b]: 35 % - 100 %
-[*][b]Companions / squad → you[/b]: 35 % - 100 %
-[*][b]Ally → ally, allied turrets[/b]: vanilla, max 10 % HP per hit - same
-[*][b]Enemy → enemy, ally ↔ enemy[/b]: 100 % (realistic) - same
+[*][b]You → companions / squad[/b]: 35 % (Realism modes: 100 %)
+[*][b]Companions / squad → you[/b]: 35 % (Realism modes: 100 %)
+[*][b]Ally → ally, allied turrets[/b]: vanilla, max 10 % HP per hit (Realism modes: same)
+[*][b]Enemy → enemy, ally ↔ enemy[/b]: 100 % (realistic) (Realism modes: same)
 [/list]
 
 Ground turrets fight for their own team. Your squad soldiers now take realistic damage too: in the Tactical modes they go down injured first (as vanilla); in the Realism modes headshots and heavy overkill kill outright and other lethal hits almost always do (80 % / 95 %), so both sides follow the same lethal rules. They wear at least medium armor and a helmet, so they can hold a firefight instead of dropping as soon as they show up.
@@ -159,12 +159,12 @@ Ground turrets fight for their own team. Your squad soldiers now take realistic 
 [/list]
 
 [list]
-[*][b]Pirate[/b]: raiders, salvagers - slow, spray, wide spread, may panic when mates die or flee when badly hurt
-[*][b]Militia[/b]: low-tier troops - better than pirates, still sloppy
-[*][b]Regular[/b]: standard faction troops - quick, accurate, cover, grenades
-[*][b]Elite[/b]: high-tier troops, guards, bosses - fastest reactions, tight aim, grenades, alert the area
-[*][b]Machine[/b]: robots - fearless, steady, never retreat
-[*][b]Companion[/b]: your allies - elite-level aim, no panic
+[*][b]Pirate[/b]: raiders, salvagers (How they fight: slow, spray, wide spread, may panic when mates die or flee when badly hurt)
+[*][b]Militia[/b]: low-tier troops (How they fight: better than pirates, still sloppy)
+[*][b]Regular[/b]: standard faction troops (How they fight: quick, accurate, cover, grenades)
+[*][b]Elite[/b]: high-tier troops, guards, bosses (How they fight: fastest reactions, tight aim, grenades, alert the area)
+[*][b]Machine[/b]: robots (How they fight: fearless, steady, never retreat)
+[*][b]Companion[/b]: your allies (How they fight: elite-level aim, no panic)
 [/list]
 
 [line]
