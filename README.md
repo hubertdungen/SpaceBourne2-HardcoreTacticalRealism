@@ -38,7 +38,8 @@ limits carried ammo and scavenging, so every magazine counts. [Ground Waypoints]
 ([Nexus](https://www.nexusmods.com/spacebourne2/mods/13)) shows planet waypoints on foot and on the hoverbike.
 [Get Out of the Way](https://github.com/hubertdungen/SpaceBourne2-GetOutOfTheWay) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/14))
 makes NPCs step aside naturally when you walk through them.
-Coming soon: Tactical First Person.
+[Tactical First Person](https://github.com/hubertdungen/SpaceBourne2-TacticalFirstPerson) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/15))
+adds first person on foot, with weapons held up and aiming down the sights.
 
 ## Install (2 minutes)
 
