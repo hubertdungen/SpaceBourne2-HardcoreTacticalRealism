@@ -40,6 +40,10 @@ limits carried ammo and scavenging, so every magazine counts. [Ground Waypoints]
 makes NPCs step aside naturally when you walk through them.
 [Tactical First Person](https://github.com/hubertdungen/SpaceBourne2-TacticalFirstPerson) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/15))
 adds first person on foot, with weapons held up and aiming down the sights.
+[Clear HUD](https://github.com/hubertdungen/SpaceBourne2-ClearHUD) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/16))
+gives you a reticle you can see and HUD colours of your choice.
+[Bigger Armies](https://github.com/hubertdungen/SpaceBourne2-BiggerArmies) ([Nexus](https://www.nexusmods.com/spacebourne2/mods/17))
+doubles your faction's general slots, so you can field twice the ground and space forces.
 
 ## Install (2 minutes)
 
