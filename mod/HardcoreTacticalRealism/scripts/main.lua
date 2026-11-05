@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.10"
+local VERSION = "0.4.11"
 
 local U = require("htr.util")
 
@@ -200,7 +200,15 @@ H.add(G.Fn.PlayerIncome, Pl.onIncome, "player damage")
 H.add(G.Fn.PlayerRadial, Pl.onRadial, "player radial")
 H.add(G.Fn.PlayerTick, Pl.onTick, "player tick")
 H.add(G.Fn.PerkRegen, PK.onRegen, "slow perks")
-for i, path in ipairs(G.NpcProjectileHits) do H.add(path, Pl.onShooterProjectileHit, "shooter hit " .. i) end
+-- NPC, squad, turret and drone bullets: same load-crash fix (a knocked-out body under fire collects
+-- many frozen bullets; the load after that death crashed, 0x268)
+for i, path in ipairs(G.NpcProjectileHits) do
+    H.add(path, function(self, proj, ...)
+        local ok, err = pcall(Pl.onShooterProjectileHit, self, proj, ...)
+        BL.endAfterHit(proj)
+        if not ok then error(err, 0) end
+    end, "shooter hit " .. i)
+end
 H.add(G.Fn.NpcRadial, N.onRadial, "NPC blast")
 H.add(G.Fn.SoldierHit, N.onSoldierHit, "squad soldier damage")
 H.add(G.Fn.SoldierUpdate, N.onSoldierUpdate, "squad soldier bleeding")

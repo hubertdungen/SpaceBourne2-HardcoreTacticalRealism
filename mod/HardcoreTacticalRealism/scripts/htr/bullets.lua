@@ -1,5 +1,6 @@
 --[[
-  Load-crash fix (0.4.6): your bullets end right after they hit something.
+  Load-crash fix (0.4.6): your bullets end right after they hit something; since 0.4.11 also the
+  bullets of NPCs, squad soldiers, turrets and drones (a knocked-out body under fire collected them).
 
   SpaceBourne 2 bug, also without mods (verified in game, 2026-10-31): a bullet from your hand
   weapon often does not end after its hit. The projectile object (XProjectile plugin,

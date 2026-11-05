@@ -243,12 +243,12 @@ function KO.updatePlayer(p, now, dt, near)
     return nil
 end
 
+-- Also before a bleed-out death: you never die while HTR still holds you ragdolled (a load right
+-- after such a death crashed the game, 0x268; player.lua kills you on the next tick instead).
 function KO.standUp(p, revived)
     U.set(p, "DisableMove", false); U.set(p, "DisableJump?", false); U.set(p, "Injured?", false)
-    if revived then
-        pcall(function() p:RagdollEnd() end)
-        U.set(p, "CurrentHP", U.get(p, "MaxHP", 100) * 0.25)
-    end
+    pcall(function() p:RagdollEnd() end)
+    if revived then U.set(p, "CurrentHP", U.get(p, "MaxHP", 100) * 0.25) end
     U.set(p, "ResurectUsed", false)
 end
 

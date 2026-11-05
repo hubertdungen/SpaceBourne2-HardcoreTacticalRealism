@@ -252,8 +252,9 @@ can hold a firefight instead of dropping as soon as they show up.
 ## Game bugs HTR fixes
 
 - **Crash when loading after you die in a long firefight** ("Fatal error", also without mods):
-  your bullets often stay alive, frozen, after hitting something, and a load with many of them
-  around can crash the game. HTR ends each of your bullets right after its hit (0.4.6).
+  bullets often stay alive, frozen, after hitting something, and a load with many of them
+  around can crash the game. HTR ends each bullet right after its hit: yours since 0.4.6, the
+  NPCs', squad's, turrets' and drones' since 0.4.11 (a knocked-out body under fire collected them).
 - **Armor overflow:** the hit that empties vanilla armor also takes the armor's value from your HP.
 - **Companions' bullets** had a 0-second life and did nothing.
 

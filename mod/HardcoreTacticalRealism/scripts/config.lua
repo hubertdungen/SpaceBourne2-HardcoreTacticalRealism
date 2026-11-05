@@ -178,7 +178,7 @@ return {
 
     -- Fixes for SpaceBourne 2 bugs (they also happen without mods).
     Fixes = {
-        -- Your bullets often stay alive (frozen) after hitting something; loading while many are
+        -- Bullets (yours and NPCs') often stay alive (frozen) after hitting something; loading while many are
         -- around can crash the game ("Fatal error" when the death screen loads your save after a
         -- long firefight). HTR ends each bullet right after the game has handled its hit.
         EndBulletsAfterHit = true,

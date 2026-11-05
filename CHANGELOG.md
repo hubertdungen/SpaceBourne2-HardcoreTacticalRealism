@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.11 — 2026-11-05
+
+- **Fixed: "Fatal error" (EXCEPTION_ACCESS_VIOLATION reading 0x268) when the game loads after you
+  die.** It came back with the knockouts: in tests with HTR 0.4.10 alone it crashed twice, both
+  times on the load after a knockout ended in a bleed-out (once with enemies close by).
+  - When you bleed out, HTR first ends your ragdoll and your knocked-out state; you die a moment
+    later, like a normal death.
+  - Bullets of NPCs, squad soldiers, turrets and drones now also end right after their hit (0.4.6
+    did this for your bullets). Frozen bullets can keep the old map in memory, which is what the
+    load then trips over.
+- Tested in game: 4 knockouts in a row, each with enemies spawned close by, a 45 s bleed-out and
+  the load: no crash, no bullets left over (before the fix it crashed on the 2nd).
+
 ## 0.4.10 — 2026-11-01
 
 - **Knockouts are safe across floors, dungeons and loads.** When you arrive somewhere new (elevator,

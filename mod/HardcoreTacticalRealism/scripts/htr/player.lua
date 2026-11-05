@@ -313,7 +313,7 @@ function Pl.onTick(self)
     HTR.playerTickT = os.clock()
     -- a level load always brings a new player pawn: forget everyone knocked out in the old world
     local pa = U.addr(p)
-    if pa and HTR.playerAddr and pa ~= HTR.playerAddr then KO.forget() end
+    if pa and HTR.playerAddr and pa ~= HTR.playerAddr then KO.forget(); Pl.bledOutAt = nil end
     HTR.playerAddr = pa
     HTR.playerLevel = U.get(p, P.PlayerLevel, HTR.playerLevel or 1) -- squad / turret gear level (gear bonus)
     if not enabled() then return end
@@ -325,7 +325,12 @@ function Pl.onTick(self)
         if r == "medic" then pcall(U.notify, "Knocked out - a medic is coming", p)
         elseif r == "help" then pcall(U.notify, "Knocked out - help is coming", p)
         elseif r == "revived" then pcall(U.notify, "Back on your feet - get to cover", p)
-        elseif r == "bledout" then kill(p) end
+        elseif r == "bledout" then Pl.bledOutAt = t end -- stood up first (knockout.lua); dies next tick
+        return
+    end
+    if Pl.bledOutAt then
+        Pl.bledOutAt = nil
+        kill(p)
         return
     end
     if dt > 0 then regenStep(p, t, dt) end
