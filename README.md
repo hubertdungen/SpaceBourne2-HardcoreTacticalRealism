@@ -62,7 +62,7 @@ updated.
    and copy `dwmapi.dll`, `UE4SS.dll` and `UE4SS-settings.ini` into
    `SpaceBourne 2\SB2\Binaries\Win64\`.
 
-**Update:** the installer does it for you, or extract the new zip the same way (your `config.lua`
+**Updating:** the installer does it for you, or extract the new zip the same way (your `config.lua`
 is kept when you use the installer). **Uninstall:** untick HTR in the installer or delete the
 `HardcoreTacticalRealism` folder. HTR never writes to your saves, so you can add or remove it at
 any time.
@@ -72,9 +72,9 @@ any time.
 | Key | What it does |
 |---|---|
 | **F7** | Next mode: Tactical → Tactical Hardcore → Realism → Realism Hardcore (shown on the HUD) |
-| **Shift+F7** | Gear bonus on/off (off by default; see below). Was F8 before 0.4.3, which is also the game's quick load |
+| **Shift+F7** | Gear bonus on/off (off by default; see below). Not F8: that is the game's quick load |
 | **F9** | Ships vs infantry on/off (shown on the HUD) |
-| **Shift+F3** | Slow perks on/off, on foot (on by default; see below). Was F11 before 0.4.8, which is the game's fullscreen toggle |
+| **Shift+F3** | Slow perks on/off, on foot (on by default; see below). Not F11: that is the game's fullscreen toggle |
 | Gamepad (experimental) | press **Switch camera** 4 times quickly = next mode; crouched = ships toggle |
 
 All choices are remembered between sessions. Keys can be changed in `config.lua`. HTR's
@@ -258,14 +258,14 @@ can hold a firefight instead of dropping as soon as they show up.
 
 - **Crash when loading after you die in a long firefight** ("Fatal error", also without mods):
   bullets often stay alive, frozen, after hitting something, and a load with many of them
-  around can crash the game. HTR ends each bullet right after its hit: yours since 0.4.6, the
-  NPCs', squad's, turrets' and drones' since 0.4.11 (a knocked-out body under fire collected them).
+  around can crash the game. HTR ends each bullet right after its hit: yours and the NPCs',
+  squad's, turrets' and drones' (a knocked-out body under fire collected them).
 - **Armor overflow:** the hit that empties vanilla armor also takes the armor's value from your HP.
 - **Companions' bullets** had a 0-second life and did nothing.
-- **UE4SS crash with many mods** ("Fatal error", UE4SS.dll, at the menu or in play): since 0.4.14
-  HTR runs all its timed work on the game thread, from the game's own ticks, and no longer uses
-  UE4SS's background loops (LoopAsync / ExecuteWithDelay). Two mods using those at the same moment
-  could crash UE4SS 3.0.1. The other mods of the set get the same change.
+- **UE4SS crash with many mods** ("Fatal error", UE4SS.dll, at the menu or in play): HTR runs
+  all its timed work on the game thread, from the game's own ticks, and never uses UE4SS's
+  background loops (LoopAsync / ExecuteWithDelay). Two mods using those at the same moment could
+  crash UE4SS 3.0.1; every mod of the set works the same way.
 
 ## Settings
 
@@ -286,8 +286,7 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   are very welcome (for a crash, please add `UE4SS.log` and the newest folder in
   `%LOCALAPPDATA%\SB2\Saved\Crashes`); if you ever notice stutter, `htr.log` names any HTR code that took longer
   than 8 ms.
-- **Versions before 0.3.2 froze the game for a moment on every shot** — fixed in 0.3.2; please update.
-  In-game tests while firing now show the same frame times as the game without mods.
+- In-game tests while firing show the same frame times as the game without mods.
 
 ## After a game update
 
