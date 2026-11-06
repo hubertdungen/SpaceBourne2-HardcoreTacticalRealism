@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.11"
+local VERSION = "0.4.12"
 
 local U = require("htr.util")
 
@@ -75,7 +75,11 @@ default(cfg.GearBonus, "ArmorRating", 8); default(cfg.GearBonus, "ArmorWear", 0.
 default(cfg.GearBonus, "Modes", { ["Tactical"] = true, ["Tactical Hardcore"] = true, ["Realism"] = true, ["Realism Hardcore"] = true })
 cfg.Perks = cfg.Perks or {}
 default(cfg.Perks, "SlowOnFoot", true); default(cfg.Perks, "ToggleKey", "Shift+F3")
-default(cfg.Perks, "EnergyRegen", 0.25); default(cfg.Perks, "Cooldown", 0.25)
+-- perk energy refill per mode (0.4.12; vanilla refills in ~16 s): ~80 s / ~2 min / ~3.5 min / ~4.5 min.
+-- Configs that still carry the old shipped 0.25 for every mode move to these values.
+local ENERGY_REGEN = { ["Tactical"] = 0.2, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.08, ["Realism Hardcore"] = 0.06 }
+if cfg.Perks.EnergyRegen == nil or cfg.Perks.EnergyRegen == 0.25 then cfg.Perks.EnergyRegen = ENERGY_REGEN end
+default(cfg.Perks, "Cooldown", 0.25)
 cfg.Awareness = cfg.Awareness or {}
 default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
 cfg.Squad = cfg.Squad or {}
@@ -318,7 +322,7 @@ local function togglePerks(ctx)
     HTR.perksSlow = not HTR.perksSlow
     saveState()
     U.warn("slow perks " .. (HTR.perksSlow and "ON" or "OFF"))
-    pcall(U.notify, HTR.perksSlow and "HTR: slow perks ON - perk energy and cooldowns recover 4x slower on foot"
+    pcall(U.notify, HTR.perksSlow and "HTR: slow perks ON - perk energy and cooldowns recover much slower on foot"
         or "HTR: slow perks OFF - vanilla perk energy", ctx)
 end
 

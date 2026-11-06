@@ -83,7 +83,9 @@ messages appear on the HUD without the game's red-alert sound (`Messages.Quiet`)
 ## Perks (Shift+F3 — slow by default)
 
 With realistic damage, perks such as the turret, barricade, ground slam, shield or slow time
-turn into super powers. HTR makes the suit's perk energy refill **4x slower on foot** and the
+turn into super powers. HTR makes the suit's perk energy refill **in minutes on foot** (a full
+refill: ~80 s in Tactical, ~2 min in Tactical Hardcore, ~3.5 min in Realism, ~4.5 min in Realism
+Hardcore; vanilla ~16 s) and the
 turret / barricade / ground-slam / auto-revive cooldowns run 4x slower, so a perk is a tactical
 tool you save for the right moment. Ship energy is not affected. Shift+F3 (on foot) switches back to vanilla.
 
@@ -233,6 +235,9 @@ can hold a firefight instead of dropping as soon as they show up.
 - **Your squad keeps up:** vanilla squad soldiers walk, fall behind and then teleport next to
   you. HTR makes them run and sprint after you, so only a stuck soldier still teleports.
 - **Suppression:** your rounds landing close make enemies duck and shoot worse.
+- **Hit means fight:** an NPC hit before it noticed anyone goes straight into combat against
+  whoever shot it (vanilla only walked off to another spot). When an NPC is hit or dies, its
+  mates nearby (enemies and allies alike) go into combat toward where the shots came from.
 - **Situational awareness:** relaxed enemies (no fight yet) only notice you up close; once
   alert (they spotted you, got hit or were warned) they spot and shoot much farther.
 - **Arrival grace:** after an elevator ride, a new dungeon floor or a level load, and for

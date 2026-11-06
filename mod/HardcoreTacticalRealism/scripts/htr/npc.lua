@@ -51,6 +51,21 @@ local function doctrine(st)
     return DOC[st.doctrine] or DOC.regular
 end
 
+--[[ Alert an NPC the way its own eyes would (0.4.12): the threat as its target, where it is, in
+     combat. Verified in game: an unaware NPC then fights. The game's CheckForFirstFocus and
+     "target detected" events, called from outside, left the NPC without its AI controller (it
+     stood there like a statue), so HTR no longer uses them. An NPC already fighting keeps its target. ]]
+local function alertNow(npc, target, loc)
+    local bb = U.blackboard(npc)
+    if not bb or U.bbGetBool(npc, BB.InCombat) then return false end
+    return pcall(function()
+        if U.valid(target) then bb:SetValueAsObject(FName(BB.CurrentTarget), target) end
+        if loc then bb:SetValueAsVector(FName(BB.TargetLocation), { X = loc.X, Y = loc.Y, Z = loc.Z }) end
+        bb:SetValueAsBool(FName(BB.FirstInteract), false)
+        bb:SetValueAsBool(FName(BB.InCombat), true)
+    end)
+end
+
 -- Effects queued by other NPCs or by your shots, applied by this NPC's own hook.
 local function applyPending(npc, st, t)
     if st.duckReq then
@@ -60,10 +75,12 @@ local function applyPending(npc, st, t)
         st.clearJGDAt = t + 2.0
     end
     if st.alertReq then
+        local r = st.alertReq -- { X, Y, Z = where the threat was, player = it was you }
         st.alertReq = nil
-        local target = U.playerPawn(npc)
-        if target then pcall(function() npc:CheckForFirstFocus(target) end) end
-        if U.Verbose then U.log("alerted by a mate: " .. tostring(st.cn)) end
+        local target = r.player and U.playerPawn(npc) or nil
+        if alertNow(npc, target, r.X and r or (target and U.location(target))) and U.Verbose then
+            U.log("alerted by a mate: " .. tostring(st.cn))
+        end
     end
     if st.panicReq then
         st.panicReq = nil
@@ -201,6 +218,15 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     local c = cfg()
     local attacker = causerP:get()
     local aside, acn = C.sideOf(attacker)
+    if aside == "other" then -- a weapon or projectile as causer: its instigator / owner fired it (0.4.12)
+        local who = C.shooterOf(attacker)
+        if who then attacker = who; aside, acn = C.sideOf(who) end
+    end
+    -- where the threat is, for this NPC's and its mates' alert (onReceivePoint / onDead)
+    if (st.side == "enemy" and (aside == "player" or aside == "ally")) or (st.side == "ally" and aside == "enemy") then
+        local l = U.location(attacker)
+        if l then st.threat = { X = l.X, Y = l.Y, Z = l.Z, player = (aside == "player") } end
+    end
     local vanilla = out:get()
     local ff = feat("FriendlyFireRules")
 
@@ -268,17 +294,33 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     end
 end
 
--- Enemies near `npc` start hunting the player (applied on their next hook).
-function N.alertAllies(npc, st, radius)
-    if st.side ~= "enemy" or radius <= 0 then return end
+-- Mates near `npc` (same side) go into combat against the threat (applied on their next hook).
+-- threat: { X, Y, Z, player } from the last hit; allies never turn on you for friendly fire.
+function N.alertAllies(npc, st, radius, threat)
+    if radius <= 0 or (st.side ~= "enemy" and st.side ~= "ally") then return end
+    threat = threat or { player = (st.side == "enemy") }
+    if st.side == "ally" and threat.player then return end
     local me = U.addr(npc)
     for _, e in ipairs(N.near(U.location(npc), radius)) do
-        if e.a ~= me and e.st.side == "enemy" then e.st.alertReq = true end
+        if e.a ~= me and e.st.side == st.side and not e.st.down then e.st.alertReq = threat end
     end
 end
 
--- Hook: Q1_Shooter_AI_C:ReceivePointDamage (after vanilla processed the hit)
-function N.onReceivePoint(self)
+-- The pawn that fired a hit: the damage causer if it is one, else the instigating controller's pawn.
+local function shooterOf(instigP, causerP)
+    local ok, who = pcall(function()
+        local c = causerP and causerP:get()
+        if U.valid(c) and C.familyOf(c, U.className(c)) then return c end
+        local ins = instigP and instigP:get()
+        if U.valid(ins) then local pw = ins.Pawn; if U.valid(pw) then return pw end end
+        return C.shooterOf(c)
+    end)
+    return ok and who or nil
+end
+
+-- Hook: Q1_Shooter_AI_C:ReceivePointDamage (Damage, DamageType, HitLocation, HitNormal,
+-- HitComponent, BoneName, ShotFromDirection, InstigatedBy, DamageCauser), after vanilla.
+function N.onReceivePoint(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, dirP, instigP, causerP)
     if not feat("SmarterAI") then return end
     local npc = self:get()
     if U.get(npc, P.Dead, false) then return end
@@ -287,6 +329,16 @@ function N.onReceivePoint(self)
     st.hitT = os.clock() -- a reviver under fire stops (knockout.lua)
     local d = doctrine(st)
     local t = U.now(npc)
+    -- hit while unaware: it turns on whoever shot it (vanilla only walked off to another spot)
+    if not st.down and U.bbGetBool(npc, BB.InCombat) == false then
+        local foe = shooterOf(instigP, causerP)
+        local fs = foe and C.sideOf(foe)
+        if foe and fs ~= st.side and fs ~= "other" and not (st.side == "ally" and fs == "player") then
+            alertNow(npc, foe, U.location(foe))
+        elseif st.threat then
+            alertNow(npc, st.threat.player and U.playerPawn(npc) or nil, st.threat)
+        end
+    end
     -- One "break line of sight" at a time: after diving for cover an NPC fights from there for
     -- a while. Without this, sustained fire re-triggered it on every hit and NPCs (pirates most)
     -- spent the whole fight sprinting instead of shooting back.
@@ -304,7 +356,7 @@ function N.onReceivePoint(self)
     end
     if (st.alertAt or 0) < t then
         st.alertAt = t + 4
-        N.alertAllies(npc, st, d.alertRadius)
+        N.alertAllies(npc, st, d.alertRadius, st.threat)
     end
 end
 
@@ -315,7 +367,7 @@ function N.onDead(self)
     local st = a and N.state[a]
     if st and feat("SmarterAI") then
         local d = doctrine(st)
-        N.alertAllies(npc, st, d.alertRadius)
+        N.alertAllies(npc, st, d.alertRadius, st.threat) -- a mate dropping next to them
         -- morale: undisciplined troops may break when a mate drops next to them
         if st.side == "enemy" then
             for _, e in ipairs(N.near(U.location(npc), 1500)) do

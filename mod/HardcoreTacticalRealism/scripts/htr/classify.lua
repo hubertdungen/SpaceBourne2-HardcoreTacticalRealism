@@ -56,6 +56,22 @@ function C.sideOf(actor)
     return "other", cn
 end
 
+-- The character behind a weapon, projectile or other causer: its instigator or owner chain
+-- (0.4.12). nil when none is a known character.
+function C.shooterOf(obj)
+    local ok, who = pcall(function()
+        for _ = 1, 3 do
+            if not U.valid(obj) then return nil end
+            local i = obj.Instigator
+            if U.valid(i) and familyOf(i, U.className(i)) then return i end
+            local o = obj:GetOwner()
+            if U.valid(o) and familyOf(o, U.className(o)) then return o end
+            obj = o
+        end
+    end)
+    return ok and who or nil
+end
+
 -- Doctrine key for a shooter NPC.
 function C.doctrineOf(npc, cn)
     if U.get(npc, P.IsCompanion, false) or U.get(npc, P.AIType, 0) == G.AIType.Ally then return "companion" end

@@ -38,7 +38,9 @@ function PK.onRegen(self)
     local a = U.addr(p)
     if not (a and isPlayer(p, a)) then return end
     local s = settings()
-    local fe = slow() and s.EnergyRegen or 1.0
+    local er = s.EnergyRegen
+    if type(er) == "table" then er = er[HTR.mode] or er["Tactical"] end -- per mode (0.4.12)
+    local fe = slow() and (tonumber(er) or 0.25) or 1.0
     local fc = slow() and s.Cooldown or 1.0
 
     local r = U.get(p, G.P.EnergyRegen, nil)

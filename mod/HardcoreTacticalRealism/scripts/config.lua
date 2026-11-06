@@ -124,10 +124,12 @@ return {
     -- Slow perks (ON by default; Shift+F3 on foot toggles in game, remembered; was F11 before
     -- 0.4.8, which is the game's fullscreen toggle - old "F11" settings move over by themselves). With realistic damage,
     -- perks (turret, barricade, ground slam, shield, slow time...) become super powers.
-    -- On foot, the suit's perk energy refills EnergyRegen times as fast as vanilla and the
+    -- On foot, the suit's perk energy refills EnergyRegen times as fast as vanilla (per mode; a
+    -- full refill takes ~16 s in vanilla: ~80 s / ~2 min / ~3.5 min / ~4.5 min here) and the
     -- turret / barricade / ground-slam / auto-revive cooldowns run Cooldown times as fast.
-    -- Ship energy is not affected. 1.0 = vanilla.
-    Perks = { SlowOnFoot = true, ToggleKey = "Shift+F3", EnergyRegen = 0.25, Cooldown = 0.25 },
+    -- Ship energy is not affected. 1.0 = vanilla; one number instead of the table = all modes.
+    Perks = { SlowOnFoot = true, ToggleKey = "Shift+F3", Cooldown = 0.25,
+        EnergyRegen = { ["Tactical"] = 0.2, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.08, ["Realism Hardcore"] = 0.06 } },
 
     -- Situational awareness of enemies: relaxed (they haven't noticed a fight yet) they only
     -- notice you up close; once alert (they spotted you, got hit or were warned) they scan,

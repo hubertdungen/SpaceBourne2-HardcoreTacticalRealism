@@ -137,7 +137,8 @@ G.Item = {
 }
 
 -- Blackboard keys used by the shooter behaviour trees
-G.BB = { JustGotDamage = "JustGotDamage", FirstInteract = "IsFirstInteract", InCover = "InCover?", InCombat = "InCombat?" }
+G.BB = { JustGotDamage = "JustGotDamage", FirstInteract = "IsFirstInteract", InCover = "InCover?", InCombat = "InCombat?",
+    CurrentTarget = "CurrentTarget", TargetLocation = "TargetLocation" }
 
 -- Enums
 G.AIType  = { Enemy = 0, Ally = 1, Civil = 2, Natural = 3, Guard = 4 }

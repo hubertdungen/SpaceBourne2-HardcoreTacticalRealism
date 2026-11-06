@@ -133,7 +133,8 @@ function U.bbGetBool(npc, key)
     local bb = U.blackboard(npc)
     if not bb then return nil end
     local ok, v = pcall(function() return bb:GetValueAsBool(FName(key)) end)
-    return ok and v or nil
+    if ok then return v end -- false stays false ("ok and v or nil" turned it into nil)
+    return nil
 end
 
 -- The player's pawn. ctx: any live object in the world -> instant engine lookup.

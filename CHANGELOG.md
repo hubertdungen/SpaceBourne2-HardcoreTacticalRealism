@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.12 — 2026-11-06
+
+- **Hit means fight.** An NPC hit before it noticed anyone now goes straight into combat against
+  whoever shot it: that shooter as its target, its position as where to go. Vanilla only walked
+  off to another spot and stayed out of combat. Tested in game: in combat, with you as the
+  target, 1 s after the hit.
+- **Mates react to hits and deaths.** When an NPC is hit or dies, its mates within its doctrine's
+  alert radius go into combat toward where the shots came from, with the same alert as above.
+  Allied NPCs now do this too (never against you for friendly fire). Not tested separately in game.
+- **Allies take real damage from enemy fire.** When the game passes a weapon or projectile as the
+  damage causer, HTR now finds the shooter behind it. Before, such hits on allies could count as
+  friendly fire (capped at 10 % of their HP per hit), which made allies very hard to kill.
+- **Perk energy recovers in minutes.** A full refill on foot now takes ~80 s in Tactical, ~2 min
+  in Tactical Hardcore, ~3.5 min in Realism and ~4.5 min in Realism Hardcore (vanilla ~16 s;
+  0.4.11: ~64 s in every mode). `Perks.EnergyRegen` takes one number or one per mode; configs
+  that still carry the old 0.25 move to the new values. Tested in game: Realism Hardcore
+  0.42 -> 0.10 energy per 0.25 s.
+- Not done yet: allies that stand still without patrolling (needs a place with allies to watch).
+
 ## 0.4.11 — 2026-11-05
 
 - **Fixed: "Fatal error" (EXCEPTION_ACCESS_VIOLATION reading 0x268) when the game loads after you
