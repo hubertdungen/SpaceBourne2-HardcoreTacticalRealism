@@ -178,6 +178,8 @@ Gear bonus off (the default) = the tables above, for every level.
   Hardcore 50 %, Realism 25 %, Realism Hardcore 12 % of vanilla — and it starts 8–15 s after
   your last hit. Armor nanites slowly repair the suit too.
 
+![Bleeding: the screen pulses dark red like a heartbeat](https://raw.githubusercontent.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism/main/docs/bleeding.jpg)
+
 ## Not always dead (knockouts)
 
 A lethal hit sometimes knocks the victim out instead of killing: you, your allies and enemies
