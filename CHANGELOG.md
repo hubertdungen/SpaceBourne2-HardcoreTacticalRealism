@@ -7,11 +7,11 @@
   run on their own threads without UE4SS's lock; each ExecuteInGameThread from there adds an
   entry to a map that all mods share, and two at the same moment broke it. HTR no longer uses
   them: its once-a-second work and the alarm unmute run on the game thread, from the player's
-  and the ships' own ticks (new `htr\gametick.lua`, the same file in every mod of the set). The
+  tick and the HUD's drawing (new `htr\gametick.lua`, the same file in every mod of the set). The
   crash needs every mod of the set changed; the others follow.
-- Tested in game (HTR alone, 2 launches): on foot the work runs from the player tick, in space
-  from the ship tick (no character ticks there), and it carries on after a second load. Timed
-  work costs about 1-2 ms every 5 s. Nothing runs at the main menu (HTR needs nothing there).
+- Tested in game (HTR alone, 5 launches): on foot the work runs from the player tick, in space
+  from the HUD (no character ticks there), and it carries on after a second load. Timed work
+  costs about 1-2 ms every 5 s; with 20 enemies around the ticks used still fire once a frame. Nothing runs at the main menu (HTR needs nothing there).
 
 ## 0.4.13 — 2026-11-06
 

@@ -252,9 +252,9 @@ local KO = require("htr.knockout")
 -- (UE4SS.dll+0x87c104). After each load or possession (ClientRestart) the player tick is looked
 -- for right away, so the pump starts without a background loop.
 GT.boot(function(now) H.prime(G.Fn.PlayerTick) end)
--- In a ship no ALS character ticks (measured in space): ship ticks pump there, so the ship hooks
--- (ships vs infantry) are registered without going on foot first.
-GT.drive(GT.SHIP_TICK, "ship")
+-- In a ship no ALS character ticks (measured in space): the HUD's drawing pumps there (once per
+-- frame, on foot too), so the ship hooks (ships vs infantry) are registered without going on foot.
+GT.drive(GT.HUD_TICK, "hud")
 GT.every(1.0, function(t0)
         local registered = 0
         local ok, err = pcall(function()
