@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.13 — 2026-11-06
+
+- **Fixed: NPCs left standing with their AI switched off ("scarecrows").** A knocked-out NPC has
+  its AI paused while it lies there. If you moved on (elevator, new floor, a long jump), HTR
+  forgot it without switching its AI back on, so it never got up or moved again. Now it stays
+  down and bleeds out on its own after the usual 45 s. The knocked-out NPCs and revivers are also
+  kept when HTR trims its NPC memory (after 600 NPCs).
+- Tested in game: an NPC killed in front of two unaware mates put the one in reach into combat,
+  with you as its target, within 2 s (0.4.12's "mates react", now tested on its own). The
+  scarecrow fix itself was not seen in game (the test saves have no allied soldiers nearby).
+
 ## 0.4.12 — 2026-11-06
 
 - **Hit means fight.** An NPC hit before it noticed anyone now goes straight into combat against

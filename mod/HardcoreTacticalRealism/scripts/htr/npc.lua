@@ -117,7 +117,13 @@ function N.ensure(npc)
     if not a then return nil end
     local st = N.state[a]
     if st then return st end
-    if N.count > 600 then N.state = {}; N.count = 0 end -- keep memory bounded
+    if N.count > 600 then -- keep memory bounded, but not at the cost of knocked-out NPCs and revivers
+        local keep, n = {}, 0
+        for k, s in pairs(N.state) do
+            if s.down or s.reviving or s.reviveMoving then keep[k] = s; n = n + 1 end
+        end
+        N.state, N.count = keep, n
+    end
     local cn = U.className(npc)
     st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1),
         robot = U.get(npc, P.Robot, false) or cn == "Q1_Shooter_Robot_C", boss = U.get(npc, P.IsBoss, false) == true }
@@ -533,7 +539,14 @@ function N.onThink(self)
     if U.get(npc, P.Dead, false) then return end
     local st = N.ensure(npc)
     if not st then return end
-    if st.down then return end -- knocked out: lies still (knockout.lua runs bleed-out and revive)
+    if st.down then -- knocked out: lies still (knockout.lua runs bleed-out and revive)
+        -- left behind when you moved on (KO.forget): nobody comes any more, it bleeds out here
+        if st.koUntil and os.clock() >= st.koUntil and not KO.down[U.addr(npc)] then
+            st.koUntil, st.down = nil, nil
+            pcall(function() npc:ForceToDead() end)
+        end
+        return
+    end
     local t = U.now(npc)
     N.track(npc)
     if st.reviving or st.reviveMoving then KO.drive(npc, st) end

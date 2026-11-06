@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.12"
+local VERSION = "0.4.13"
 
 local U = require("htr.util")
 

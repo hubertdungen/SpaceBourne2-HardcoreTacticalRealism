@@ -146,8 +146,10 @@ end
 
 -- Arrival somewhere new (elevator, new floor, level load): drop every downed NPC without touching
 -- it - their objects may already be destroyed (calling into a freed object can crash the game).
+-- They stay down and bleed out through their own hook (npc.lua onThink, koUntil): before 0.4.13
+-- they kept their AI switched off and never got up again ("scarecrows").
 function KO.forget(keepPlayer)
-    for _, b in pairs(KO.down) do if b.st then b.st.down = nil end end
+    for _, b in pairs(KO.down) do if b.st then b.st.koUntil = b.untilT end end
     KO.down, KO.soldiers = {}, {}
     if not keepPlayer then KO.player = nil end -- a new pawn is never down
 end
