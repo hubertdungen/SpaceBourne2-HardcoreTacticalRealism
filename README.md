@@ -262,6 +262,10 @@ can hold a firefight instead of dropping as soon as they show up.
   NPCs', squad's, turrets' and drones' since 0.4.11 (a knocked-out body under fire collected them).
 - **Armor overflow:** the hit that empties vanilla armor also takes the armor's value from your HP.
 - **Companions' bullets** had a 0-second life and did nothing.
+- **UE4SS crash with many mods** ("Fatal error", UE4SS.dll, at the menu or in play): since 0.4.14
+  HTR runs all its timed work on the game thread, from the game's own ticks, and no longer uses
+  UE4SS's background loops (LoopAsync / ExecuteWithDelay). Two mods using those at the same moment
+  could crash UE4SS 3.0.1. The other mods of the set get the same change.
 
 ## Settings
 

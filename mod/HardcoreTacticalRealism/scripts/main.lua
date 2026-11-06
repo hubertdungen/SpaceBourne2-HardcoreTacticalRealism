@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.13"
+local VERSION = "0.4.14"
 
 local U = require("htr.util")
 
@@ -173,6 +173,8 @@ local function saveState()
 end
 
 local H = require("htr.hooks")
+local GT = require("htr.gametick") -- timed work on the game thread (no LoopAsync: UE4SS crash, 0.4.14)
+GT.log = function(msg) U.warn(msg) end
 H.SLOW = cfg.Debug.SlowHookMs / 1000
 local G = require("htr.gamedefs")
 local N = require("htr.npc")
@@ -202,7 +204,8 @@ for i, path in ipairs(G.PlayerProjectileHits) do
 end
 H.add(G.Fn.PlayerIncome, Pl.onIncome, "player damage")
 H.add(G.Fn.PlayerRadial, Pl.onRadial, "player radial")
-H.add(G.Fn.PlayerTick, Pl.onTick, "player tick")
+-- The player tick also pumps HTR's timed work (gametick.lua), on the game thread.
+H.add(G.Fn.PlayerTick, Pl.onTick, "player tick", function() GT.pump("foot") end)
 H.add(G.Fn.PerkRegen, PK.onRegen, "slow perks")
 -- NPC, squad, turret and drone bullets: same load-crash fix (a knocked-out body under fire collects
 -- many frozen bullets; the load after that death crashed, 0x268)
@@ -243,9 +246,16 @@ end
 
 local lastStatus, pollSlowAt, profileAt, lastArrival, lastKO = "", -1e9, os.clock() + 30, nil, nil
 local KO = require("htr.knockout")
-LoopAsync(1000, function()
-    ExecuteInGameThread(function()
-        local t0 = os.clock()
+-- Once a second on the game thread, pumped by the player tick (gametick.lua). Until 0.4.13 this
+-- was LoopAsync + ExecuteInGameThread: called from UE4SS's async thread, ExecuteInGameThread
+-- writes a map that all mods share without a lock, and two mods at once crashed the game
+-- (UE4SS.dll+0x87c104). After each load or possession (ClientRestart) the player tick is looked
+-- for right away, so the pump starts without a background loop.
+GT.boot(function(now) H.prime(G.Fn.PlayerTick) end)
+-- In a ship no ALS character ticks (measured in space): ship ticks pump there, so the ship hooks
+-- (ships vs infantry) are registered without going on foot first.
+GT.drive(GT.SHIP_TICK, "ship")
+GT.every(1.0, function(t0)
         local registered = 0
         local ok, err = pcall(function()
             -- arrived somewhere new (level load, elevator, new floor): look for new classes now
@@ -270,13 +280,11 @@ LoopAsync(1000, function()
         if t0 > profileAt then
             profileAt = t0 + 30
             local prof = H.profile()
-            if U.Verbose and prof ~= "" then U.log("profile 30 s: " .. prof) end
+            if U.Verbose and prof ~= "" then U.log("profile 30 s: " .. prof .. " | timed work: " .. GT.report()) end
         end
         local on, off = H.status()
         local s = string.format("hooks active %d, waiting %d", on, off)
         if s ~= lastStatus then lastStatus = s; U.log(s) end
-    end)
-    return false
 end)
 
 -- Mode hotkey ------------------------------------------------------------------

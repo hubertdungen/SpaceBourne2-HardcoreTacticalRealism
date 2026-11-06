@@ -175,6 +175,7 @@ Ground turrets fight for their own team. Your squad soldiers now take realistic 
 [*][b]Crash when loading after you die in a long firefight[/b] ("Fatal error", also without mods): bullets often stay alive, frozen, after hitting something, and a load with many of them around can crash the game. HTR ends each bullet right after its hit: yours since 0.4.6, the NPCs', squad's, turrets' and drones' since 0.4.11 (a knocked-out body under fire collected them).
 [*][b]Armor overflow:[/b] the hit that empties vanilla armor also takes the armor's value from your HP.
 [*][b]Companions' bullets[/b] had a 0-second life and did nothing.
+[*][b]UE4SS crash with many mods[/b] ("Fatal error", UE4SS.dll, at the menu or in play): since 0.4.14 HTR runs all its timed work on the game thread, from the game's own ticks, and no longer uses UE4SS's background loops (LoopAsync / ExecuteWithDelay). Two mods using those at the same moment could crash UE4SS 3.0.1. The other mods of the set get the same change.
 [/list]
 
 [line]

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.14 — 2026-11-06
+
+- **Fixed: a UE4SS crash with many mods** ("Fatal error" in UE4SS.dll+0x87c104, at the main menu
+  or in play; 7 crash dumps since 30/10). Mods' background loops (LoopAsync, ExecuteWithDelay)
+  run on their own threads without UE4SS's lock; each ExecuteInGameThread from there adds an
+  entry to a map that all mods share, and two at the same moment broke it. HTR no longer uses
+  them: its once-a-second work and the alarm unmute run on the game thread, from the player's
+  and the ships' own ticks (new `htr\gametick.lua`, the same file in every mod of the set). The
+  crash needs every mod of the set changed; the others follow.
+- Tested in game (HTR alone, 2 launches): on foot the work runs from the player tick, in space
+  from the ship tick (no character ticks there), and it carries on after a second load. Timed
+  work costs about 1-2 ms every 5 s. Nothing runs at the main menu (HTR needs nothing there).
+
 ## 0.4.13 — 2026-11-06
 
 - **Fixed: NPCs left standing with their AI switched off ("scarecrows").** A knocked-out NPC has
