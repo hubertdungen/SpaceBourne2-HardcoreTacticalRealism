@@ -81,11 +81,19 @@ return {
     -- a headshot, a big explosion or overkill beyond OverkillPercent of max HP. A medic, a squad
     -- soldier or a companion can bring you back; enemies revive each other by training (elites fast,
     -- militia and pirates rarely); robots never. Nobody comes within BleedOutSeconds: dead.
+    -- While down, only you, pirates and explosions can kill: the big factions leave the downed on
+    -- the ground, pirates walk up and finish off anyone of your side.
     Knockout = {
         Enabled = true,
         Chance = { ["Tactical"] = 0.18, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.10, ["Realism Hardcore"] = 0.05 },
         BleedOutSeconds = 45,
         OverkillPercent = 50,
+        BleedOut = true,          -- bleeding to zero knocks out instead of killing (you, squad, companions,
+                                  -- enemies; robots never bleed and bosses still die)
+        PiratesFinishOff = true,  -- pirates finish off the downed of your side (you, squad, companions)
+        PlayerRevive = true,      -- crouch next to a downed companion to revive it...
+        PlayerReviveSeconds = 8,  -- ...for this long (a hit on you starts over)
+        RevivedHP = 0.25,         -- health after any revive; it stops the bleeding (broken bones stay)
     },
 
     -- Nanotech healing between fights. HP: multiplier on the game's own suit healing

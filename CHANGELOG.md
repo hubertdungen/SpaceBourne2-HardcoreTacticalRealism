@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.15 — 2026-11-07
+
+- **Blood loss knocks out instead of killing.** Whoever bleeds to zero passes out for 45 s and can
+  be revived: you, squad soldiers, companions and enemies (robots never bleed; bosses still die).
+  Before, enemies and companions died at once and you were knocked out only by the per-mode chance.
+- **Pirates finish off the downed.** A pirate within 15 m walks up to anyone of your side who is
+  down (you, squad soldiers, companions) and fires. The other factions' rounds no longer kill
+  someone who is down; your own shots and explosions still do (you included, while you are down).
+- **You revive companions:** crouch next to a downed companion for 8 s.
+- **Revives stop the bleeding** and bring anyone back at 25 % health (NPCs had 20 %); broken
+  bones stay broken.
+- While you are down, HTR no longer resolves hits on you itself: any death while down goes through
+  the safe path that ends the ragdoll first (the 0x268 load crash of 0.4.11).
+- New `Knockout` settings: `BleedOut`, `PiratesFinishOff`, `PlayerRevive`, `PlayerReviveSeconds`,
+  `RevivedHP`.
+
 ## 0.4.14 — 2026-11-06
 
 - **Fixed: a UE4SS crash with many mods** ("Fatal error" in UE4SS.dll+0x87c104, at the main menu

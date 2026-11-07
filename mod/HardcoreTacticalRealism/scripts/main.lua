@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.14"
+local VERSION = "0.4.15"
 
 local U = require("htr.util")
 
@@ -87,6 +87,8 @@ default(cfg.Squad, "KeepUp", true); default(cfg.Squad, "RunBeyond", 600); defaul
 cfg.Knockout = cfg.Knockout or {}
 default(cfg.Knockout, "Enabled", true); default(cfg.Knockout, "BleedOutSeconds", 45); default(cfg.Knockout, "OverkillPercent", 50)
 default(cfg.Knockout, "Chance", { ["Tactical"] = 0.18, ["Tactical Hardcore"] = 0.12, ["Realism"] = 0.10, ["Realism Hardcore"] = 0.05 })
+default(cfg.Knockout, "BleedOut", true); default(cfg.Knockout, "PiratesFinishOff", true); default(cfg.Knockout, "RevivedHP", 0.25)
+default(cfg.Knockout, "PlayerRevive", true); default(cfg.Knockout, "PlayerReviveSeconds", 8)
 cfg.Fixes = cfg.Fixes or {}
 default(cfg.Fixes, "EndBulletsAfterHit", true)
 cfg.Messages = cfg.Messages or {}
@@ -267,8 +269,9 @@ GT.every(1.0, function(t0)
             end
             registered = H.poll(t0)
             tuneBehaviourTree(t0)
-            -- knocked-out NPCs; only while you are in the world (your tick stops during loads and menus)
-            if next(KO.down) and t0 - (HTR.playerTickT or -1e9) < 1.5 then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end
+            -- knocked-out NPCs and downed squad soldiers; only while you are in the world (your tick
+            -- stops during loads and menus)
+            if KO.busy() and t0 - (HTR.playerTickT or -1e9) < 1.5 then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end
             lastKO = t0
         end)
         if not ok then U.warn("poll: " .. tostring(err)) end

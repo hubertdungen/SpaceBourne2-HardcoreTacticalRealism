@@ -81,5 +81,10 @@ function W.fracture(key, t)
     return s.fracture
 end
 function W.heal(key) W.list[key] = nil end
+-- A revive stops the bleeding; a broken bone stays broken until it fuses.
+function W.stanch(key)
+    local s = key and W.list[key]
+    if s then s.wounds = {} end
+end
 
 return W

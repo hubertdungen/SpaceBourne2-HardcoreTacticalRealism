@@ -186,13 +186,23 @@ A lethal hit sometimes knocks the victim out instead of killing: you, your allie
 (Tactical 18 %, Tactical Hardcore 12 %, Realism 10 %, Realism Hardcore 5 %). Never on a headshot,
 a big explosion or heavy overkill; robots and bosses are never knocked out.
 
-- Someone can bring the downed back: a squad medic fastest, otherwise a squad soldier or a
-  companion. Enemies revive their own by training: elites fast and reliably, regulars slower,
-  militia and pirates rarely, and they often give up under fire.
-- Nobody goes in under fire: the area round the body must be clear. The reviver has to stay with
-  the body for a few seconds, and it can fail.
-- Nobody comes within 45 s: the downed one bleeds out. While you are down you take no damage.
-- `Knockout` in config: on/off, chance per mode, bleed-out time.
+- **Blood loss knocks out:** whoever bleeds to zero passes out instead of dying - you, your squad,
+  companions and enemies alike. Robots never bleed; bosses still die.
+- **Revives:** a squad medic comes fastest, otherwise a squad soldier or a companion. Enemies
+  revive their own by training: elites fast and reliably, regulars slower, militia and pirates
+  rarely, and they often give up under fire.
+- **You revive too:** crouch next to a downed companion and stay there 8 s (a hit on you starts
+  over). Squad soldiers keep the game's own hold-to-revive.
+- **Nobody goes in under fire:** the area round the body must be clear. The reviver has to stay
+  with the body for a few seconds, and it can fail.
+- **Back on their feet:** a revive stops the bleeding and brings the person back at 25 % health;
+  a broken bone stays broken until it fuses.
+- **Who finishes off the downed:** the big factions' troops leave them on the ground. Pirates
+  don't: one nearby walks up to anyone of your side who is down - you included - and fires.
+  Your own shots and any explosion can also kill someone who is down.
+- **Time runs out:** nobody comes within 45 s and the downed one dies.
+- `Knockout` in config: on/off, chance per mode, time down, blood loss, pirates, your revives,
+  health after a revive.
 
 **Getting medics.** Your ground soldiers are members of your faction. In your faction's member
 list (the screen where you give members a role such as Soldier, Pilot or Researcher, with

@@ -60,6 +60,7 @@ end
 -- in the same frame). Only the hit in this same frame counts as an explosion.
 function Pl.onRadial()
     Pl.radialTick = Pl.tick
+    if KO.player then KO.blastPlayer() end -- an explosion kills you while you are down (knockout.lua)
 end
 
 local function playerArmorRatings(p)
@@ -142,7 +143,13 @@ local function kill(p)
 end
 
 -- A lethal hit: sometimes knocked out instead (0.4.9, knockout.lua), else HTR's lethal hand-off.
-local function lethal(p, zone, overkill, explosion)
+-- Blood loss always knocks you out (0.4.15). Never called while you are down (Pl.resolve).
+local function lethal(p, zone, overkill, explosion, bleed)
+    if bleed and not KO.player and KO.bleedOutKnocksOut(nil) then
+        KO.downPlayer(p, os.clock())
+        pcall(U.notify, "Passed out from blood loss - hold on, help may come", p)
+        return
+    end
     if not KO.player and KO.roll(zone, overkill, explosion) then
         KO.downPlayer(p, os.clock())
         pcall(U.notify, "Knocked out - hold on, help may come", p)
@@ -155,6 +162,14 @@ function Pl.resolve(p, shooter, bone)
     if #Pl.pending == 0 then return end
     local list = Pl.pending
     Pl.pending = {}
+    if KO.player then
+        -- down: only a pirate's round or an explosion kills, and only through knockout.lua, which
+        -- ends the ragdoll first (dying while ragdolled crashed the next load, 0x268)
+        local sst = U.valid(shooter) and N.state[U.addr(shooter) or 0]
+        if sst and sst.doctrine == "pirate" and KO.killsDowned("enemy", true) then KO.player.execDone = true end
+        for _, e in ipairs(list) do if e.radial then KO.blastPlayer() end end
+        return
+    end
     local hp, armor = U.get(p, P.HP, 0), U.get(p, P.Armor, 0)
     Pl.lastHurt = os.clock()
     local lastZone, lastBlast = "unknown", false
@@ -208,6 +223,10 @@ end
 -- Damage from outside the normal hit path (ship blasts, bleeding). Absolute HP.
 function Pl.applyExternal(p, amount, label)
     if amount <= 0 or not enabled() then return end
+    if KO.player then -- down: a ship blast kills (knockout.lua), bleeding is on hold
+        if label ~= "bleeding" then KO.blastPlayer() end
+        return
+    end
     local hp, armor = U.get(p, P.HP, 0) - amount, U.get(p, P.Armor, 0)
     if label ~= "bleeding" then
         armor = math.max(0, armor - amount * 0.3)
@@ -216,7 +235,7 @@ function Pl.applyExternal(p, amount, label)
     if U.LogHits then U.log(string.format("PLAYER <- %s %.1f => hp %.1f", label, amount, hp)) end
     if hp <= 0 then
         if U.get(p, P.GodMode, false) then hp = 1
-        else lethal(p, "torso", -hp / math.max(1, U.get(p, P.MaxHP, 100)), label ~= "bleeding"); return end
+        else lethal(p, "torso", -hp / math.max(1, U.get(p, P.MaxHP, 100)), label ~= "bleeding", label == "bleeding"); return end
     end
     U.set(p, P.HP, hp)
     U.set(p, P.Armor, armor)
@@ -325,7 +344,10 @@ function Pl.onTick(self)
         if r == "medic" then pcall(U.notify, "Knocked out - a medic is coming", p)
         elseif r == "help" then pcall(U.notify, "Knocked out - help is coming", p)
         elseif r == "revived" then pcall(U.notify, "Back on your feet - get to cover", p)
-        elseif r == "bledout" then Pl.bledOutAt = t end -- stood up first (knockout.lua); dies next tick
+        elseif r == "bledout" or r == "finished" or r == "blast" then
+            Pl.bledOutAt = t -- stood up first (knockout.lua); dies next tick
+            if r == "finished" then pcall(U.notify, "A pirate finished you off", p) end
+        end
         return
     end
     if Pl.bledOutAt then
@@ -333,6 +355,11 @@ function Pl.onTick(self)
         kill(p)
         return
     end
+    if next(KO.down) then -- you revive a downed companion by crouching next to it (knockout.lua)
+        local rv = KO.youRevive(p, pos, t, dt, Pl.lastHurt)
+        if rv == "start" then pcall(U.notify, "Reviving - stay crouched", p)
+        elseif rv == "done" then pcall(U.notify, "Revived - back on their feet", p) end
+    elseif KO.you then KO.you = nil end
     if dt > 0 then regenStep(p, t, dt) end
     Pl.addr = U.addr(p)
     local hp, maxHP = U.get(p, P.HP, 0), U.get(p, P.MaxHP, 100)

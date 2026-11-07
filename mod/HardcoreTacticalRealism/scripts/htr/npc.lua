@@ -120,7 +120,7 @@ function N.ensure(npc)
     if N.count > 600 then -- keep memory bounded, but not at the cost of knocked-out NPCs and revivers
         local keep, n = {}, 0
         for k, s in pairs(N.state) do
-            if s.down or s.reviving or s.reviveMoving then keep[k] = s; n = n + 1 end
+            if s.down or s.reviving or s.reviveMoving or s.executing then keep[k] = s; n = n + 1 end
         end
         N.state, N.count = keep, n
     end
@@ -220,13 +220,18 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     local maxHP = U.get(npc, P.MaxHP, 0)
     if maxHP <= 1.5 then return end -- civilians: one hit, as vanilla
     local st = N.ensure(npc)
-    if not st or st.down then return end -- knocked out: the next hit kills (vanilla damage)
+    if not st then return end
     local c = cfg()
     local attacker = causerP:get()
     local aside, acn = C.sideOf(attacker)
     if aside == "other" then -- a weapon or projectile as causer: its instigator / owner fired it (0.4.12)
         local who = C.shooterOf(attacker)
         if who then attacker = who; aside, acn = C.sideOf(who) end
+    end
+    if st.down then -- knocked out: your hits and pirates' kill (vanilla damage); others leave it down
+        local ast = N.state[U.addr(attacker) or 0]
+        if not KO.killsDowned(aside, ast and ast.doctrine == "pirate") then out:set(0) end
+        return
     end
     -- where the threat is, for this NPC's and its mates' alert (onReceivePoint / onDead)
     if (st.side == "enemy" and (aside == "player" or aside == "ally")) or (st.side == "ally" and aside == "enemy") then
@@ -471,12 +476,16 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
         local outright = (cfg().Damage.SquadOutrightDeath or {})[HTR.mode] or 0
         local fatal = HTR.base == "Realism" and (zone == "head" or hp < -0.5 * U.get(sol, P.MaxHP, 100))
         local dies
-        if U.get(sol, "InInjuredMode", false) then dies = true
+        local injured = U.get(sol, "InInjuredMode", false)
+        if injured then -- already down: your hits and pirates' kill, others leave it down (0.4.15)
+            local who = (aside == "other" and C.shooterOf(attacker)) or attacker
+            local wst = N.state[U.addr(who) or 0]
+            dies = KO.killsDowned(who == attacker and aside or C.sideOf(who), wst and wst.doctrine == "pirate")
         elseif KO.enabled() then dies = not KO.roll(zone, -hp / U.get(sol, P.MaxHP, 100), false) -- 0.4.9: chance per mode
         else dies = fatal or math.random() < outright end
         if dies then
             pcall(function() sol:Deaded() end)
-        else
+        elseif not injured then
             pcall(function() sol:EnterInjuredMode() end)
         end
     end
@@ -512,7 +521,7 @@ function N.onSoldierInjured(self)
     if not KO.enabled() then return end
     local sol = self:get()
     local a = U.addr(sol)
-    if a then KO.soldierInjured(sol, a, os.clock()) end
+    if a then KO.soldierInjured(sol, a, os.clock(), C.sideOf(sol)) end
 end
 
 -- Hook: Master_Soldier_C:SetWalkSpeed(_Guarded) - squad soldiers following you.
@@ -549,7 +558,7 @@ function N.onThink(self)
     end
     local t = U.now(npc)
     N.track(npc)
-    if st.reviving or st.reviveMoving then KO.drive(npc, st) end
+    if st.reviving or st.reviveMoving or st.executing then KO.drive(npc, st) end
     applyPending(npc, st, t)
     if U.get(npc, P.Dead, false) then return end -- a queued ship blast may have killed it
     -- bleeding (1 Hz)
@@ -560,6 +569,12 @@ function N.onThink(self)
         local pct = W.bleed(U.addr(npc), ct, dt)
         if pct > 0 then
             local left = U.get(npc, P.HP, 0) - pct / 100 * U.get(npc, P.MaxHP, 100)
+            if left <= 0 and KO.bleedOutKnocksOut(st) then -- blood loss knocks out (0.4.15)
+                U.set(npc, P.HP, 1.0)
+                KO.downShooter(npc, st, ct)
+                if U.LogHits then U.log("BLED OUT, KNOCKED OUT " .. tostring(st.cn) .. " (" .. st.side .. ")") end
+                return
+            end
             U.set(npc, P.HP, math.max(0, left))
             if left <= 0 then pcall(function() npc:ForceToDead() end); return end
         end
@@ -611,7 +626,7 @@ function N.onRifleEye(self)
     if st.down then return end
     local t = U.now(npc)
     N.track(npc)
-    if st.reviving or st.reviveMoving then KO.drive(npc, st); return end -- busy reviving: no aiming
+    if st.reviving or st.reviveMoving or st.executing then KO.drive(npc, st); return end -- busy reviving: no aiming
     applyPending(npc, st, t) -- NPCs in a fight react to queued effects within ~0.3 s
     if feat("SmarterAI") and not U.get(npc, P.Dead, false) then resumeFire(npc, st, t) end
     if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end

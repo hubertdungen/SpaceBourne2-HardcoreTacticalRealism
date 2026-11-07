@@ -2,20 +2,27 @@
   Not always dead (0.4.9). A lethal hit sometimes knocks the victim out instead (chance per
   mode, Knockout in config); never on a headshot, a big explosion or heavy overkill. Someone
   can reach the body and bring them back; if nobody does in time, they bleed out.
+  Blood loss (0.4.15): bleeding to zero always knocks out instead of killing - you, squad
+  soldiers, companions and enemies; robots never bleed and bosses still die.
 
   - Squad soldiers: the game's own injured state (its medics and your "hold to revive" work as
     before); HTR sets the chance per mode and lengthens the bleed-out.
   - Gun NPCs (enemies, companions): kept alive at 1 HP, ragdolled, AI stopped. Who comes depends
     on training: elites fast and reliably, regulars slower, militia and pirates rarely and may
-    give up under fire; robots are never knocked out.
-  - You: HP stays at 1, you lie on the ground, no damage while down; the nearest squad medic,
-    else any squad soldier or companion comes for you (medics fastest).
+    give up under fire; robots are never knocked out. You revive a downed companion by
+    crouching next to it.
+  - You: HP stays at 1, you lie on the ground; the nearest squad medic, else any squad soldier
+    or companion comes for you (medics fastest).
+  - While down only you, pirates and explosions can kill: pirates walk up and finish off anyone
+    of your side who is down; the big factions' troops leave the downed on the ground.
+  - A revive stops the bleeding and brings the person back at RevivedHP; broken bones stay.
 
   Downed NPCs are kept by address; their object is checked (IsValid + same address) before use.
 ]]
 
 local U = require("htr.util")
-local KO = { down = {}, soldiers = {} }
+local W = require("htr.wounds")
+local KO = { down = {}, soldiers = {}, injured = {} }
 
 -- try = chance to attempt, time = s at the body, success = chance it works, quit = gives up under fire
 KO.REVIVE = {
@@ -28,16 +35,32 @@ KO.REVIVE = {
     pirate    = { try = 0.3,  time = 15, success = 0.5,  quit = 0.35 },
 }
 local REACH, SEARCH = 300, 2500 -- cm: at the body (squad soldiers stop ~2-3 m short) / how far a reviver comes from
+local EXEC_SEE, EXEC_AT, EXEC_AIM = 1500, 250, 1.0 -- pirates: come from 15 m, fire within 2.5 m after 1 s
+local YOU_REACH = 250 -- cm: you revive a companion this close, crouched
 
 local function cfg() return HTR.cfg.Knockout end
 function KO.enabled() return cfg().Enabled ~= false end
 function KO.bleedOut() return cfg().BleedOutSeconds or 45 end
+local function revivedHP() return cfg().RevivedHP or 0.25 end
 
 -- Does this lethal hit knock out instead of kill? overkill = damage beyond the HP left / max HP.
 function KO.roll(zone, overkill, explosion)
     if not KO.enabled() or zone == "head" or explosion then return false end
     if overkill > (cfg().OverkillPercent or 50) / 100 then return false end
     return math.random() < ((cfg().Chance or {})[HTR.mode] or 0)
+end
+
+-- Blood loss knocks out instead of killing (0.4.15). st = npc.lua state (nil for you).
+function KO.bleedOutKnocksOut(st)
+    if not KO.enabled() or cfg().BleedOut == false then return false end
+    return not (st and (st.robot or st.boss or st.doctrine == "machine"))
+end
+
+-- May this hit kill someone who is down? You decide for yourself; pirates always finish off;
+-- the big factions' troops leave the downed on the ground. Explosions are handled by the caller.
+function KO.killsDowned(aside, pirate)
+    if not KO.enabled() then return true end
+    return aside == "player" or (pirate == true and cfg().PiratesFinishOff ~= false)
 end
 
 local function same(o, a) return U.valid(o) and U.addr(o) == a end
@@ -107,7 +130,7 @@ local function candidates(pos, near, now, withSoldiers)
     local out = {}
     for _, e in ipairs(near(pos, SEARCH)) do
         local st = e.st
-        if not st.down and not st.robot then
+        if not st.down and not st.robot and not st.executing then
             local r = KO.REVIVE[st.doctrine] or (st.side == "ally" and KO.REVIVE.companion)
             out[#out + 1] = { a = e.a, st = st, side = st.side, d = e.d, r = r, busy = st.reviving ~= nil }
         end
@@ -132,7 +155,47 @@ local function distOf(a, pos, near)
     return nil
 end
 
--- Gun NPC knocked out (from its CalculateDamage hook; HTR already set the hit to leave 1 HP).
+-- Pirates finish off the downed of your side (sides are relative to you). One pirate per body;
+-- it walks over with its AI paused (KO.drive) and fires; returns true once it has fired.
+local function bodyOf(key)
+    if KO.player and KO.player.key == key then return KO.player end
+    return KO.down[key] or KO.injured[key]
+end
+local function executed(body, near)
+    if body.side ~= "ally" or cfg().PiratesFinishOff == false then return false end
+    if body.execDone then return true end
+    if body.exec then
+        for _, e in ipairs(near(body.pos, EXEC_SEE)) do
+            if e.a == body.exec and not e.st.down then return false end -- still on its way
+        end
+        body.exec = nil -- gone, down or dead
+    end
+    local best
+    for _, e in ipairs(near(body.pos, EXEC_SEE)) do
+        local st = e.st
+        if st.doctrine == "pirate" and st.side == "enemy" and not st.down and not st.executing and not st.reviving
+            and (not best or e.d < best.d) then best = e end
+    end
+    if best then body.exec = best.a; best.st.executing = body.key end
+    return false
+end
+local function releaseExec(body)
+    body.exec, body.execDone = nil, nil -- the pirate's own hook (KO.drive) restarts its AI
+end
+
+-- Gun NPC back on its feet (by an NPC reviver or by you).
+local function reviveNPC(b)
+    local npc = b.obj
+    if b.revSt then b.revSt.reviving = nil end
+    releaseExec(b)
+    pcall(function() npc:RagdollEnd() end)
+    brain(npc, true)
+    U.set(npc, "CurrentHP", U.get(npc, "MaxHP", 100) * revivedHP())
+    W.stanch(b.key) -- the revive stops the bleeding; broken bones stay
+    if b.st then b.st.down = nil end
+end
+
+-- Gun NPC knocked out (from its CalculateDamage hook, or its think hook on blood loss; HP is 1).
 function KO.downShooter(npc, st, now)
     local a = U.addr(npc)
     if not a then return end
@@ -150,7 +213,8 @@ end
 -- they kept their AI switched off and never got up again ("scarecrows").
 function KO.forget(keepPlayer)
     for _, b in pairs(KO.down) do if b.st then b.st.koUntil = b.untilT end end
-    KO.down, KO.soldiers = {}, {}
+    KO.down, KO.soldiers, KO.injured, KO.you = {}, {}, {}, nil
+    if KO.player then releaseExec(KO.player) end
     if not keepPlayer then KO.player = nil end -- a new pawn is never down
 end
 
@@ -160,26 +224,60 @@ function KO.update(now, dt, near)
         local npc = b.obj
         if not same(npc, a) or U.get(npc, "NPCDead", false) then
             KO.down[a] = nil -- died for good or gone
-        elseif now >= b.untilT then
+        elseif now >= b.untilT or executed(b, near) then
             KO.down[a] = nil
-            pcall(function() npc:ForceToDead() end) -- bled out
+            if b.revSt then b.revSt.reviving = nil end
+            releaseExec(b)
+            pcall(function() npc:ForceToDead() end) -- bled out, or a pirate finished it off
         else
             b.safe = safe(b.pos, b.side, near, now)
             if not b.rev then assign(b, candidates(b.pos, near, now, b.side == "ally")) end
             if b.rev and progress(b, distOf(b.rev, b.pos, near), now, dt) then
                 KO.down[a] = nil
-                if b.revSt then b.revSt.reviving = nil end
-                pcall(function() npc:RagdollEnd() end)
-                brain(npc, true)
-                U.set(npc, "CurrentHP", U.get(npc, "MaxHP", 100) * 0.2)
-                if b.st then b.st.down = nil end
+                reviveNPC(b)
             end
         end
     end
+    -- your squad soldiers lying in the game's injured state: pirates finish them off too
+    for a, s in pairs(KO.injured) do
+        if now - s.t > 3 or not same(s.obj, a) or not U.get(s.obj, "InInjuredMode", false) then
+            KO.injured[a] = nil; releaseExec(s) -- revived, dead or gone
+        elseif executed(s, near) then
+            KO.injured[a] = nil; releaseExec(s)
+            pcall(function() s.obj:Deaded() end)
+        end
+    end
 end
+function KO.busy() return next(KO.down) ~= nil or next(KO.injured) ~= nil end
 
--- From a living gun NPC's own hook: a reviver walks to its body with its AI paused.
+-- From a living gun NPC's own hook: a reviver walks to its body with its AI paused; a pirate
+-- going to finish someone off walks over too, turns to the body and fires.
 function KO.drive(npc, st)
+    if st.executing then
+        local b = bodyOf(st.executing)
+        if b and b.exec == U.addr(npc) and not b.execDone then
+            if not st.reviveMoving then st.reviveMoving = true; brain(npc, false) end
+            local here = U.location(npc)
+            if here and U.dist(here, b.pos) <= EXEC_AT then
+                local now = os.clock()
+                st.execAt = st.execAt or now + EXEC_AIM
+                if now >= st.execAt then
+                    pcall(function()
+                        local yaw = math.deg(math.atan(b.pos.Y - here.Y, b.pos.X - here.X))
+                        npc:K2_SetActorRotation({ Pitch = 0, Yaw = yaw, Roll = 0 }, false)
+                    end)
+                    pcall(function() npc:StartShoot() end)
+                    b.execDone = true
+                end
+            else
+                moveTo(npc, b.pos)
+            end
+            return
+        end
+        st.executing, st.execAt = nil, nil -- done, or the body is gone
+        if st.reviveMoving and not st.reviving then st.reviveMoving = nil; brain(npc, true) end
+        return
+    end
     local b = st.reviving and (KO.down[st.reviving] or (KO.player and KO.player.key == st.reviving and KO.player))
     if b and b.rev and b.safe then
         if not st.reviveMoving then st.reviveMoving = true; brain(npc, false) end
@@ -203,11 +301,14 @@ function KO.soldier(sol, a, now, side)
 end
 
 -- Squad soldier down (its 1 s InjuredTime timer): the game's bleed-out is ~21 s; HTR holds it until BleedOutSeconds.
-function KO.soldierInjured(sol, a, now)
+function KO.soldierInjured(sol, a, now, side)
     local s = KO.soldiers[a] or {}
     KO.soldiers[a] = s
     s.downAt = (s.downAt and now - s.downAt < KO.bleedOut() + 5) and s.downAt or now
     if now - s.downAt < KO.bleedOut() and U.get(sol, "InjuredSec", 0) > 15 then U.set(sol, "InjuredSec", 15) end
+    local i = KO.injured[a] or { key = a, tried = {} }
+    KO.injured[a] = i
+    i.obj, i.side, i.t, i.pos = sol, side, now, U.location(sol) or i.pos
 end
 
 -- You: knocked out (from HTR's lethal hand-off). Returns true when knocked out.
@@ -220,14 +321,25 @@ function KO.downPlayer(p, now)
     return true
 end
 
--- Your downed state, from the player tick (0.25 s). Returns "revived", "bledout" or nil.
+-- An explosion reached you while you are down (player.lua's radial hook): it kills.
+function KO.blastPlayer() if KO.player then KO.player.blasted = true end end
+
+-- Your downed state, from the player tick (0.25 s).
+-- Returns "revived", "bledout", "finished" (a pirate), "blast", "medic", "help" or nil.
 function KO.updatePlayer(p, now, dt, near)
     local b = KO.player
     if not b then return nil end
     U.set(p, "ResurectUsed", true)
     U.set(p, "CurrentHP", 1.0); U.set(p, "HPRecoverRate", 0.0) -- no healing while down (HTR's regen resumes after)
     b.pos = U.location(p) or b.pos
-    if now >= b.untilT then KO.player = nil; KO.standUp(p, false); return "bledout" end
+    local why = (now >= b.untilT and "bledout") or (b.blasted and "blast") or (executed(b, near) and "finished")
+    if why then
+        KO.player = nil
+        if b.revSt then b.revSt.reviving = nil end
+        releaseExec(b)
+        KO.standUp(p, false) -- player.lua kills you on the next tick (0x268)
+        return why
+    end
     if now >= (b.safeAt or 0) then b.safeAt = now + 1; b.safe = safe(b.pos, "ally", near, now) end
     if not b.rev then
         assign(b, candidates(b.pos, near, now, true))
@@ -239,19 +351,45 @@ function KO.updatePlayer(p, now, dt, near)
     if b.rev and progress(b, distOf(b.rev, b.pos, near), now, dt) then
         KO.player = nil
         if b.revSt then b.revSt.reviving = nil end
+        releaseExec(b)
         KO.standUp(p, true)
         return "revived"
     end
     return nil
 end
 
--- Also before a bleed-out death: you never die while HTR still holds you ragdolled (a load right
--- after such a death crashed the game, 0x268; player.lua kills you on the next tick instead).
+-- Also before any death while down: you never die while HTR still holds you ragdolled (a load
+-- right after such a death crashed the game, 0x268; player.lua kills you on the next tick instead).
 function KO.standUp(p, revived)
     U.set(p, "DisableMove", false); U.set(p, "DisableJump?", false); U.set(p, "Injured?", false)
     pcall(function() p:RagdollEnd() end)
-    if revived then U.set(p, "CurrentHP", U.get(p, "MaxHP", 100) * 0.25) end
+    if revived then
+        U.set(p, "CurrentHP", U.get(p, "MaxHP", 100) * revivedHP())
+        W.stanch(U.addr(p))
+    end
     U.set(p, "ResurectUsed", false)
+end
+
+-- You revive a downed companion: crouch next to it for PlayerReviveSeconds (a hit on you starts
+-- over). From the player tick (0.25 s) while you are up. Returns "start", "done" or nil.
+function KO.youRevive(p, pos, now, dt, hurtAt)
+    if cfg().PlayerRevive == false or not next(KO.down) or not pos then KO.you = nil; return nil end
+    local body
+    if U.get(p, "Stance", 0) == 1 then -- crouched
+        for _, b in pairs(KO.down) do
+            if b.side == "ally" and b.pos and U.dist(pos, b.pos) < YOU_REACH then body = b; break end
+        end
+    end
+    if not body then KO.you = nil; return nil end
+    if not KO.you or KO.you.key ~= body.key then KO.you = { key = body.key, at = 0 }; return "start" end
+    if now - (hurtAt or -1e9) < 1 then KO.you.at = 0; return nil end
+    KO.you.at = KO.you.at + dt
+    if KO.you.at < (cfg().PlayerReviveSeconds or 8) then return nil end
+    KO.you = nil
+    if not same(body.obj, body.key) or U.get(body.obj, "NPCDead", false) then KO.down[body.key] = nil; return nil end
+    KO.down[body.key] = nil
+    reviveNPC(body)
+    return "done"
 end
 
 return KO
