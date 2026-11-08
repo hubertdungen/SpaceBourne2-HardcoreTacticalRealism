@@ -35,6 +35,7 @@ KO.REVIVE = {
     pirate    = { try = 0.3,  time = 15, success = 0.5,  quit = 0.35 },
 }
 local REACH, SEARCH = 300, 2500 -- cm: at the body (squad soldiers stop ~2-3 m short) / how far a reviver comes from
+local REVIVE_WALK = 15 -- s of clear ground: a reviver not at the body by then gives up (its AI comes back on)
 -- pirates within 15 m stop, turn to the body and fire after 1 s, from where they stand (walking
 -- them over was tried in 0.4.15 tests: NPCs did not follow a move order); after 8 s the body dies
 -- regardless (in case the pirate's own hook never runs)
@@ -104,7 +105,7 @@ local function assign(body, cands)
         end
     end
     if best then
-        body.rev, body.revSt, body.r, body.at = best.a, best.st, best.r, 0
+        body.rev, body.revSt, body.r, body.at, body.walk = best.a, best.st, best.r, 0, 0
         if best.st then best.st.reviving = body.key end
     end
 end
@@ -112,7 +113,15 @@ end
 -- Progress of a body's reviver; returns true when the revive succeeded. dist = reviver distance or nil.
 local function progress(body, dist, now, dt)
     if not dist then body.rev = nil; return false end -- reviver gone
-    if not body.safe or dist > REACH then return false end
+    if not body.safe then return false end
+    if dist > REACH then -- on its way; one that can't get there gives up (never a stalled NPC)
+        body.walk = (body.walk or 0) + dt
+        if body.walk > REVIVE_WALK then
+            if body.revSt then body.revSt.reviving = nil end
+            body.rev = nil
+        end
+        return false
+    end
     if underFire(body.revSt, now) then
         if body.r.quit and math.random() < body.r.quit then
             if body.revSt then body.revSt.reviving = nil end
