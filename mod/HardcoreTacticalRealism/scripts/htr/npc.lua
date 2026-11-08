@@ -51,10 +51,10 @@ local function doctrine(st)
     return st.doc or DOC[st.doctrine] or DOC.regular
 end
 
--- Companions fight by their own skill (0.4.15): between faction regulars and elites, by the
--- game's tier for that NPC (0-4). Tier 0 is close to a regular, tier 4 good but short of elite.
+-- Companions fight by their own skill (0.4.15): by the game's tier for that NPC (0-4), from a
+-- faction regular (tier 0) to an elite (tier 4, the rare best), in even steps.
 local function companionDoctrine(tier)
-    local t = 0.2 + 0.6 * U.clamp((tonumber(tier) or 2) / 4, 0, 1)
+    local t = U.clamp((tonumber(tier) or 2) / 4, 0, 1)
     local a, b, d = DOC.regular, DOC.elite, { label = "Companion (skill " .. tostring(tier) .. ")", grenades = false }
     for k, v in pairs(a) do
         if type(v) == "number" then d[k] = v + ((tonumber(b[k]) or 0) - v) * t end

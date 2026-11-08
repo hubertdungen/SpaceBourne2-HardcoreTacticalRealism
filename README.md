@@ -256,8 +256,8 @@ can hold a firefight instead of dropping as soon as they show up.
   freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody
   gets massacred the moment a floor loads.
 - Companions' bullets work (vanilla gave them a 0-second projectile life).
-- **Allies by their own skill:** each companion fights by its tier in the game (0-4), between
-  faction regulars and elites - good, but not elite. Squad soldiers wear the kit of an enemy
+- **Allies by their own skill:** each companion fights by its tier in the game (0-4): tier 0
+  like a faction regular, tier 4 (the rare best) like an elite, the tiers between in steps. Squad soldiers wear the kit of an enemy
   of the same tier (none, light, medium, heavy armor; a helmet from tier 1) and have normal
   bodies; their tier rises with the faction screen's Upgrade Soldier.
 
@@ -268,7 +268,7 @@ can hold a firefight instead of dropping as soon as they show up.
 | Regular | standard faction troops | quick, accurate, cover, grenades |
 | Elite | high-tier troops, guards, bosses | fastest reactions, tight aim, grenades, alert the area |
 | Machine | robots | fearless, steady, never retreat |
-| Companion | your allies | by their own tier: between regulars and elites |
+| Companion | your allies | by their own tier: from regular (tier 0) to elite (tier 4) |
 
 ## Game bugs HTR fixes
 

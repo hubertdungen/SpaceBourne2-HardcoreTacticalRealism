@@ -16,7 +16,8 @@
 - New `Knockout` settings: `BleedOut`, `PiratesFinishOff`, `PlayerRevive`, `PlayerReviveSeconds`,
   `RevivedHP`.
 - **Allies no longer outclass everyone.** Companions fought at near-elite level whatever their
-  tier; now each fights by its own tier (0-4), between faction regulars and elites. Squad
+  tier; now each fights by its own tier (0-4), from a faction regular (tier 0) to an elite
+  (tier 4, the rare best). Squad
   soldiers had at least medium armor, always a helmet and 20 % tougher bodies; now they wear the
   kit of an enemy of the same tier and have normal bodies. Pirates stay the sloppiest.
 
