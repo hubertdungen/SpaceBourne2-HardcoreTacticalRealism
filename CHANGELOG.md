@@ -5,14 +5,24 @@
 - **Blood loss knocks out instead of killing.** Whoever bleeds to zero passes out for 45 s and can
   be revived: you, squad soldiers, companions and enemies (robots never bleed; bosses still die).
   Before, enemies and companions died at once and you were knocked out only by the per-mode chance.
-- **Pirates finish off the downed.** A pirate within 15 m walks up to anyone of your side who is
-  down (you, squad soldiers, companions) and fires. The other factions' rounds no longer kill
+- **Pirates finish off the downed.** A pirate within 15 m stops, turns to anyone of your side who
+  is down (you, squad soldiers, companions) and fires from where it stands. The other factions' rounds no longer kill
   someone who is down; your own shots and explosions still do (you included, while you are down).
 - **You revive companions:** crouch next to a downed companion for 8 s.
 - **Revives stop the bleeding** and bring anyone back at 25 % health (NPCs had 20 %); broken
   bones stay broken.
 - While you are down, HTR no longer resolves hits on you itself: any death while down goes through
   the safe path that ends the ragdoll first (the 0x268 load crash of 0.4.11).
+- **Fixed: a squad soldier picked to revive a downed companion never came** (only revives of you
+  made soldiers move) and kept everyone else from helping until the companion died.
+- **No stalled revivers.** A reviver walks with its AI paused; one that has not reached the body
+  after 15 s on clear ground gives up and fights again (another may try). A pirate finishing
+  someone off gives up after 8 s.
+- Tested in game (scripted, 7 launches, HTR alone): enemies and you are knocked out by blood loss;
+  a squad soldier revived you at 25 % (381/1526); the downed die when the time runs out; your death
+  while down and the game's reload after it were clean in all 7 launches (no crash dumps); regular
+  enemy fire did not kill you while down. Not yet seen in game: a pirate finishing someone off and
+  a completed crouched revive (the test enemies kept hitting the player, which restarts it).
 - New `Knockout` settings: `BleedOut`, `PiratesFinishOff`, `PlayerRevive`, `PlayerReviveSeconds`,
   `RevivedHP`.
 - **Allies no longer outclass everyone.** Companions fought at near-elite level whatever their

@@ -198,11 +198,14 @@ a big explosion or heavy overkill; robots and bosses are never knocked out.
 - **Back on their feet:** a revive stops the bleeding and brings the person back at 25 % health;
   a broken bone stays broken until it fuses.
 - **Who finishes off the downed:** the big factions' troops leave them on the ground. Pirates
-  don't: one nearby walks up to anyone of your side who is down - you included - and fires.
+  don't: one within 15 m stops, turns to anyone of your side who is down - you included - and
+  fires.
   Your own shots and any explosion can also kill someone who is down.
 - **Time runs out:** nobody comes within 45 s and the downed one dies.
 - `Knockout` in config: on/off, chance per mode, time down, blood loss, pirates, your revives,
   health after a revive.
+
+![Kneeling by a knocked-out soldier](https://raw.githubusercontent.com/hubertdungen/SpaceBourne2-HardcoreTacticalRealism/main/docs/knockout.jpg)
 
 **Getting medics.** Your ground soldiers are members of your faction. In your faction's member
 list (the screen where you give members a role such as Soldier, Pilot or Researcher, with
@@ -303,6 +306,14 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   `%LOCALAPPDATA%\SB2\Saved\Crashes`); if you ever notice stutter, `htr.log` names any HTR code that took longer
   than 8 ms.
 - In-game tests while firing show the same frame times as the game without mods.
+<!-- nexus:skip -->
+- Test status of the knockouts (scripted in-game tests, 7 launches): whoever bleeds to zero is
+  knocked out (enemies and you); a squad soldier revived you at 25 %; when the time runs out the
+  downed die; your death while down and the reload after it were clean every time. Not yet seen
+  in game: a pirate finishing someone off, and you completing a crouched revive (the count runs
+  and starts over on a hit, but the test enemies kept hitting you). Every wait has a time limit
+  (pirate 8 s, a reviver 15 s on clear ground, the downed 45 s), so nobody is left standing still.
+<!-- /nexus:skip -->
 
 ## After a game update
 
