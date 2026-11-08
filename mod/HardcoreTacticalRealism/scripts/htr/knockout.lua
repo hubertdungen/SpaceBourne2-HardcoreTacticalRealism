@@ -298,14 +298,18 @@ function KO.drive(npc, st)
     end
 end
 
--- Squad soldiers report themselves (their 1.5 s update); a reviver walks to you.
+-- Squad soldiers report themselves (their 1.5 s update); a reviver walks to its body: you or a
+-- downed companion (0.4.15: before, a soldier picked for a companion never came and blocked others).
 function KO.soldier(sol, a, now, side)
     local s = KO.soldiers[a] or {}
     KO.soldiers[a] = s
     s.pos, s.t, s.side = U.location(sol), now, side
     s.medic = U.get(sol, "SoldierType", 0) == 2
-    local b = KO.player
-    if b and b.rev == a then s.reviving = true; if b.safe then moveTo(sol, b.pos) end else s.reviving = nil end
+    local b = KO.player and KO.player.rev == a and KO.player or nil
+    if not b then
+        for _, d in pairs(KO.down) do if d.rev == a then b = d; break end end
+    end
+    if b then s.reviving = true; if b.safe then moveTo(sol, b.pos) end else s.reviving = nil end
 end
 
 -- Squad soldier down (its 1 s InjuredTime timer): the game's bleed-out is ~21 s; HTR holds it until BleedOutSeconds.
