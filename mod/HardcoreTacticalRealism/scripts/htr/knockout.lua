@@ -35,9 +35,10 @@ KO.REVIVE = {
     pirate    = { try = 0.3,  time = 15, success = 0.5,  quit = 0.35 },
 }
 local REACH, SEARCH = 300, 2500 -- cm: at the body (squad soldiers stop ~2-3 m short) / how far a reviver comes from
--- pirates: come from 15 m and fire within 2.5 m after 1 s; one that can't get there (no path,
--- tested 0.4.15) fires from where it stands after 4 s; after 8 s the body dies regardless
-local EXEC_SEE, EXEC_AT, EXEC_AIM, EXEC_WALK, EXEC_GIVE = 1500, 250, 1.0, 4, 8
+-- pirates within 15 m stop, turn to the body and fire after 1 s, from where they stand (walking
+-- them over was tried in 0.4.15 tests: NPCs did not follow a move order); after 8 s the body dies
+-- regardless (in case the pirate's own hook never runs)
+local EXEC_SEE, EXEC_AIM, EXEC_GIVE = 1500, 1.0, 8
 local YOU_REACH = 250 -- cm: you revive a companion this close, crouched
 
 local function cfg() return HTR.cfg.Knockout end
@@ -262,27 +263,26 @@ function KO.drive(npc, st)
     if st.executing then
         local b = bodyOf(st.executing)
         if b and b.exec == U.addr(npc) and not b.execDone then
-            if not st.reviveMoving then st.reviveMoving = true; brain(npc, false) end
+            if not st.reviveMoving then -- stop where it is (AI paused, no move order of its own)
+                st.reviveMoving = true; brain(npc, false)
+                pcall(function() npc.Controller:StopMovement() end)
+            end
             local here = U.location(npc)
             local now = os.clock()
-            st.execSince = st.execSince or now
-            -- at the body, or stuck on the way: aim, then fire from where it stands
-            if here and (U.dist(here, b.pos) <= EXEC_AT or now - st.execSince >= EXEC_WALK) then
-                st.execAt = st.execAt or now + EXEC_AIM
-                if now >= st.execAt then
-                    pcall(function()
-                        local yaw = math.deg(math.atan(b.pos.Y - here.Y, b.pos.X - here.X))
-                        npc:K2_SetActorRotation({ Pitch = 0, Yaw = yaw, Roll = 0 }, false)
-                    end)
-                    pcall(function() npc:StartShoot() end)
-                    b.execDone = true
-                end
-            else
-                moveTo(npc, b.pos)
+            st.execAt = st.execAt or now + EXEC_AIM
+            if here then
+                pcall(function()
+                    local yaw = math.deg(math.atan(b.pos.Y - here.Y, b.pos.X - here.X))
+                    npc:K2_SetActorRotation({ Pitch = 0, Yaw = yaw, Roll = 0 }, false)
+                end)
+            end
+            if now >= st.execAt then
+                pcall(function() npc:StartShoot() end)
+                b.execDone = true
             end
             return
         end
-        st.executing, st.execAt, st.execSince = nil, nil, nil -- done, or the body is gone
+        st.executing, st.execAt = nil, nil -- done, or the body is gone
         if st.reviveMoving and not st.reviving then st.reviveMoving = nil; brain(npc, true) end
         return
     end
