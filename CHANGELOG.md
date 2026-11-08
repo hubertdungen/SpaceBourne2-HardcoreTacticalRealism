@@ -15,6 +15,10 @@
   the safe path that ends the ragdoll first (the 0x268 load crash of 0.4.11).
 - New `Knockout` settings: `BleedOut`, `PiratesFinishOff`, `PlayerRevive`, `PlayerReviveSeconds`,
   `RevivedHP`.
+- **Allies no longer outclass everyone.** Companions fought at near-elite level whatever their
+  tier; now each fights by its own tier (0-4), between faction regulars and elites. Squad
+  soldiers had at least medium armor, always a helmet and 20 % tougher bodies; now they wear the
+  kit of an enemy of the same tier and have normal bodies. Pirates stay the sloppiest.
 
 ## 0.4.14 — 2026-11-06
 

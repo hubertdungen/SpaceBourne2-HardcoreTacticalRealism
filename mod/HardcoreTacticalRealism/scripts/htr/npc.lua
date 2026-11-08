@@ -48,7 +48,18 @@ end
 
 local function doctrine(st)
     if not feat("FactionDoctrines") then return DOC.regular end
-    return DOC[st.doctrine] or DOC.regular
+    return st.doc or DOC[st.doctrine] or DOC.regular
+end
+
+-- Companions fight by their own skill (0.4.15): between faction regulars and elites, by the
+-- game's tier for that NPC (0-4). Tier 0 is close to a regular, tier 4 good but short of elite.
+local function companionDoctrine(tier)
+    local t = 0.2 + 0.6 * U.clamp((tonumber(tier) or 2) / 4, 0, 1)
+    local a, b, d = DOC.regular, DOC.elite, { label = "Companion (skill " .. tostring(tier) .. ")", grenades = false }
+    for k, v in pairs(a) do
+        if type(v) == "number" then d[k] = v + ((tonumber(b[k]) or 0) - v) * t end
+    end
+    return d
 end
 
 --[[ Alert an NPC the way its own eyes would (0.4.12): the threat as its target, where it is, in
@@ -128,6 +139,8 @@ function N.ensure(npc)
     st = { side = (C.sideOf(npc)), doctrine = C.doctrineOf(npc, cn), cn = cn, level = U.get(npc, P.Level, 1),
         robot = U.get(npc, P.Robot, false) or cn == "Q1_Shooter_Robot_C", boss = U.get(npc, P.IsBoss, false) == true }
     st.armor, st.helmet, st.vitality = C.protectionOf(npc, cn, cfg())
+    st.tier = U.get(npc, P.Tier, 2)
+    if st.doctrine == "companion" then st.doc = companionDoctrine(st.tier) end
     N.state[a] = st
     N.count = N.count + 1
     N.applyTuning(npc, st)
@@ -434,10 +447,10 @@ end
 
 -- Hook: Master_Soldier_C:ReceivePointDamage (your ground squad / team-battle soldiers).
 -- Vanilla already subtracted self.Damage from armor or HP; HTR swaps it for the realistic value.
--- Squad soldiers are issued military kit: at least medium armor and a helmet, and a slightly
--- tougher body, so they can hold a firefight instead of dropping as soon as they show up.
-local SOLDIER_ARMOR = { [0] = "medium", [1] = "medium", [2] = "medium", [3] = "heavy", [4] = "heavy" }
-local SOLDIER_VITALITY = 1.2
+-- Squad soldiers wear the kit of an enemy of the same tier (0.4.15; their tier rises with the
+-- faction screen's Upgrade Soldier): none, light, medium, heavy; a helmet from tier 1; a normal body.
+local SOLDIER_ARMOR = { [0] = "none", [1] = "light", [2] = "medium", [3] = "heavy", [4] = "heavy" }
+local SOLDIER_VITALITY = 1.0
 function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, dirP, instigP, causerP)
     if not feat("RealisticDamageToNPCs") then return end
     local sol = self:get()
@@ -456,9 +469,11 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     end
     local zone = C.zoneOf((function() local ok, s = pcall(function() return boneP:get():ToString() end); return ok and s or "None" end)(), false)
     local caliber = C.caliberOf(attacker, aside, acn, sol)
-    local hpPct, _, pass = B.compute(GB.apply({ caliber = caliber, zone = zone, armor = SOLDIER_ARMOR[U.get(sol, P.Tier, 2)] or "medium",
-        hasHelmet = true, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit, rnd = math.random() },
-        GB.weapon(attacker), GB.soldierArmor()))
+    local tier = U.get(sol, P.Tier, 2)
+    local kit = SOLDIER_ARMOR[tier] or "medium"
+    local hpPct, _, pass = B.compute(GB.apply({ caliber = caliber, zone = zone, armor = kit,
+        hasHelmet = (tonumber(tier) or 2) >= 1, integrity = 1, vitality = SOLDIER_VITALITY, minPct = cfg().Damage.MinPercentPerHit,
+        rnd = math.random() }, GB.weapon(attacker), kit ~= "none" and GB.soldierArmor() or 0))
     if cfg().Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
         W.onHit(U.addr(sol), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(vside) * HTR.woundFreq(vside), HTR.woundFreq(vside))
     end
