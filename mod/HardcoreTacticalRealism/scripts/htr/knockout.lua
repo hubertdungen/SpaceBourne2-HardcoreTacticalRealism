@@ -35,7 +35,9 @@ KO.REVIVE = {
     pirate    = { try = 0.3,  time = 15, success = 0.5,  quit = 0.35 },
 }
 local REACH, SEARCH = 300, 2500 -- cm: at the body (squad soldiers stop ~2-3 m short) / how far a reviver comes from
-local EXEC_SEE, EXEC_AT, EXEC_AIM = 1500, 250, 1.0 -- pirates: come from 15 m, fire within 2.5 m after 1 s
+-- pirates: come from 15 m and fire within 2.5 m after 1 s; one that can't get there (no path,
+-- tested 0.4.15) fires from where it stands after 4 s; after 8 s the body dies regardless
+local EXEC_SEE, EXEC_AT, EXEC_AIM, EXEC_WALK, EXEC_GIVE = 1500, 250, 1.0, 4, 8
 local YOU_REACH = 250 -- cm: you revive a companion this close, crouched
 
 local function cfg() return HTR.cfg.Knockout end
@@ -166,7 +168,11 @@ local function executed(body, near)
     if body.execDone then return true end
     if body.exec then
         for _, e in ipairs(near(body.pos, EXEC_SEE)) do
-            if e.a == body.exec and not e.st.down then return false end -- still on its way
+            if e.a == body.exec and not e.st.down then -- still on its way (KO.drive fires)
+                if os.clock() - (body.execT or 0) < EXEC_GIVE then return false end
+                body.execDone = true -- its own hook never fired: the body dies anyway
+                return true
+            end
         end
         body.exec = nil -- gone, down or dead
     end
@@ -176,11 +182,11 @@ local function executed(body, near)
         if st.doctrine == "pirate" and st.side == "enemy" and not st.down and not st.executing and not st.reviving
             and (not best or e.d < best.d) then best = e end
     end
-    if best then body.exec = best.a; best.st.executing = body.key end
+    if best then body.exec, body.execT = best.a, os.clock(); best.st.executing = body.key end
     return false
 end
 local function releaseExec(body)
-    body.exec, body.execDone = nil, nil -- the pirate's own hook (KO.drive) restarts its AI
+    body.exec, body.execDone, body.execT = nil, nil, nil -- the pirate's own hook (KO.drive) restarts its AI
 end
 
 -- Gun NPC back on its feet (by an NPC reviver or by you).
@@ -258,8 +264,10 @@ function KO.drive(npc, st)
         if b and b.exec == U.addr(npc) and not b.execDone then
             if not st.reviveMoving then st.reviveMoving = true; brain(npc, false) end
             local here = U.location(npc)
-            if here and U.dist(here, b.pos) <= EXEC_AT then
-                local now = os.clock()
+            local now = os.clock()
+            st.execSince = st.execSince or now
+            -- at the body, or stuck on the way: aim, then fire from where it stands
+            if here and (U.dist(here, b.pos) <= EXEC_AT or now - st.execSince >= EXEC_WALK) then
                 st.execAt = st.execAt or now + EXEC_AIM
                 if now >= st.execAt then
                     pcall(function()
@@ -274,7 +282,7 @@ function KO.drive(npc, st)
             end
             return
         end
-        st.executing, st.execAt = nil, nil -- done, or the body is gone
+        st.executing, st.execAt, st.execSince = nil, nil, nil -- done, or the body is gone
         if st.reviveMoving and not st.reviving then st.reviveMoving = nil; brain(npc, true) end
         return
     end
