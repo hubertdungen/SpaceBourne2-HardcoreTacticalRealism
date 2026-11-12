@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.16 — 2026-11-12
+
+- **Allies feel every hit.** A hit on a companion whose shooter HTR could not identify counted as
+  friendly fire and took at most 10 % of its health ("4 hits and nothing happens"). Now only a
+  shooter known to be an ally counts as friendly fire. Squad soldiers: a hit the game itself did
+  not count is no longer dropped, and a weapon or projectile as the causer is traced to its shooter.
+- **Your squad comes for you.** Allies come to revive you when no enemy is within 8 m (was 15 m);
+  still unsafe after 10 s, the nearest ally - a medic first - comes anyway.
+- **Revivers really walk to the body.** HTR's move order did not move NPCs (tests in 0.4.15); it
+  now uses the game's simple move order, which walked an NPC 7 m in 3 s in a test.
+- **Reaction time.** An NPC that just spotted a target, or switched to another, waits before its
+  first shot: elites 0.3 s, regulars 0.5 s, militia 0.7 s, pirates 0.8 s, companions by skill.
+  Before, enemies could turn and hit you in the same instant.
+- **For other mods (Squad Tactics "Rescue me"):** `Injured?` on your character tells that you
+  are down; a `rescue.request` file in HTR's folder makes your rescue urgent (see the README).
+- Tested in game (scripted, 3 launches, HTR alone): your rescue at 25 % with the 8 m rule (14 s)
+  and on a request (urgent within 2 s); enemy hits on a companion (~21 % each) and on squad
+  soldiers (~30 % each); the new move order; enemies still fire after their reaction time. Saves
+  untouched, no crash. Not settled: whether NPC groups far from you fight each other (in tests,
+  NPCs placed away from you stayed idle - the game's own AI).
+
 ## 0.4.15 — 2026-11-07
 
 - **Blood loss knocks out instead of killing.** Whoever bleeds to zero passes out for 45 s and can

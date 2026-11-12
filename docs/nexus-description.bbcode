@@ -120,7 +120,8 @@ A lethal hit sometimes knocks the victim out instead of killing: you, your allie
 [*][b]Blood loss knocks out:[/b] whoever bleeds to zero passes out instead of dying - you, your squad, companions and enemies alike. Robots never bleed; bosses still die.
 [*][b]Revives:[/b] a squad medic comes fastest, otherwise a squad soldier or a companion. Enemies revive their own by training: elites fast and reliably, regulars slower, militia and pirates rarely, and they often give up under fire.
 [*][b]You revive too:[/b] crouch next to a downed companion and stay there 8 s (a hit on you starts over). Squad soldiers keep the game's own hold-to-revive.
-[*][b]Nobody goes in under fire:[/b] the area round the body must be clear. The reviver has to stay with the body for a few seconds, and it can fail.
+[*][b]Nobody goes in under fire:[/b] the area round the body must be clear (15 m; round you 8 m). The reviver has to stay with the body for a few seconds, and it can fail.
+[*][b]Your rescue can't wait forever:[/b] still unsafe 10 s after you went down, the nearest ally - a squad medic first - comes for you anyway.
 [*][b]Back on their feet:[/b] a revive stops the bleeding and brings the person back at 25 % health; a broken bone stays broken until it fuses.
 [*][b]Who finishes off the downed:[/b] the big factions' troops leave them on the ground. Pirates don't: one within 15 m stops, turns to anyone of your side who is down - you included - and fires. Your own shots and any explosion can also kill someone who is down.
 [*][b]Time runs out:[/b] nobody comes within 45 s and the downed one dies.
@@ -163,6 +164,7 @@ Ground turrets fight for their own team. Your squad soldiers now take realistic 
 [*][b]Suppression:[/b] your rounds landing close make enemies duck and shoot worse.
 [*][b]Hit means fight:[/b] an NPC hit before it noticed anyone goes straight into combat against whoever shot it (vanilla only walked off to another spot). When an NPC is hit or dies, its mates nearby (enemies and allies alike) go into combat toward where the shots came from.
 [*][b]Situational awareness:[/b] relaxed enemies (no fight yet) only notice you up close; once alert (they spotted you, got hit or were warned) they spot and shoot much farther.
+[*][b]Reaction time:[/b] an NPC that just spotted a target, or switched to another, waits before its first shot: elites 0.3 s, regulars 0.5 s, militia 0.7 s, pirates 0.8 s, companions by skill.
 [*][b]Arrival grace:[/b] after an elevator ride, a new dungeon floor or a level load, and for freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody gets massacred the moment a floor loads.
 [*]Companions' bullets work (vanilla gave them a 0-second projectile life).
 [*][b]Allies by their own skill:[/b] each companion fights by its tier in the game (0-4): tier 0 like a faction regular, tier 4 (the rare best) like an elite, the tiers between in steps. Squad soldiers wear the kit of an enemy of the same tier (none, light, medium, heavy armor; a helmet from tier 1) and have normal bodies; their tier rises with the faction screen's Upgrade Soldier.
@@ -201,6 +203,7 @@ SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua (open with No
 [*]Gamepad toggles are experimental (untested without a controller).
 [*]Tested on the Steam build of 26 Oct 2026. Bug reports with htr.log (set Debug.Log = true) are very welcome (for a crash, please add UE4SS.log and the newest folder in %LOCALAPPDATA%\SB2\Saved\Crashes); if you ever notice stutter, htr.log names any HTR code that took longer than 8 ms.
 [*]In-game tests while firing show the same frame times as the game without mods.
+[*]NPCs far from you can stay idle until you come near (in tests, NPCs placed away from you and not sent after you did nothing); that is the game's own AI, not HTR's awareness rules.
 [/list]
 
 [line]

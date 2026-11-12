@@ -193,8 +193,10 @@ a big explosion or heavy overkill; robots and bosses are never knocked out.
   rarely, and they often give up under fire.
 - **You revive too:** crouch next to a downed companion and stay there 8 s (a hit on you starts
   over). Squad soldiers keep the game's own hold-to-revive.
-- **Nobody goes in under fire:** the area round the body must be clear. The reviver has to stay
-  with the body for a few seconds, and it can fail.
+- **Nobody goes in under fire:** the area round the body must be clear (15 m; round you 8 m).
+  The reviver has to stay with the body for a few seconds, and it can fail.
+- **Your rescue can't wait forever:** still unsafe 10 s after you went down, the nearest ally -
+  a squad medic first - comes for you anyway.
 - **Back on their feet:** a revive stops the bleeding and brings the person back at 25 % health;
   a broken bone stays broken until it fuses.
 - **Who finishes off the downed:** the big factions' troops leave them on the ground. Pirates
@@ -255,6 +257,8 @@ can hold a firefight instead of dropping as soon as they show up.
   mates nearby (enemies and allies alike) go into combat toward where the shots came from.
 - **Situational awareness:** relaxed enemies (no fight yet) only notice you up close; once
   alert (they spotted you, got hit or were warned) they spot and shoot much farther.
+- **Reaction time:** an NPC that just spotted a target, or switched to another, waits before its
+  first shot: elites 0.3 s, regulars 0.5 s, militia 0.7 s, pirates 0.8 s, companions by skill.
 - **Arrival grace:** after an elevator ride, a new dungeon floor or a level load, and for
   freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody
   gets massacred the moment a floor loads.
@@ -306,13 +310,18 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   `%LOCALAPPDATA%\SB2\Saved\Crashes`); if you ever notice stutter, `htr.log` names any HTR code that took longer
   than 8 ms.
 - In-game tests while firing show the same frame times as the game without mods.
+- NPCs far from you can stay idle until you come near (in tests, NPCs placed away from you and
+  not sent after you did nothing); that is the game's own AI, not HTR's awareness rules.
 <!-- nexus:skip -->
-- Test status of the knockouts (scripted in-game tests, 7 launches): whoever bleeds to zero is
-  knocked out (enemies and you); a squad soldier revived you at 25 %; when the time runs out the
-  downed die; your death while down and the reload after it were clean every time. Not yet seen
-  in game: a pirate finishing someone off, and you completing a crouched revive (the count runs
-  and starts over on a hit, but the test enemies kept hitting you). Every wait has a time limit
-  (pirate 8 s, a reviver 15 s on clear ground, the downed 45 s), so nobody is left standing still.
+- Test status of the knockouts (scripted in-game tests, 10 launches): whoever bleeds to zero is
+  knocked out (enemies and you); a squad soldier revived you at 25 % (also with the 8 m rule and
+  on a "rescue me" request); when the time runs out the downed die; your death while down and
+  the reload after it were clean every time. An NPC with its AI paused walks to where it is sent
+  (7 m in 3 s). Enemy hits on allies: a companion lost about 21 % a hit, a squad soldier about
+  30 %. Not yet seen in game: a pirate finishing someone off, and you completing a crouched
+  revive (the count runs and starts over on a hit, but the test enemies kept hitting you). Every
+  wait has a time limit (pirate 8 s, a reviver 15 s on clear ground, the downed 45 s), so nobody
+  is left standing still.
 <!-- /nexus:skip -->
 
 ## After a game update
@@ -320,6 +329,20 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
 Every game-internal name lives in one file, `htr\gamedefs.lua`. If an update renames
 something, HTR switches that feature off (logged in `UE4SS.log`) instead of crashing.
 `tools\` holds the scripts used to inspect the game's Blueprints.
+
+<!-- nexus:skip -->
+## For other mods
+
+UE4SS gives each mod its own Lua, so HTR talks to other mods through the game and one file
+(stable from 0.4.16):
+
+- **Is the player down?** While HTR holds you knocked out, your character's game property
+  `Injured?` is `true` (and `DisableMove` is `true`); both go back to `false` when you get up or die.
+- **"Rescue me":** create the empty file `rescue.request` in HTR's mod folder
+  (`...\Mods\HardcoreTacticalRealism\rescue.request`; any content). HTR checks for it once a
+  second, deletes it, and if you are down makes your rescue urgent: the nearest ally (a medic
+  first) comes at once, even with enemies close. If you are not down, the request is dropped.
+<!-- /nexus:skip -->
 
 ## Credits & license
 
