@@ -254,8 +254,13 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     local vanilla = out:get()
     local ff = feat("FriendlyFireRules")
 
-    -- Allied NPCs / turrets hitting allies: vanilla damage, capped.
-    if ff and st.side == "ally" and (aside == "ally" or aside == "other") then
+    -- Allied NPCs / turrets hitting allies: vanilla damage, capped. Only a shooter known to be an
+    -- ally counts (0.4.16): an unidentified causer was capped too, so enemy fire on allies whose
+    -- shooter HTR could not find did at most 10 % a hit ("4 hits and nothing happens").
+    if U.LogHits and st.side == "ally" then
+        U.log(string.format("ALLY HIT %s <- %s (%s) vanilla %.1f", tostring(st.cn), aside, tostring(acn), out:get()))
+    end
+    if ff and st.side == "ally" and aside == "ally" then
         out:set(math.min(vanilla, maxHP * c.FriendlyFire.AllyToAllyCapPercent / 100) * HTR.sideMultiplier("ally"))
         return
     end
@@ -455,11 +460,23 @@ function N.onSoldierHit(self, dmgP, dtypeP, hitLocP, hitNormalP, compP, boneP, d
     if not feat("RealisticDamageToNPCs") then return end
     local sol = self:get()
     if U.get(sol, P.Dead, false) then return end
-    local applied = U.get(sol, "Damage", 0)
-    if applied <= 0 then return end
+    -- what the game already took off (its Damage variable); 0.4.16: a hit the game itself did not
+    -- count is no longer dropped, HTR applies its own damage to it
+    local applied = math.max(0, U.get(sol, "Damage", 0))
+    local raw = 0
+    pcall(function() raw = dmgP:get() end)
+    if applied <= 0 and (tonumber(raw) or 0) <= 0 then
+        if U.LogHits then U.log("SQUAD hit with no damage at all (game 0, event 0) - skipped") end
+        return
+    end
     local attacker = causerP:get()
     local aside, acn = C.sideOf(attacker)
+    if aside == "other" then -- a weapon or projectile as causer: its instigator / owner fired it
+        local who = C.shooterOf(attacker)
+        if who then attacker = who; aside, acn = C.sideOf(who) end
+    end
     local vside = C.sideOf(sol)
+    if U.LogHits and applied <= 0 then U.log(string.format("SQUAD hit the game did not count (event %.1f) from %s", raw, aside)) end
     if aside == vside and aside ~= "other" then return end -- vanilla ignores own-team soldiers
     local hp, armor = U.get(sol, P.HP, 0), U.get(sol, P.Armor, 0)
     if armor > 0 then
@@ -624,6 +641,7 @@ end
      so without this they ran around and never fired again while they could still see you.
      StartShoot is guarded in the Blueprint: calling it while already firing does nothing. ]]
 local function resumeFire(npc, st, t)
+    if t < (st.holdFireUntil or 0) then return end -- reaction time after a new target (0.4.16)
     if (st.fireCheckAt or 0) > t then return end
     st.fireCheckAt = t + 0.5
     if U.get(npc, P.RotationMode, 0) ~= G.Rotation.Aiming then return end
@@ -643,15 +661,23 @@ function N.onRifleEye(self)
     N.track(npc)
     if st.reviving or st.reviveMoving or st.executing then KO.drive(npc, st); return end -- busy reviving: no aiming
     applyPending(npc, st, t) -- NPCs in a fight react to queued effects within ~0.3 s
-    if feat("SmarterAI") and not U.get(npc, P.Dead, false) then resumeFire(npc, st, t) end
-    if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
     local d = doctrine(st)
     local tgtStruct = U.get(npc, P.ShootTarget, nil)
-    if not tgtStruct then return end
-    local target = U.get(tgtStruct, "DetectedActor", nil)
-    if not U.valid(target) then return end
-    local ta = U.addr(target)
-    if st.targetAddr ~= ta then st.targetAddr = ta; st.acquiredAt = t end
+    local target = tgtStruct and U.get(tgtStruct, "DetectedActor", nil)
+    local ta = U.valid(target) and U.addr(target) or nil
+    -- Reaction time (0.4.16, user's choice): a target just spotted, or a switch to another one, is
+    -- not shot at before the doctrine's reaction time (elite 0.3 s ... pirate 0.8 s). The game
+    -- starts firing in this same event, so it is stopped here and resumed by resumeFire.
+    if ta and st.targetAddr ~= ta then
+        st.targetAddr, st.acquiredAt = ta, t
+        if feat("SmarterAI") then
+            st.holdFireUntil = t + (d.react or 0.5)
+            pcall(function() npc:StopShoot() end)
+        end
+    end
+    if feat("SmarterAI") and not U.get(npc, P.Dead, false) then resumeFire(npc, st, t) end
+    if not feat("RealisticNPCBallistics") or N.aimWrite == false then return end
+    if not ta then return end
     local spread = d.spread
     if t - (st.acquiredAt or t) < d.settle then spread = spread * 2.2 end
     if st.suppressedUntil and t < st.suppressedUntil then spread = spread * 1.8 end

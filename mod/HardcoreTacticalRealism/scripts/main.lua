@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.15"
+local VERSION = "0.4.16"
 
 local U = require("htr.util")
 
@@ -272,6 +272,10 @@ GT.every(1.0, function(t0)
             -- knocked-out NPCs and downed squad soldiers; only while you are in the world (your tick
             -- stops during loads and menus)
             if KO.busy() and t0 - (HTR.playerTickT or -1e9) < 1.5 then KO.update(t0, math.min(2, t0 - (lastKO or t0)), N.near) end
+            -- "Rescue me" from another mod (Squad Tactics): creating HTR's rescue.request file asks for
+            -- it; read and removed here, acted on only while you are down (knockout.lua)
+            local rq = io.open(U.Dir .. "rescue.request", "r")
+            if rq then rq:close(); os.remove(U.Dir .. "rescue.request"); KO.requestRescue() end
             lastKO = t0
         end)
         if not ok then U.warn("poll: " .. tostring(err)) end

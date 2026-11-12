@@ -74,15 +74,26 @@ local function brain(npc, on)
         if on then b:RestartLogic() else b:StopLogic("HTR knocked out") end
     end)
 end
+-- Walk an AI pawn to pos. 0.4.16: AIBlueprintHelperLibrary.SimpleMoveToLocation first (no class
+-- parameter); 0.4.9-0.4.15 only called MoveToLocation with a nil filter class inside pcall, and NPCs
+-- never moved in the 0.4.15 tests.
+local AIBL
 local function moveTo(pawn, pos)
-    pcall(function() pawn.Controller:MoveToLocation({ X = pos.X, Y = pos.Y, Z = pos.Z }, 60.0, true, true, true, true, nil, true) end)
+    local dest = { X = pos.X, Y = pos.Y, Z = pos.Z }
+    local ok = pcall(function()
+        if not (AIBL and AIBL:IsValid()) then AIBL = StaticFindObject("/Script/AIModule.Default__AIBlueprintHelperLibrary") end
+        AIBL:SimpleMoveToLocation(pawn.Controller, dest)
+    end)
+    if not ok then pcall(function() pawn.Controller:MoveToLocation(dest, 60.0, true, true, true, true, nil, true) end) end
 end
 local function underFire(st, now) return st and now - (st.hitT or -1e9) < 2 end
 
--- Nobody goes in under fire: the area round the body must be clear of live hostiles (15 m).
-local CLEAR = 1500
-local function safe(pos, side, near, now)
-    for _, e in ipairs(near(pos, CLEAR)) do
+-- Nobody goes in under fire: the area round the body must be clear of live hostiles (15 m; round
+-- you 8 m, 0.4.16). Still unsafe 10 s after you went down: your rescue becomes urgent and the
+-- reviver comes anyway, a medic first (user's choice, 2026-11-12).
+local CLEAR, CLEAR_YOU, BRAVE_AFTER = 1500, 800, 10
+local function safe(pos, side, near, now, radius)
+    for _, e in ipairs(near(pos, radius or CLEAR)) do
         local s = e.st.side
         if s ~= side and s ~= "other" and not e.st.down then return false end
     end
@@ -94,6 +105,7 @@ local function safe(pos, side, near, now)
     end
     return true
 end
+local function clear(body) return body.safe or body.brave end -- a reviver may go in
 
 -- One reviver per body. A body: { pos, side, rev = addr, revSt, r = REVIVE row, at = s spent, tried = {} }
 local function assign(body, cands)
@@ -113,7 +125,7 @@ end
 -- Progress of a body's reviver; returns true when the revive succeeded. dist = reviver distance or nil.
 local function progress(body, dist, now, dt)
     if not dist then body.rev = nil; return false end -- reviver gone
-    if not body.safe then return false end
+    if not clear(body) then return false end
     if dist > REACH then -- on its way; one that can't get there gives up (never a stalled NPC)
         body.walk = (body.walk or 0) + dt
         if body.walk > REVIVE_WALK then
@@ -296,7 +308,7 @@ function KO.drive(npc, st)
         return
     end
     local b = st.reviving and (KO.down[st.reviving] or (KO.player and KO.player.key == st.reviving and KO.player))
-    if b and b.rev and b.safe then
+    if b and b.rev and clear(b) then
         if not st.reviveMoving then st.reviveMoving = true; brain(npc, false) end
         moveTo(npc, b.pos)
     elseif b and b.rev then -- not clear yet: keep fighting from where it is
@@ -318,7 +330,7 @@ function KO.soldier(sol, a, now, side)
     if not b then
         for _, d in pairs(KO.down) do if d.rev == a then b = d; break end end
     end
-    if b then s.reviving = true; if b.safe then moveTo(sol, b.pos) end else s.reviving = nil end
+    if b then s.reviving = true; if clear(b) then moveTo(sol, b.pos) end else s.reviving = nil end
 end
 
 -- Squad soldier down (its 1 s InjuredTime timer): the game's bleed-out is ~21 s; HTR holds it until BleedOutSeconds.
@@ -338,7 +350,16 @@ function KO.downPlayer(p, now)
     U.set(p, "ResurectUsed", true) -- the game ignores damage while this is set
     U.set(p, "DisableMove", true); U.set(p, "DisableJump?", true); U.set(p, "Injured?", true)
     pcall(function() p:RagdollStart() end)
-    KO.player = { key = "player", side = "ally", pos = U.location(p), untilT = now + KO.bleedOut(), at = 0, tried = {} }
+    KO.player = { key = "player", side = "ally", pos = U.location(p), untilT = now + KO.bleedOut(), at = 0, tried = {}, downT = now }
+    return true
+end
+
+-- "Rescue me" (0.4.16): another mod (Squad Tactics) asks for it by creating HTR's rescue.request
+-- file (main.lua polls it); the rescue becomes urgent at once. You down = the pawn's Injured? flag.
+function KO.requestRescue()
+    local b = KO.player
+    if not b then return false end
+    b.brave, b.tried = true, {}
     return true
 end
 
@@ -361,7 +382,8 @@ function KO.updatePlayer(p, now, dt, near)
         KO.standUp(p, false) -- player.lua kills you on the next tick (0x268)
         return why
     end
-    if now >= (b.safeAt or 0) then b.safeAt = now + 1; b.safe = safe(b.pos, "ally", near, now) end
+    if now >= (b.safeAt or 0) then b.safeAt = now + 1; b.safe = safe(b.pos, "ally", near, now, CLEAR_YOU) end
+    if not b.safe and not b.brave and now - (b.downT or now) >= BRAVE_AFTER then b.brave = true end
     if not b.rev then
         assign(b, candidates(b.pos, near, now, true))
         if b.rev and not b.announced then
