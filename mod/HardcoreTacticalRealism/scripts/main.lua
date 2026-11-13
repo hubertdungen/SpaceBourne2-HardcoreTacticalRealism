@@ -13,7 +13,7 @@
     htr/hooks.lua      safe lazy hook registration
 ]]
 
-local VERSION = "0.4.16"
+local VERSION = "0.4.17"
 
 local U = require("htr.util")
 
@@ -37,6 +37,7 @@ for _, f in ipairs({ "RealisticDamageToNPCs", "RealisticDamageToPlayer", "Friend
 default(cfg.Features, "NPCGrenades", true)
 default(cfg.Damage, "GlobalToNPCs", 1.0); default(cfg.Damage, "MinPercentPerHit", 10)
 default(cfg.Damage, "BossVitality", 1.8); default(cfg.Damage, "TankVitality", 2.0)
+default(cfg.Damage, "BossMaxPercentPerHit", 5); default(cfg.Damage, "BossSpawnGrace", 6)
 default(cfg.Damage, "RobotVitality", 1.2); default(cfg.Damage, "PirateArmorShift", -1)
 default(cfg.Damage, "HelmetMinPass", 0.4); default(cfg.Damage, "ExplosionRadius", 600)
 default(cfg.Damage, "SquadOutrightDeath", { ["Tactical"] = 0, ["Tactical Hardcore"] = 0, ["Realism"] = 0.8, ["Realism Hardcore"] = 0.95 })
@@ -81,7 +82,7 @@ local ENERGY_REGEN = { ["Tactical"] = 0.2, ["Tactical Hardcore"] = 0.12, ["Reali
 if cfg.Perks.EnergyRegen == nil or cfg.Perks.EnergyRegen == 0.25 then cfg.Perks.EnergyRegen = ENERGY_REGEN end
 default(cfg.Perks, "Cooldown", 0.25)
 cfg.Awareness = cfg.Awareness or {}
-default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25)
+default(cfg.Awareness, "Enabled", true); default(cfg.Awareness, "RelaxedSight", 0.55); default(cfg.Awareness, "AlertSight", 1.25); default(cfg.Awareness, "Allies", true)
 cfg.Squad = cfg.Squad or {}
 default(cfg.Squad, "KeepUp", true); default(cfg.Squad, "RunBeyond", 600); default(cfg.Squad, "SprintBeyond", 1500)
 cfg.Knockout = cfg.Knockout or {}

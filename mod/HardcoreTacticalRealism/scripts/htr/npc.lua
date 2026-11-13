@@ -27,7 +27,15 @@ local FRESH = 3.0 -- s; a live NPC reports at least once a second
 
 function N.track(npc)
     local a, l = U.addr(npc), U.location(npc)
-    if a and l then N.pos[a] = { X = l.X, Y = l.Y, Z = l.Z, t = os.clock() } end
+    -- obj: checked (IsValid + same address) before use, never trusted (0.4.17: retargeting)
+    if a and l then N.pos[a] = { X = l.X, Y = l.Y, Z = l.Z, t = os.clock(), obj = npc } end
+end
+
+-- The live object of a tracked NPC, or nil.
+function N.objOf(a)
+    local p = N.pos[a]
+    local o = p and p.obj
+    if o and U.valid(o) and U.addr(o) == a then return o end
 end
 
 -- Tracked NPCs within radius of center: list of { a = address, st = state, d = distance }.
@@ -59,6 +67,11 @@ local function companionDoctrine(tier)
     for k, v in pairs(a) do
         if type(v) == "number" then d[k] = v + ((tonumber(b[k]) or 0) - v) * t end
     end
+    -- 0.4.17: allies are good, not bots. They need longer than the enemy of their tier to spot and
+    -- to fire (tier 0 0.9 s ... tier 4 0.45 s) and scan slower (0.45 s ... 0.25 s between looks).
+    d.react = 0.9 - 0.1125 * (tonumber(tier) or 2)
+    d.sense = 0.45 - 0.05 * (tonumber(tier) or 2)
+    d.sight = 4000 + 300 * (tonumber(tier) or 2)
     return d
 end
 
@@ -174,8 +187,11 @@ local function setAwareness(npc, st, alert)
     if U.Verbose then U.log(string.format("%s %s: sight %.0f m", tostring(st.cn), alert and "alert" or "relaxed", sight / 100)) end
 end
 
+-- Enemies, and (0.4.17) companions: an ally that has not met the enemy yet sees only 55 % as far
+-- and needs the game to alert it first; once in combat it sees its full, tier-scaled range.
 local function awarenessOn(st)
-    return feat("SmarterAI") and cfg().Awareness.Enabled and st.side == "enemy"
+    local aw = cfg().Awareness
+    return feat("SmarterAI") and aw.Enabled and (st.side == "enemy" or (st.side == "ally" and st.doctrine == "companion" and aw.Allies ~= false))
 end
 
 -- One-time per NPC: armor model handover, ballistics and doctrine values.
@@ -246,6 +262,10 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
         if not KO.killsDowned(aside, ast and ast.doctrine == "pirate") then out:set(0) end
         return
     end
+    -- who is shooting at it, for target choice (0.4.17): the last ally that hit it
+    if st.side == "enemy" and aside == "ally" and U.valid(attacker) then
+        st.hitByAlly, st.hitByAllyT = attacker, os.clock()
+    end
     -- where the threat is, for this NPC's and its mates' alert (onReceivePoint / onDead)
     if (st.side == "enemy" and (aside == "player" or aside == "ally")) or (st.side == "ally" and aside == "enemy") then
         local l = U.location(attacker)
@@ -283,6 +303,11 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
         args.wearMult = (args.wearMult or 1) * (c.Damage.BossArmorWear or 1)
     end
     local hpPct, ablation, pass = B.compute(args)
+    if st.boss then -- 0.4.17: bosses keep their toughness (turret / ally headshots took 50-90 % a hit)
+        local cap = c.Damage.BossMaxPercentPerHit or 5
+        if hpPct > cap then hpPct = cap end
+        if os.clock() - (st.spawnT or 0) < (c.Damage.BossSpawnGrace or 6) then hpPct = hpPct * 0.15 end
+    end
     if c.Wounds.Bleeding and not (B.Calibers[caliber] or {}).tick then
         local new = W.onHit(U.addr(npc), zone, hpPct, pass, os.clock(), HTR.sideMultiplier(st.side) * HTR.woundFreq(st.side),
             HTR.woundFreq(st.side), st.robot)
@@ -333,6 +358,48 @@ function N.alertAllies(npc, st, radius, threat)
     for _, e in ipairs(N.near(U.location(npc), radius)) do
         if e.a ~= me and e.st.side == st.side and not e.st.down then e.st.alertReq = threat end
     end
+end
+
+--[[ Enemies spread their fire (0.4.17). An enemy in combat whose target is you may turn on an ally
+     instead: the ally that just hit it, else the nearest ally (companion or squad soldier) clearly
+     closer than you; chance by doctrine (retarget), checked every 3 s. It sets the same blackboard
+     target the game's own eyes set. Allies were never shot at while you stood in the open. ]]
+function N.spreadFire(npc, st, now)
+    if now < (st.retargetAt or 0) then return end
+    st.retargetAt = now + 3
+    if U.bbGetBool(npc, BB.InCombat) ~= true then return end
+    local bb, player = U.blackboard(npc), U.playerPawn(npc)
+    if not (bb and U.valid(player)) then return end
+    local cur
+    pcall(function() cur = bb:GetValueAsObject(FName(BB.CurrentTarget)) end)
+    if not (U.valid(cur) and U.addr(cur) == U.addr(player)) then return end -- already on someone else
+    local me = U.location(npc)
+    local dPlayer = U.dist(me, U.location(player))
+    local pick
+    local h = st.hitByAlly
+    if h and U.valid(h) and now - (st.hitByAllyT or -1e9) < 6 then pick = h end
+    if not pick then
+        local best = 1e9
+        for _, e in ipairs(N.near(me, 2500)) do
+            if e.st.side == "ally" and not e.st.down and e.d < best and e.d < dPlayer * 0.9 then
+                local o = N.objOf(e.a)
+                if o then pick, best = o, e.d end
+            end
+        end
+        for _, s in pairs(KO.soldiers) do
+            if s.obj and s.pos and s.side == "ally" and now - s.t < 4 then
+                local d = U.dist(me, s.pos)
+                if d < 2500 and d < best and d < dPlayer * 0.9 and U.valid(s.obj) then pick, best = s.obj, d end
+            end
+        end
+    end
+    if not pick or math.random() >= (doctrine(st).retarget or 0.6) then return end
+    local l = U.location(pick)
+    pcall(function()
+        bb:SetValueAsObject(FName(BB.CurrentTarget), pick)
+        if l then bb:SetValueAsVector(FName(BB.TargetLocation), { X = l.X, Y = l.Y, Z = l.Z }) end
+    end)
+    if U.LogHits then U.log("RETARGET " .. tostring(st.cn) .. " (" .. st.doctrine .. ") -> ally " .. tostring(U.className(pick))) end
 end
 
 -- The pawn that fired a hit: the damage causer if it is one, else the instigating controller's pawn.
@@ -612,6 +679,17 @@ function N.onThink(self)
         end
     end
     if W.fracture(U.addr(npc), ct) == "leg" then pcall(function() npc:SetDesiredGait(G.Gait.Walk) end) end
+    if st.side == "enemy" and feat("SmarterAI") then N.spreadFire(npc, st, ct) end
+    -- Pirates are untrained, not suicidal (0.4.17): hit while sprinting at a target, one often dives
+    -- for cover instead of running on (the game's pirates rushed under fire)
+    if st.doctrine == "pirate" and feat("SmarterAI") and ct - (st.hitT or -1e9) < 3 and ct >= (st.dodgeAt or 0)
+        and U.speed(npc) > 350 and U.bbGetBool(npc, BB.InCombat) then
+        st.dodgeAt = ct + 8
+        if math.random() < (cfg().Doctrine and cfg().Doctrine.PirateDiveChance or 0.6) then
+            st.duckReq = true
+            if U.LogHits then U.log("pirate dives for cover instead of charging: " .. tostring(st.cn)) end
+        end
+    end
     if st.clearJGDAt and t > st.clearJGDAt then
         U.bbSetBool(npc, BB.JustGotDamage, false)
         st.clearJGDAt = nil

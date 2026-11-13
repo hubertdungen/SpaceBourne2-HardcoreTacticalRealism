@@ -324,7 +324,7 @@ end
 function KO.soldier(sol, a, now, side)
     local s = KO.soldiers[a] or {}
     KO.soldiers[a] = s
-    s.pos, s.t, s.side = U.location(sol), now, side
+    s.pos, s.t, s.side, s.obj = U.location(sol), now, side, sol
     s.medic = U.get(sol, "SoldierType", 0) == 2
     local b = KO.player and KO.player.rev == a and KO.player or nil
     if not b then

@@ -41,6 +41,8 @@ return {
         GlobalToNPCs      = 1.0,  -- multiply all damage NPCs take (0.8 = tougher NPCs)
         MinPercentPerHit  = 10,   -- any bullet removes at least this % of HP (caps hits-to-kill at ~10)
         BossVitality      = 1.8,  -- bosses have 1.8x the "body" of a soldier
+        BossMaxPercentPerHit = 5, -- a boss loses at most this % of its health to one hit (headshots too)
+        BossSpawnGrace    = 6,    -- s after a boss appears when it takes only 15 % of each hit
         BossArmorBonus    = 10,   -- and better-made power armor: +10 protection points...
         BossArmorWear     = 0.5,  -- ...that wears half as fast (rifle: ~12 body hits, 3 to the head)
         TankVitality      = 2.0,  -- heavy robot tanks
@@ -142,7 +144,7 @@ return {
     -- Situational awareness of enemies: relaxed (they haven't noticed a fight yet) they only
     -- notice you up close; once alert (they spotted you, got hit or were warned) they scan,
     -- spot and shoot much farther. Multipliers on each doctrine's sight range.
-    Awareness = { Enabled = true, RelaxedSight = 0.55, AlertSight = 1.25 },
+    Awareness = { Enabled = true, RelaxedSight = 0.55, AlertSight = 1.25, Allies = true }, -- Allies: companions need the game to alert them too
 
     -- Your ground squad following you. Vanilla makes them walk, so they fall behind and
     -- teleport next to you once 30 m away. KeepUp makes them run (beyond RunBeyond cm)

@@ -18,38 +18,39 @@
               fights from cover (0 = no morale hit)
   alertRadius cm; allies inside it are alerted when this NPC is hit or dies
   grenades    uses grenades to flush targets out of cover (if NPCGrenades on)
+  retarget    chance (checked every 3 s) that an enemy aimed at you turns on a nearer or shooting ally (0.4.17)
   react       s before the first shot at a target it just spotted or switched to (0.4.16)
 ]]
 
 return {
     -- sloppy, but they spray a lot of lead and don't run as soon as it gets loud
     pirate = {
-        label = "Pirate / raider", react = 0.8, sense = 0.45, sight = 3500, projSpeed = 36000, fireRate = 0.085, magazine = 30,
-        spread = 2.6, settle = 1.0, aimCenter = 0.55, reactToHits = 0.45, coverOnSuppress = 0.25, reactEvery = 8,
+        label = "Pirate / raider", react = 0.8, retarget = 0.4, sense = 0.45, sight = 3500, projSpeed = 36000, fireRate = 0.085, magazine = 30,
+        spread = 2.6, settle = 1.0, aimCenter = 0.55, reactToHits = 0.65, coverOnSuppress = 0.5, reactEvery = 8,
         retreatHP = 0.3, panic = 0.25, crippleFlee = 0.6, alertRadius = 1200, grenades = false,
     },
     militia = {
-        label = "Militia / low-tier troops", react = 0.7, sense = 0.38, sight = 4000, projSpeed = 38000, fireRate = 0.11, magazine = 30,
+        label = "Militia / low-tier troops", react = 0.7, retarget = 0.5, sense = 0.38, sight = 4000, projSpeed = 38000, fireRate = 0.11, magazine = 30,
         spread = 2.0, settle = 0.9, aimCenter = 0.7, reactToHits = 0.7, coverOnSuppress = 0.45, reactEvery = 7,
         retreatHP = 0.35, panic = 0.2, crippleFlee = 0.45, alertRadius = 1800, grenades = false,
     },
     regular = {
-        label = "Faction regulars", react = 0.5, sense = 0.30, sight = 4500, projSpeed = 42000, fireRate = 0.13, magazine = 30,
+        label = "Faction regulars", react = 0.5, retarget = 0.6, sense = 0.30, sight = 4500, projSpeed = 42000, fireRate = 0.13, magazine = 30,
         spread = 1.5, settle = 0.7, aimCenter = 0.85, reactToHits = 0.85, coverOnSuppress = 0.6, reactEvery = 6,
         retreatHP = 0.3, panic = 0.1, crippleFlee = 0.25, alertRadius = 2500, grenades = true,
     },
     elite = {
-        label = "Elite faction troops", react = 0.3, sense = 0.20, sight = 5500, projSpeed = 46000, fireRate = 0.15, magazine = 30,
+        label = "Elite faction troops", react = 0.3, retarget = 0.75, sense = 0.20, sight = 5500, projSpeed = 46000, fireRate = 0.15, magazine = 30,
         spread = 0.9, settle = 0.5, aimCenter = 0.95, reactToHits = 1.0, coverOnSuppress = 0.75, reactEvery = 5,
         retreatHP = 0.25, panic = 0.0, alertRadius = 3500, grenades = true,
     },
     machine = {
-        label = "Robots", react = 0.25, sense = 0.25, sight = 5000, projSpeed = 50000, fireRate = 0.12, magazine = 40,
+        label = "Robots", react = 0.25, retarget = 0.3, sense = 0.25, sight = 5000, projSpeed = 50000, fireRate = 0.12, magazine = 40,
         spread = 1.1, settle = 0.4, aimCenter = 1.0, reactToHits = 0.0, coverOnSuppress = 0.0, reactEvery = 6,
         retreatHP = 0.0, panic = 0.0, alertRadius = 2500, grenades = false,
     },
     companion = {
-        label = "Companions & allies", react = 0.4, sense = 0.22, sight = 5000, projSpeed = 46000, fireRate = 0.14, magazine = 30,
+        label = "Companions & allies", react = 0.4, retarget = 0.6, sense = 0.22, sight = 5000, projSpeed = 46000, fireRate = 0.14, magazine = 30,
         spread = 1.0, settle = 0.5, aimCenter = 0.9, reactToHits = 0.9, coverOnSuppress = 0.6, reactEvery = 6,
         retreatHP = 0.25, panic = 0.0, alertRadius = 3000, grenades = false,
     },
