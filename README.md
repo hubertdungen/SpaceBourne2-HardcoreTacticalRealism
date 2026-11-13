@@ -259,6 +259,16 @@ can hold a firefight instead of dropping as soon as they show up.
   alert (they spotted you, got hit or were warned) they spot and shoot much farther.
 - **Reaction time:** an NPC that just spotted a target, or switched to another, waits before its
   first shot: elites 0.3 s, regulars 0.5 s, militia 0.7 s, pirates 0.8 s, companions by skill.
+- **Allies are good, not bots:** each companion needs time to spot and to fire by its own tier: the
+  first shot comes 0.9 s after spotting a target at tier 0 down to 0.45 s at tier 4, it scans slower
+  (a look every 0.45 s down to 0.25 s) and sees 40-52 m. Until the game puts it in combat it sees
+  only 55 % as far (`Awareness.Allies`).
+- **Enemies don't only shoot you:** an enemy hit by one of your allies, or alerted by a mate that
+  was, turns on that ally; one aimed at you may turn on a nearer ally instead (chance by training,
+  every 3 s).
+- **Pirates aren't suicidal:** untrained, but a pirate hit while sprinting at a target often dives
+  for cover instead of running on (`Doctrine.PirateDiveChance`), takes cover more often under fire
+  and is easier to suppress.
 - **Arrival grace:** after an elevator ride, a new dungeon floor or a level load, and for
   freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody
   gets massacred the moment a floor loads.
@@ -310,9 +320,17 @@ and `htr\doctrines.lua` (how each kind of NPC fights).
   `%LOCALAPPDATA%\SB2\Saved\Crashes`); if you ever notice stutter, `htr.log` names any HTR code that took longer
   than 8 ms.
 - In-game tests while firing show the same frame times as the game without mods.
+- Bosses keep their toughness: one hit takes at most 5 % of a boss's health (headshots included;
+  `Damage.BossMaxPercentPerHit`), and for 6 s after it appears only 15 % of that
+  (`Damage.BossSpawnGrace`). Before, turret and ally headshots took 50-90 % a hit.
 - NPCs far from you can stay idle until you come near (in tests, NPCs placed away from you and
   not sent after you did nothing); that is the game's own AI, not HTR's awareness rules.
 <!-- nexus:skip -->
+- Test status of 0.4.17 (scripted in-game tests, 3 launches): the boss cap and spawn grace measured
+  on a stand-in boss (0.75 % a hit when fresh, 5 % later, headshots included). Not verified in game:
+  enemies turning on allies (the test's enemies kept no blackboard target, so the retarget never
+  fired, and the alert change was added after the last launch), pirates diving for cover (they never
+  sprinted in the test), companions' slower awareness (no companion in the test slot).
 - Test status of the knockouts (scripted in-game tests, 10 launches): whoever bleeds to zero is
   knocked out (enemies and you); a squad soldier revived you at 25 % (also with the 8 m rule and
   on a "rescue me" request); when the time runs out the downed die; your death while down and

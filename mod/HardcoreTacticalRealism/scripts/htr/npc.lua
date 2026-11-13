@@ -101,7 +101,7 @@ local function applyPending(npc, st, t)
     if st.alertReq then
         local r = st.alertReq -- { X, Y, Z = where the threat was, player = it was you }
         st.alertReq = nil
-        local target = r.player and U.playerPawn(npc) or nil
+        local target = r.player and U.playerPawn(npc) or (U.valid(r.obj) and r.obj or nil)
         if alertNow(npc, target, r.X and r or (target and U.location(target))) and U.Verbose then
             U.log("alerted by a mate: " .. tostring(st.cn))
         end
@@ -269,7 +269,8 @@ function N.onCalculateDamage(self, dmgIn, causerP, out)
     -- where the threat is, for this NPC's and its mates' alert (onReceivePoint / onDead)
     if (st.side == "enemy" and (aside == "player" or aside == "ally")) or (st.side == "ally" and aside == "enemy") then
         local l = U.location(attacker)
-        if l then st.threat = { X = l.X, Y = l.Y, Z = l.Z, player = (aside == "player") } end
+        -- obj (0.4.17): the ally that shot, so alerted mates turn on it, not on you
+        if l then st.threat = { X = l.X, Y = l.Y, Z = l.Z, player = (aside == "player"), obj = (aside == "ally") and attacker or nil } end
     end
     local vanilla = out:get()
     local ff = feat("FriendlyFireRules")
@@ -364,15 +365,19 @@ end
      instead: the ally that just hit it, else the nearest ally (companion or squad soldier) clearly
      closer than you; chance by doctrine (retarget), checked every 3 s. It sets the same blackboard
      target the game's own eyes set. Allies were never shot at while you stood in the open. ]]
+N.sf = { calls = 0, notCombat = 0, noPlayer = 0, noTarget = 0, onOther = 0, noPick = 0, rolledOut = 0, done = 0 }
 function N.spreadFire(npc, st, now)
     if now < (st.retargetAt or 0) then return end
     st.retargetAt = now + 3
-    if U.bbGetBool(npc, BB.InCombat) ~= true then return end
+    local sf = N.sf
+    sf.calls = sf.calls + 1
+    if U.bbGetBool(npc, BB.InCombat) ~= true then sf.notCombat = sf.notCombat + 1; return end
     local bb, player = U.blackboard(npc), U.playerPawn(npc)
-    if not (bb and U.valid(player)) then return end
+    if not (bb and U.valid(player)) then sf.noPlayer = sf.noPlayer + 1; return end
     local cur
     pcall(function() cur = bb:GetValueAsObject(FName(BB.CurrentTarget)) end)
-    if not (U.valid(cur) and U.addr(cur) == U.addr(player)) then return end -- already on someone else
+    if not U.valid(cur) then sf.noTarget = sf.noTarget + 1; return end
+    if U.addr(cur) ~= U.addr(player) then sf.onOther = sf.onOther + 1; return end -- already on someone else
     local me = U.location(npc)
     local dPlayer = U.dist(me, U.location(player))
     local pick
@@ -393,7 +398,9 @@ function N.spreadFire(npc, st, now)
             end
         end
     end
-    if not pick or math.random() >= (doctrine(st).retarget or 0.6) then return end
+    if not pick then sf.noPick = sf.noPick + 1; return end
+    if math.random() >= (doctrine(st).retarget or 0.6) then sf.rolledOut = sf.rolledOut + 1; return end
+    sf.done = sf.done + 1
     local l = U.location(pick)
     pcall(function()
         bb:SetValueAsObject(FName(BB.CurrentTarget), pick)

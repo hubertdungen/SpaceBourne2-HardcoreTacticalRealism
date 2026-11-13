@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.17 — 2026-11-13
+
+- **Allies by level.** A companion needs time to spot and fire by its tier (first shot 0.9 s after
+  spotting at tier 0, 0.45 s at tier 4), scans slower and sees 40-52 m; until the game puts it in
+  combat it sees 55 % as far (`Awareness.Allies`).
+- **Enemies spread their fire.** An enemy hit by an ally turns on it, and alerted mates did always
+  turn on you before; now they turn on the ally that shot. An enemy aimed at you may turn on a
+  nearer ally (chance by training: elite 75 %, pirate 40 %).
+- **Pirates aren't suicidal.** One hit while sprinting at its target often dives for cover
+  (`Doctrine.PirateDiveChance`, 60 %); pirates take cover more often under fire (65 % when hit,
+  50 % when suppressed).
+- **Bosses keep their toughness.** A hit takes at most 5 % of a boss's health (`BossMaxPercentPerHit`)
+  and only 15 % of that in the first 6 s (`BossSpawnGrace`). Turret and ally headshots took 50-90 %.
+- Tested in game (scripted, 3 launches, HTR alone): boss cap and spawn grace on a stand-in boss;
+  no new errors. Not verified: enemies turning on allies, pirates diving for cover, companions'
+  awareness (see the README). One test crash (0x268 on a reload right after killing a boss-flagged
+  test enemy) did not repeat.
+
 ## 0.4.16 — 2026-11-12
 
 - **Allies feel every hit.** A hit on a companion whose shooter HTR could not identify counted as

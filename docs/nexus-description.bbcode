@@ -165,6 +165,9 @@ Ground turrets fight for their own team. Your squad soldiers now take realistic 
 [*][b]Hit means fight:[/b] an NPC hit before it noticed anyone goes straight into combat against whoever shot it (vanilla only walked off to another spot). When an NPC is hit or dies, its mates nearby (enemies and allies alike) go into combat toward where the shots came from.
 [*][b]Situational awareness:[/b] relaxed enemies (no fight yet) only notice you up close; once alert (they spotted you, got hit or were warned) they spot and shoot much farther.
 [*][b]Reaction time:[/b] an NPC that just spotted a target, or switched to another, waits before its first shot: elites 0.3 s, regulars 0.5 s, militia 0.7 s, pirates 0.8 s, companions by skill.
+[*][b]Allies are good, not bots:[/b] each companion needs time to spot and to fire by its own tier: the first shot comes 0.9 s after spotting a target at tier 0 down to 0.45 s at tier 4, it scans slower (a look every 0.45 s down to 0.25 s) and sees 40-52 m. Until the game puts it in combat it sees only 55 % as far (Awareness.Allies).
+[*][b]Enemies don't only shoot you:[/b] an enemy hit by one of your allies, or alerted by a mate that was, turns on that ally; one aimed at you may turn on a nearer ally instead (chance by training, every 3 s).
+[*][b]Pirates aren't suicidal:[/b] untrained, but a pirate hit while sprinting at a target often dives for cover instead of running on (Doctrine.PirateDiveChance), takes cover more often under fire and is easier to suppress.
 [*][b]Arrival grace:[/b] after an elevator ride, a new dungeon floor or a level load, and for freshly spawned NPCs, everyone (enemies and allies) aims very badly for 3-4 s, so nobody gets massacred the moment a floor loads.
 [*]Companions' bullets work (vanilla gave them a 0-second projectile life).
 [*][b]Allies by their own skill:[/b] each companion fights by its tier in the game (0-4): tier 0 like a faction regular, tier 4 (the rare best) like an elite, the tiers between in steps. Squad soldiers wear the kit of an enemy of the same tier (none, light, medium, heavy armor; a helmet from tier 1) and have normal bodies; their tier rises with the faction screen's Upgrade Soldier.
@@ -203,6 +206,7 @@ SB2\Binaries\Win64\Mods\HardcoreTacticalRealism\scripts\config.lua (open with No
 [*]Gamepad toggles are experimental (untested without a controller).
 [*]Tested on the Steam build of 26 Oct 2026. Bug reports with htr.log (set Debug.Log = true) are very welcome (for a crash, please add UE4SS.log and the newest folder in %LOCALAPPDATA%\SB2\Saved\Crashes); if you ever notice stutter, htr.log names any HTR code that took longer than 8 ms.
 [*]In-game tests while firing show the same frame times as the game without mods.
+[*]Bosses keep their toughness: one hit takes at most 5 % of a boss's health (headshots included; Damage.BossMaxPercentPerHit), and for 6 s after it appears only 15 % of that (Damage.BossSpawnGrace). Before, turret and ally headshots took 50-90 % a hit.
 [*]NPCs far from you can stay idle until you come near (in tests, NPCs placed away from you and not sent after you did nothing); that is the game's own AI, not HTR's awareness rules.
 [/list]
 
