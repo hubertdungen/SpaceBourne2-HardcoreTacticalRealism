@@ -367,3 +367,6 @@ UE4SS gives each mod its own Lua, so HTR talks to other mods through the game an
 MIT licensed — see `LICENSE`. Uses [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS) (MIT).
 Code written with AI assistance; banner images are AI-generated. Unofficial fan mod, not
 affiliated with the developer of SpaceBourne 2.
+
+
+<p align="center"><a href="https://dlforge.dungenlabs.com"><img src="docs/branding/dlforge-logo.svg" alt="DL Forge" width="120"></a><br><a href="https://dlforge.dungenlabs.com">DL Forge</a></p>
